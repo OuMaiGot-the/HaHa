@@ -1,0 +1,571 @@
+# PDF textbook section to live review app: Windows quickstart
+
+This is the canonical beginner-facing installation and operating guide for the current `main` branch. It covers a controlled topic corpus rooted in `source.pdf`, workstation setup, independent Google OAuth and Gemini accounts, specific generation, managed continuous-auto mode, review, and optional static deployment.
+
+**Documentation freshness rule:** use this file from the same `main` revision that you are running. Operational changes must update the relevant documentation in the same PR; see `docs/DOCUMENTATION_MAINTENANCE.md`.
+
+Specialist references:
+
+- `docs/WORKSTATION_SYNC.md` — workstation synchronization and machine-local state;
+- `docs/GENERIC_PROJECT_SETUP.md` — recycling the repository for another textbook/project;
+- `docs/CONTINUOUS_AUTO_TESTING.md` — continuous auto-mode and multi-PC verification;
+- `app_generator/README.md` — generator technical reference;
+- `config/README.md` — configuration field reference.
+
+Generation does **not** mean that content is approved, publishable, merged, or publicly deployed.
+
+## 1. Supported source layout
+
+The generator processes one topic corpus per subchapter. Each subchapter has a primary `source.pdf`; any sibling PDFs are supplementary sources and are attached in the same fresh Gem conversation. A supported Google Drive tree looks like:
+
+Before reusing this workflow for a textbook from a **different discipline**, read `docs/DOMAIN_PROFILES.md`. Stage 0 now automatically classifies representative PDFs from the complete Source Root and binds the source inventory to a compatible installed profile before any generation job is claimed. A chemistry, mathematics, biology, history, or other textbook with no compatible active profile stops safely with `DOMAIN_PROFILE_REQUIRED`; onboard/activate that domain before generation. The selected profile then governs the subject-specific generation instructions. New packages record its ID/version, and validation/public release use that recorded identity; older packages without it retain default-profile compatibility.
+
+```text
+Textbook-or-source-root/
+└── 8/
+    ├── 8.1/
+    │   └── source.pdf
+    ├── 8.2/
+    │   └── source.pdf
+    └── 8.5/
+        └── source.pdf
+```
+
+The immediate parent folder must look like `8.5`; the controlled filename is normally `source.pdf`.
+
+Never commit source PDFs, OAuth files, tokens, browser profiles, cookies, raw Gemini responses, or generator run directories to Git.
+
+## 2. Install prerequisites on each Windows PC
+
+Install:
+
+- Python 3.12;
+- Git;
+- Node.js;
+- current Google Chrome;
+- GitHub CLI (`gh`) for managed coordinator bootstrap and GitHub operations;
+- VS Code or another editor if desired.
+
+Check:
+
+```powershell
+py -3.12 --version
+git --version
+node --version
+gh --version
+```
+
+For GitHub operations also check:
+
+```powershell
+gh auth status
+```
+
+## 3. Clone or refresh the repository
+
+For a new PC:
+
+```powershell
+cd <projects-folder>
+git clone https://github.com/tlyoon/brilliant.org-style-learning-apps.git
+cd brilliant.org-style-learning-apps
+git fetch origin
+git status -sb
+```
+
+A freshly cloned current checkout normally shows:
+
+```text
+## main...origin/main
+```
+
+For an existing PC:
+
+```powershell
+git switch main
+git fetch origin
+git status -sb
+```
+
+If it shows `[behind N]`, update safely:
+
+```powershell
+git pull --ff-only origin main
+```
+
+`git fetch origin` updates the PC's knowledge of GitHub without changing working files. `git pull --ff-only origin main` updates local `main` only when a clean fast-forward is possible.
+
+## 4. Understand the tracked project authority
+
+The normal tracked project authority is:
+
+```text
+config/configure_project.toml
+```
+
+It contains non-secret project identity, Drive source root, Gemini Gem/account, automation policy, project-derived path templates, and Git handoff policy. `google.oauth_login` identifies the Drive/coordinator OAuth account; `gemini.login_name` identifies the Gemini browser account. They may differ. The Gem display name is not managed.
+
+For a new recycled project, preview the configurator:
+
+```powershell
+python scripts\configure_project.py `
+  --project-name "NewLearningProject" `
+  --source-root-url "https://drive.google.com/open?id=SOURCE_FOLDER_ID" `
+  --gem-url "https://gemini.google.com/gem/GEM_ID" `
+  --gem-edit-url "https://gemini.google.com/gems/edit/EDIT_ID" `
+  --oauth-login "authorized@example.com" `
+  --gemini-login-name "gemini@example.com"
+```
+
+Review the diff, then repeat with `--apply` when correct. Validate and merge that configuration through the normal PR workflow before distributing it to other PCs.
+
+For a conservative first **specific-mode** project test, `git_publish = false` and `git_auto_merge = false` are valid. Continuous `auto` and `distributed` modes require durable Git publication and therefore require `git_publish = true`.
+
+## 5. Project name determines the machine-local state root
+
+On Windows, the project name determines the default local state root:
+
+```text
+%LOCALAPPDATA%\<project_name>\
+```
+
+For the current project:
+
+```toml
+[project]
+project_name = "BrilliantContentGenerator"
+```
+
+so the default state root is:
+
+```text
+C:\Users\<user>\AppData\Local\BrilliantContentGenerator\
+```
+
+Important derived locations are:
+
+```text
+%LOCALAPPDATA%\<project_name>\workstation-sync.toml
+%LOCALAPPDATA%\<project_name>\credentials\drive-oauth-client.json
+%LOCALAPPDATA%\<project_name>\credentials\drive-oauth-token.json
+%LOCALAPPDATA%\<project_name>\chrome-profile\
+%LOCALAPPDATA%\<project_name>\runs\
+```
+
+A different project name, for example `something_else`, gets its own state root:
+
+```text
+%LOCALAPPDATA%\something_else\
+```
+
+### Google Cloud OAuth client JSON
+
+Create/download a Google Cloud **Desktop app** OAuth client with the Drive API enabled. Place a secure copy at:
+
+```text
+%LOCALAPPDATA%\<project_name>\credentials\drive-oauth-client.json
+```
+
+The same Google Cloud Desktop OAuth client JSON contents may be securely copied into multiple trusted PCs and multiple project-scoped credential directories when those projects intentionally use the same Google OAuth client. Keep each project's path independent rather than making one project point into another project's state directory.
+
+Each PC/project should normally maintain its own generated `drive-oauth-token.json`. Do not copy OAuth token files into Git or a shared project checkout.
+
+## 6. Initialize and synchronize a workstation
+
+To initialize only the machine-local settings:
+
+```powershell
+python -m scripts.sync_configured_workstation --init-settings-only
+```
+
+This step records a machine-local repository binding: the current PC hostname and the absolute checkout path. Run it once on each intended worker checkout. Existing older workstation settings must be rebound once after this upgrade. Later synchronization and direct generator runs fail closed if the bound settings/configuration are used from another PC or repository path.
+
+Then run the normal synchronizer:
+
+```powershell
+.\sync-workstation.cmd
+```
+
+A successful first run may create `.venv`, install dependencies, render the local generator configuration, run repository tests, and run generator doctor.
+
+Watch the line:
+
+```text
+Installed config/configure_project.toml as <generated-local-config>.toml (...)
+```
+
+**Use the filename printed by `sync-workstation.cmd` as the authority for direct CLI commands on that PC.** The default new setting is normally `project.local.toml`, but existing machine-local workstation settings may deliberately use another allowed ignored filename such as `generator.shared.local.toml`.
+
+Set a PowerShell variable after sync. Example:
+
+```powershell
+$config = ".\generator.shared.local.toml"   # replace with the filename printed on your PC
+$py = (Resolve-Path ".\.venv\Scripts\python.exe").Path
+```
+
+If the printed file is `project.local.toml`, direct CLI commands can omit `--config`; otherwise pass it explicitly.
+
+### Optional per-PC Gemini account and Gem
+
+Only the `[local_gemini]` table in the generated local TOML is intended for manual editing:
+
+```toml
+[local_gemini]
+login_name = ""
+gem_url = ""
+gem_edit_url = ""
+```
+
+Blank values inherit tracked `[gemini]` defaults. A nonblank login changes only the Gemini browser account, not `google.oauth_login`. When selecting another Gem, set both URLs together; a lone URL override is rejected. This table survives later full and quick syncs; other generated fields are replaced. Ensure the local Gemini account can edit the selected Gem. Changing local overrides invalidates cached full validation.
+
+For direct CLI commands, `--login-name` overrides the Gemini browser account and `--oauth-login` independently overrides the Drive/coordinator account. Keep workstation `[drive].login_name` consistent with tracked `google.oauth_login` for synchronization.
+
+For routine synchronization after a successful full check:
+
+```powershell
+.\sync-workstation.cmd --quick
+```
+
+Use the full command again after generator/configuration/dependency changes:
+
+```powershell
+.\sync-workstation.cmd
+```
+
+## 7. Run a non-uploading doctor check
+
+With an explicit local config variable:
+
+```powershell
+& $py -m app_generator doctor --config $config
+```
+
+For a specific section:
+
+```powershell
+& $py -m app_generator doctor --config $config --selection-mode specific --pdf-subchapter-path 8.5
+```
+
+Doctor checks configuration, Drive authorization, Source-Root/domain binding, PDF discovery/download, checksum, and provenance. If the current Source Root has no valid domain binding, doctor may upload only the bounded representative textbook PDFs needed for Stage-0 Gemini API domain discovery; it does not start activity/content generation or claim an auto content job.
+
+The first Drive authorization on a PC may open a Google browser consent flow and create that PC/project's `drive-oauth-token.json`.
+
+## 8. Generate one selected subchapter
+
+Start with a controlled specific-mode run when validating a new project:
+
+```powershell
+& $py -m app_generator run --config $config --selection-mode specific --pdf-subchapter-path 8.5
+```
+
+If that section already has generated repository artifacts, the command stops **before content generation** with `PACKAGE_ALREADY_EXISTS`; it will not silently overwrite reviewed work or waste a full Gemini generation run. To deliberately regenerate that exact section, use:
+
+```powershell
+& $py -m app_generator run --config $config --selection-mode specific --pdf-subchapter-path 8.5 --regenerate
+```
+
+`--regenerate` is intentionally available only in `specific` mode. The generator fully builds and validates the candidate before replacement, backs up all existing destination artifacts, validates the repository after replacement, and restores the originals if installation/verification fails. Do not use this as an auto-mode retry mechanism; coordinated auto mode continues to treat existing valid packages as completed/skipped work.
+
+The default controlled launcher opens an independent ordinary Chrome window directly on the configured Gemini `gem_url` with no Selenium or remote-debugging connection. Its separate `<chrome_profile_dir>/gemini-browser` profile starts signed out on first use and can retain your Gemini login afterward. The run displays the configured Gemini `login_name` and both the Gem and Gem editor URLs. Finish sign-in, confirm the Gem page loads, close that dedicated Chrome window, and then press Enter in the terminal. The app reopens the same signed-in profile for Selenium, navigates to the configured `gem_edit_url`, and verifies the exact active account before editing or generating. This keeps the Google sign-in flow outside browser automation. Gemini login may differ from Drive OAuth. Existing personal and legacy generator profiles are left untouched. The launcher uses a new local debug connection and reports a connection-readiness failure after 15 seconds rather than silently waiting for an absent browser. Explicit `attach` mode is different: it requires an already-open browser and does not launch a window or clear its login.
+
+The generator verifies the exact configured Gemini email on visible Google Account controls, reconciles project-owned Description and Instructions without renaming the Gem, opens a fresh conversation, uploads the controlled topic PDFs, generates/repairs the package, validates it, and installs the generated artifacts.
+
+A successful package is structurally validated and may proceed directly to configured publication without human sign-off.
+
+## 9. Managed coordinator: one-time project bootstrap
+
+Continuous `auto` and `distributed` modes use a coordinator. Current `main` supports repository-managed coordinator infrastructure.
+
+In `config/configure_project.toml`:
+
+```toml
+[automation]
+coordinator_url = ""
+```
+
+an empty URL selects repository-managed infrastructure. An explicit valid Google Apps Script URL remains backward-compatible **external** coordinator mode.
+
+Check current managed status:
+
+```powershell
+& $py -m app_generator coordinator-status --config $config
+```
+
+If it reports a current version and URL, do not bootstrap again.
+
+If it reports, for example:
+
+```text
+Managed coordinator: missing (required v2)
+```
+
+perform the **one-time project-wide bootstrap on one trusted administrator PC**:
+
+```powershell
+gh auth status
+& $py -m app_generator coordinator-bootstrap --config $config
+```
+
+The bootstrap may open Google consent for additional Apps Script/Drive administration scopes. It verifies `google.oauth_login` (not the Gemini browser account), stores the refreshable administrator credential in the private GitHub Actions secret used by this repository, requests the serialized managed deployment, and waits for a live health check.
+
+### First-project web-app recovery
+
+If bootstrap reports that no reachable `WEB_APP` entry point exists, complete this once on the
+trusted administrator PC:
+
+1. Open the exact Apps Script editor URL printed by the failure. Do not select a script by display
+   title; an older project can have the same name.
+2. Reload the editor, select `initializeCoordinator`, click **Run**, and wait for
+   **Execution completed**.
+3. Click **Deploy > New deployment**, select **Web app**, set **Execute as: Me** and
+   **Who has access: Anyone**, then click **Deploy**.
+4. Copy the complete URL ending in `/exec`.
+5. Register that URL and recheck live health:
+
+```powershell
+gh workflow run ensure-coordinator.yml --ref main -f project_name=<project_name> -f web_app_url=<web-app-url>
+& $py -m app_generator coordinator-ensure --config $config
+```
+
+The recovery workflow rejects a deployment that does not belong to the generated managed script.
+If a newly published URL is initially reported as unreachable, wait briefly for Google deployment
+propagation and rerun the same command. Do not create or archive another deployment merely to
+retry validation.
+
+Ordinary worker PCs do **not** repeat `coordinator-bootstrap` and do not need the administrator token locally. They discover the private managed runtime through their normal Drive authorization.
+
+Any worker can verify readiness with:
+
+```powershell
+& $py -m app_generator coordinator-ensure --config $config
+```
+
+## 10. Continuous multi-PC auto mode
+
+Auto mode requires:
+
+- Google Drive source discovery;
+- a healthy managed or explicit external coordinator;
+- `git_publish = true` so generated artifacts become durable/shared;
+- a clean/synchronized Git checkout;
+- working GitHub/Git credentials appropriate to the configured publication policy.
+
+Preview the queue without claiming a generation job:
+
+```powershell
+& $py -m app_generator doctor --config $config --selection-mode auto
+```
+
+Start a continuous worker:
+
+```powershell
+& $py -m app_generator run --config $config --selection-mode auto
+```
+
+The worker repeatedly claims globally eligible jobs, prioritizes recoverable interrupted work according to coordinator policy, renews leases, uses durable checkpoints, publishes validated artifacts through Git, and continues until the global source inventory is successful. If remaining work is currently leased by other PCs, it waits/polls instead of falsely declaring completion.
+
+### Chapter-scoped auto mode
+
+To run several PCs in parallel on one chapter without changing the canonical Drive source root, give every worker the same chapter scope:
+
+```powershell
+& $py -m app_generator doctor --config $config --selection-mode auto --chapter 10
+& $py -m app_generator run --config $config --selection-mode auto --chapter 10
+```
+
+Each PC still uses the shared Drive-native lease system, but its candidate inventory contains only `10.*` sections. A worker claims any eligible Chapter 10 section, writes only into its own bound local `repo_root`, publishes/merges the deterministic Git handoff, then claims another Chapter 10 section. When all Chapter 10 jobs are globally successful, chapter-scoped workers exit with `AUTO_CHAPTER_COMPLETE` instead of continuing into Chapter 11. `--chapter` and `--pdf-subchapter-path` are mutually exclusive in auto mode.
+
+### Targeted auto mode
+
+To generate exactly one section while retaining coordinator protection, add an explicit subchapter path:
+
+```powershell
+& $py -m app_generator doctor --config $config --selection-mode auto --pdf-subchapter-path 8.6
+& $py -m app_generator run --config $config --selection-mode auto --pdf-subchapter-path 8.6
+```
+
+This is different from `specific` mode. Targeted auto mode restricts the candidate inventory to the requested section **and still acquires a coordinator lease**. If another worker already owns that section, the targeted worker waits and does not fall through to another section. If the section is already globally successful, it exits successfully. If the target is terminally failed, it reports the blocked state. After the requested section succeeds, the targeted worker exits instead of continuing to the next section.
+
+Expected queue-control outcomes such as an already globally successful target are reported cleanly (for example, `AUTO_TARGET_COMPLETE`) without a generation-failure traceback. Genuine generation, lease, validation, or publication failures still retain error diagnostics.
+
+This form is recommended when a human wants to choose the exact section while other PCs may also be running auto mode.
+
+Use `Ctrl+C` to stop a worker. The current CLI reports interruption and returns an active auto lease safely when possible; abandoned leases also become recoverable through expiry.
+
+If an abandoned or repeatedly interrupted target exhausts its automatic attempt budget, targeted `doctor` reports `failed=1` plus the target status, attempt count, and last error code; auto mode refuses to claim it. Review those diagnostics first. To grant a new bounded attempt budget to exactly one verified Drive source, use the explicit recovery command:
+
+```powershell
+& $py -m app_generator coordinator-retry-failed --config $config --pdf-subchapter-path 9.1 --confirm
+& $py -m app_generator doctor --config $config --selection-mode auto --pdf-subchapter-path 9.1
+```
+
+The command synchronizes the Git base, resolves the exact current Drive source identity, and succeeds only when that one coordinator row is terminally failed and still matches the source version. It returns the row to `interrupted`, resets its attempt count, and preserves the last error until the next atomic claim. It does not download or upload the PDF, claim a lease, generate content, or mark unfinished work complete. Do not use `coordinator-complete` as failure recovery.
+
+See `docs/CONTINUOUS_AUTO_TESTING.md` for a two-PC recovery/concurrency verification procedure.
+
+## 11. Generated repository artifacts
+
+For Section 8.5, expect:
+
+```text
+content/chapter-8/section-8-5/
+├── README.md
+├── learning-design.md
+├── package.json
+└── review-record.md
+
+content/source-manifests/
+└── chapter-8-section-8-5.json
+```
+
+The five artifacts serve learner content, learning-design rationale, review status, section provenance/status, and controlled-source identity/checksum. No source PDF should enter Git.
+
+Validate:
+
+```powershell
+& $py scripts\lint.py
+& $py scripts\validate_content.py
+node --check app\app.js
+node --check app\visual-renderers.js
+node tests\test_app_loading.js
+node tests\test_app_rendering.js
+node tests\test_visual_renderers.js
+node tests\test_visual_player_integration.js
+node tests\test_interaction_rendering.js
+& $py -m unittest discover -s tests -v
+git diff --check
+```
+
+## 12. Validation, PR, and publication
+
+If a specific-mode run did not publish automatically, create a short-lived content branch, add only intended artifacts, validate, push, and open a PR:
+
+```powershell
+git switch -c content/section-8-5-draft
+git add content/chapter-8/section-8-5 content/source-manifests/chapter-8-section-8-5.json
+git diff --cached --check
+git commit -m "Add Section 8.5 generated draft"
+git push -u origin content/section-8-5-draft
+gh pr create --base main --fill
+```
+
+Green CI and automated semantic validation are sufficient for configured publication. The `review-record.md` file is an audit/traceability record; any additional manual review is optional and does not block publication.
+
+## 13. Build and preview a minimal static app
+
+Build one selected package into an empty directory:
+
+```powershell
+$release = "..\section-8-5-release"
+New-Item -ItemType Directory -Path $release
+& $py scripts\build_public_release.py `
+  content/chapter-8/section-8-5/package.json `
+  $release
+```
+
+Preview:
+
+```powershell
+& $py -m http.server 8001 --directory $release
+```
+
+Open `http://127.0.0.1:8001/`. The bundle contains the learner app and selected package, not PDFs, credentials, review records, source manifests, or development files.
+
+For public deployment, prefer a separate minimal GitHub Pages repository and verify the built bundle locally before pushing it.
+
+## 14. List generated apps and deployment URLs
+
+The tracked public-deployment registry is:
+
+```text
+config/deployments.json
+```
+
+From the repository root, run:
+
+```powershell
+& $py -m app_generator deployments
+```
+
+No workstation TOML, Google authorization, coordinator connection, or Gemini browser session is required. The command reports each tracked app's generated/deployed state and public URL. Any generated package under `content/chapter-*/section-*/package.json` that is missing from the registry is still listed with `DEPLOYED = no` and URL `-`.
+
+Update `config/deployments.json` in the same source-repository PR whenever a public route is created, changed, or removed. See `docs/DEPLOYMENTS.md`.
+
+## 15. Routine multi-PC operating pattern
+
+On every worker PC before use:
+
+```powershell
+git switch main
+git fetch origin
+git status -sb
+```
+
+If behind:
+
+```powershell
+git pull --ff-only origin main
+```
+
+Then:
+
+```powershell
+.\sync-workstation.cmd --quick
+```
+
+Use the generated local config filename printed by synchronization for all direct commands. Do not assume a filename copied from another PC.
+
+For specific mode:
+
+```powershell
+& $py -m app_generator doctor --config $config --selection-mode specific --pdf-subchapter-path <chapter.section>
+& $py -m app_generator run --config $config --selection-mode specific --pdf-subchapter-path <chapter.section>
+```
+
+For continuous auto mode after project-wide coordinator bootstrap:
+
+```powershell
+& $py -m app_generator doctor --config $config --selection-mode auto
+& $py -m app_generator run --config $config --selection-mode auto
+```
+
+For one coordinator-protected target section:
+
+```powershell
+& $py -m app_generator doctor --config $config --selection-mode auto --pdf-subchapter-path <chapter.section>
+& $py -m app_generator run --config $config --selection-mode auto --pdf-subchapter-path <chapter.section>
+```
+
+## 16. Common troubleshooting
+
+### `Configuration file does not exist: project.local.toml`
+
+Your workstation may use a different allowed generated config filename. Read the latest `sync-workstation.cmd` output and rerun with:
+
+```powershell
+& $py -m app_generator <command> --config .\<printed-generated-config>.toml
+```
+
+### `Managed coordinator: missing`
+
+If this project has never been bootstrapped, run `coordinator-bootstrap` once on a trusted administrator PC. If it was already bootstrapped, check the worker's Drive authorization/account and run `coordinator-ensure`.
+
+### Transient GitHub connection resets
+
+Automated Git synchronization/publication retries recognized transient transport failures such as `Recv failure: Connection was reset`, temporary connection/DNS failures, timeouts, and selected 502/503/504 responses. The generator retries with bounded backoff (2, 5, then 10 seconds after the first attempt). Authentication failures, dirty/diverged repositories, non-fast-forward updates, and other deterministic Git errors still fail immediately.
+
+If all transient attempts are exhausted, the run stops safely with a `GIT_PUBLISH_FAILED` error. Resolve the network path and rerun; auto mode does not treat the job as successfully generated when durable Git publication could not be established.
+
+### Automatic public deployment and stalls
+
+This project's auto mode publishes validated source packages to `https://tlyoon.github.io/section-8-1-learning-app/section-{section_slug}/` through a deterministic public-repository PR. Human sign-off is not required. If a worker stops after source merge, the next auto worker skips Gemini and completes the same public PR.
+
+Each auto attempt is a supervised child. Default checks are every 600 seconds and terminate after three consecutive stale checks; heartbeats do not count as content progress. Parsed Drive checkpoints are retained, so recovery begins at the last parsed stage rather than mid-token.
+
+### Dirty or diverged Git checkout
+
+Do not reset blindly. Inspect `git status -sb`; commit/stash/remove intended local changes before synchronization. The workstation synchronizer intentionally refuses to overwrite local-only work.
+
+### Documentation uncertainty
+
+Refresh `main` and read the docs from that same checkout. `docs/DOCUMENTATION_MAINTENANCE.md` defines the same-PR documentation rule and CI gate.
