@@ -1,0 +1,132 @@
+# Project-specific, non-secret configuration authority.
+# Normal workstation synchronization reads this file and materializes project.local.toml.
+# Change this file (through Git review) when recycling the code package for another
+# subject, textbook/source tree, Gemini Gem, account, or project identity.
+# Keep credentials, token values, Chrome profiles, source PDFs, and run data outside Git.
+
+[project]
+project_name = "BrilliantContentGenerator"
+
+[placeholders]
+# SINGLE SOURCE ROOT PRINCIPLE: sourcepath is the one project-level source-root
+# placeholder used by Stage 0 and all later stages. Chapter/subchapter/file values
+# below are selectors beneath this root; they must never redefine the source universe.
+sourcepath = "https://drive.google.com/drive/folders/1xiYsp3pe3bcWV9W_ikarnjo_i_EsAPaA"
+pdf_subchapter_path = "8.1"
+target_filename = "source.pdf"
+target_file = "{sourcepath}/**/{pdf_subchapter_path}/{target_filename}"
+
+[google]
+# Google Drive/Cloud OAuth identity. This remains independent of the Gemini browser account.
+oauth_login = "tlyoon@gmail.com"
+
+[llm]
+# Production generation uses the Gemini API. gemini_browser remains available as a legacy fallback.
+backend = "gemini_api"
+gemini_api_model = "gemini-3.8-flash"
+gemini_api_location = "global"
+gemini_api_thinking_level = "high"
+gemini_api_timeout_seconds = 1200
+gemini_api_upload_timeout_seconds = 180
+gemini_api_max_attempts = 3
+gemini_api_retry_backoff_seconds = 5
+
+[gemini]
+# These three values may be overridden in the generated local project TOML on a workstation.
+login_name = "tlyoon@gmail.com"
+gem_url = "https://gemini.google.com/gem/1dZR01a7xJ9pveqo55MwzfuPV2i_tUQvJ?usp=sharing"
+gem_edit_url = "https://gemini.google.com/gems/edit/815996ef2eef"
+browser_mode = "controlled"
+
+[google_drive]
+drive_api_timeout_seconds = 60
+max_drive_folders = 10000
+
+[domain]
+# Stage 0 classifies the textbook-level Source Root before any generation job is claimed.
+# Set domain_id to an installed profile id only for a deliberate manual override.
+domain_id = "auto"
+domain_sample_count = 3
+domain_min_confidence = 0.85
+
+[source_tree]
+source_id_prefix = "${PROJECT_SLUG}"
+
+[compatibility]
+# Current project only. Set to an empty string for a newly recycled project.
+legacy_environment_prefix = "BRILLIANT_GENERATOR_"
+
+[automation]
+selection_mode = "specific"
+coordination_backend = "drive"
+# Default auto mode uses Drive-native coordination and ignores coordinator_url.
+# coordinator_url is retained only for legacy cloud/distributed coordination.
+coordinator_url = ""
+coordinator_token_env = "${PROJECT_ENV_PREFIX}_COORDINATOR_TOKEN"
+coordinator_timeout_seconds = 30
+lease_seconds = 3600
+heartbeat_seconds = 300
+max_job_attempts = 3
+# Continuous auto publishes validated packages as explicitly labelled public
+# validated learning apps. Publication is permitted after automated validation succeeds.
+public_deploy = true
+public_deploy_repository = "tlyoon/section-8-1-learning-app"
+public_deploy_base_url = "https://tlyoon.github.io/section-8-1-learning-app/"
+public_deploy_base_branch = "main"
+public_deploy_branch_prefix = "automation/public-release"
+public_deploy_auto_merge = true
+stall_check_seconds = 600
+stall_after_seconds = 600
+stall_max_consecutive_checks = 3
+stall_terminate_grace_seconds = 20
+
+[repository]
+repo_root = "${REPO_ROOT}"
+
+[paths]
+state_root = "${STATE_ROOT}"
+workstation_settings = "${STATE_ROOT}/workstation-sync.toml"
+drive_oauth_client_file = "${STATE_ROOT}/credentials/drive-oauth-client.json"
+drive_token_file = "${STATE_ROOT}/credentials/drive-oauth-token.json"
+gemini_api_token_file = "${STATE_ROOT}/credentials/gemini-api-token.json"
+chrome_profile_dir = "${STATE_ROOT}/chrome-profile"
+state_dir = "${STATE_ROOT}/runs"
+
+[run]
+package_id = "chapter-{chapter_number}-section-{section_slug}"
+chapter = "Chapter {chapter_number}"
+subchapter = "{subchapter_id}"
+chapter_dir = "chapter-{chapter_number}"
+section_dir = "section-{section_slug}"
+learning_boundary = "The complete controlled PDF for section {subchapter_id} defines the included concepts; unsupported concepts are excluded."
+source_id = "{source_id_prefix}-section-{section_slug}"
+edition = "Edition not identified in the controlled PDF"
+heading = "{subchapter_id}"
+page_range = "Complete controlled PDF for section {subchapter_id}"
+reviewer = "Automated generation and validation pipeline"
+rights_note = "Instructor-authorized controlled source; use is limited to original transformation and provenance. The PDF and extracted passages must not enter Git."
+
+[limits]
+max_repair_attempts = 4
+ui_timeout_seconds = 30
+login_timeout_seconds = 300
+response_timeout_seconds = 600
+max_gemini_session_restarts = 2
+log_level = "INFO"
+
+[git]
+git_publish = true
+git_remote = "origin"
+git_base_branch = "main"
+git_branch_prefix = "automation"
+git_create_draft_pr = false
+git_run_full_tests = true
+git_auto_merge = true
+
+[models]
+model_preference_patterns = [
+  "\\bpro\\b|most capable|highest capability|advanced reasoning",
+  "advanced|reasoning|high capability",
+  "\\bflash\\b|fast",
+]
+allow_unknown_model_fallback = true
