@@ -1,0 +1,22 @@
+name: One-time upstream history import
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  import:
+    if: github.repository == 'OuMaiGot-the/HaHa'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Mirror upstream Git branches and tags
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          git clone --mirror https://github.com/tlyoon/brilliant.org-style-learning-apps.git upstream.git
+          cd upstream.git
+          git remote add destination "https://x-access-token:${GH_TOKEN}@github.com/OuMaiGot-the/HaHa.git"
+          git push --force destination 'refs/heads/*:refs/heads/*'
+          git push destination 'refs/tags/*:refs/tags/*'
