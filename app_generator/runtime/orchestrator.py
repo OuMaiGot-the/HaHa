@@ -1,0 +1,741 @@
+"""End-to-end one-PDF generation with optional distributed job leasing."""
+
+from __future__ import annotations
+
+import hashlib
+import json
+import logging
+from contextlib import nullcontext
+from copy import deepcopy
+from pathlib import Path
+from typing import Callable
+
+from app_generator.browser.chrome import ChromeSession
+from app_generator.config import GeneratorConfig
+from app_generator.coordinator.client import CoordinatorClient, JobLease
+from app_generator.coordinator.drive import DriveCoordinatorClient
+from app_generator.coordinator.heartbeat import LeaseGuard
+from app_generator.coordinator.checkpoints import CoordinatorCheckpointStore
+from app_generator.errors import AutoJobExecutionError, GitPublishError, NoAvailableJob, RepairLimitExceeded, SourceSetMismatch, UiContractError, ValidationFailure
+from app_generator.filesystem.outputs import Artifact, install_new_artifacts, preflight_artifact_install, stage_artifacts, write_json_atomic
+from app_generator.gemini.client import GeminiClient, RecoveringGeminiClient
+from app_generator.llm.gemini_api import GeminiApiClient
+from app_generator.generation.documents import render_learning_design, render_review_record, render_section_readme
+from app_generator.generation.metadata import apply_source_metadata, materialize_source_metadata
+from app_generator.generation.protocol import GenerationProtocol
+from app_generator.locking import WorkerLock
+from app_generator.logging_setup import configure_logging
+from app_generator.publishing.git import GitPublisher
+from app_generator.publishing.public import PublicPagesPublisher
+from app_generator.deployments import has_current_public_deployment
+from app_generator.domains import DomainProfile, ensure_drive_domain, resolve_domain
+from app_generator.runtime.run_context import RunContext
+from app_generator.runtime.state import RunPhase
+from app_generator.runtime.targeting import restrict_auto_inventory
+from app_generator.sources.google_drive import (
+    DriveRestClient,
+    ResolvedDriveSource,
+    discover_drive_sources_with_corpus_keys,
+    discover_drive_sources,
+    discover_topic_corpus,
+    resolve_drive_source,
+    topic_corpus_job_key,
+)
+from app_generator.sources.google_drive_auth import DriveAuthorization, authorize_google_drive
+from app_generator.sources.local_sources import inspect_sources
+from app_generator.sources.manifest import build_manifest, load_existing_manifest
+from app_generator.validation.repository_checks import run_repository_validator, validate_candidate
+from app_generator.validation.schema_validation import validate_manifest, validate_schemas
+
+LOGGER = logging.getLogger("app_generator.orchestrator")
+
+
+def _remove_temporary_source(path: Path | None, source_root: Path) -> None:
+    if path is None:
+        return
+    try:
+        path.resolve().relative_to(source_root.resolve())
+    except ValueError as exc:
+        raise RuntimeError(f"Refusing to remove a source outside the controlled run directory: {path}") from exc
+    try:
+        path.unlink()
+    except FileNotFoundError:
+        pass
+
+
+def _relative_paths(config: GeneratorConfig) -> tuple[Path, ...]:
+    section = Path("content") / config.chapter_dir / config.section_dir
+    return (
+        section / "README.md",
+        section / "learning-design.md",
+        section / "package.json",
+        section / "review-record.md",
+        config.manifest_relative_path,
+    )
+
+
+def _stage_complete_artifacts(
+    context: RunContext,
+    config: GeneratorConfig,
+    package: dict,
+    manifest: dict,
+) -> Path:
+    package_relative = Path("content") / config.chapter_dir / config.section_dir / "package.json"
+    artifacts = (
+        Artifact(package_relative.parent / "README.md", render_section_readme(config)),
+        Artifact(package_relative.parent / "learning-design.md", render_learning_design(config, package)),
+        Artifact(package_relative, json.dumps(package, indent=2, ensure_ascii=False) + "\n"),
+        Artifact(package_relative.parent / "review-record.md", render_review_record(config)),
+        Artifact(config.manifest_relative_path, json.dumps(manifest, indent=2, ensure_ascii=False) + "\n"),
+    )
+    stage_artifacts(context.candidate, artifacts)
+    return package_relative
+
+
+def _candidate_errors(
+    config: GeneratorConfig,
+    context: RunContext,
+    package: dict,
+    manifest: dict,
+    package_relative: Path,
+) -> list[str]:
+    errors = validate_schemas(config.repo_root, package, manifest)
+    if errors:
+        return errors
+    write_json_atomic(context.candidate / package_relative, package)
+    errors.extend(validate_candidate(config.repo_root, context.candidate, package_relative))
+    review_candidate = deepcopy(package)
+    review_candidate["status"] = "review"
+    write_json_atomic(context.candidate / package_relative, review_candidate)
+    errors.extend(validate_candidate(config.repo_root, context.candidate, package_relative))
+    write_json_atomic(context.candidate / package_relative, package)
+    return errors
+
+
+def _repair_post_semantic_validation(
+    config: GeneratorConfig,
+    context: RunContext,
+    package: dict,
+    manifest: dict,
+    package_relative: Path,
+    protocol: GenerationProtocol,
+    store: StateStore,
+    lease_guard: LeaseGuard | None = None,
+) -> dict:
+    """Restore deterministic validity if semantic repair changes learner-facing text."""
+
+    for repair_index in range(config.max_repair_attempts + 1):
+        if lease_guard is not None:
+            lease_guard.ensure_owned()
+        errors = _candidate_errors(config, context, package, manifest, package_relative)
+        write_json_atomic(
+            context.validation / f"semantic-validation-{repair_index:02d}.json",
+            {"errors": errors},
+        )
+        if not errors:
+            return package
+        repairable = any("activity[" in error for error in errors)
+        if not repairable:
+            raise ValidationFailure(
+                "Semantic repair introduced non-activity deterministic validation failures",
+                errors,
+            )
+        if repair_index >= config.max_repair_attempts:
+            raise ValidationFailure(
+                "Semantic repair introduced deterministic validation failures that did not converge",
+                errors,
+            )
+        store.transition(RunPhase.REPAIRING)
+        attempt_number = config.max_repair_attempts + repair_index + 1
+        package = protocol.repair_validation_errors(package, errors, attempt_number)
+        _stage_complete_artifacts(context, config, package, manifest)
+
+    return package
+
+
+def _unprocessed_sources(
+    config: GeneratorConfig,
+    sources: tuple[ResolvedDriveSource, ...],
+) -> tuple[ResolvedDriveSource, ...]:
+    eligible: list[ResolvedDriveSource] = []
+    for source in sources:
+        materialized = config.for_subchapter(source.subchapter_id)
+        if not materialized.package_path.exists():
+            eligible.append(source)
+    return tuple(eligible)
+
+
+def _local_job_key(config: GeneratorConfig, source_path: Path) -> str:
+    material = f"{config.package_id}:{source_path.resolve()}".encode("utf-8")
+    return hashlib.sha256(material).hexdigest()
+
+
+def _log_generation_exception(
+    config: GeneratorConfig,
+    context: RunContext,
+    exc: BaseException,
+    *,
+    lease: JobLease | None,
+) -> None:
+    """Log expected auto queue exhaustion without an alarming traceback."""
+
+    details = {
+        "run_id": context.run_id,
+        "error_code": getattr(exc, "code", exc.__class__.__name__),
+    }
+    if config.selection_mode == "auto" and isinstance(exc, NoAvailableJob) and lease is None:
+        LOGGER.info(
+            "No auto source job is currently claimable",
+            extra=details,
+        )
+        return
+    LOGGER.exception("Generation run failed", extra=details)
+
+
+def _restart_automation_browser(
+    chrome_factory: Callable[[GeneratorConfig], ChromeSession],
+    config: GeneratorConfig,
+) -> tuple[ChromeSession, object]:
+    """Reopen the already authenticated isolated profile without another manual pause."""
+
+    browser = chrome_factory(config)
+    return browser, browser.start()
+
+
+def _configure_gem_with_session_recovery(
+    browser: ChromeSession,
+    client: GeminiClient,
+    config: GeneratorConfig,
+    *,
+    chrome_factory: Callable[[GeneratorConfig], ChromeSession],
+    client_factory: Callable[[object, GeneratorConfig], GeminiClient],
+    lease_guard: LeaseGuard | None = None,
+) -> tuple[ChromeSession, GeminiClient]:
+    """Retry Gem configuration once in a fresh authenticated browser session."""
+
+    try:
+        client.configure_gem()
+        return browser, client
+    except UiContractError:
+        LOGGER.warning(
+            "Gem editor contract was unavailable in the attached Chrome session; "
+            "restarting the isolated browser once"
+        )
+        if lease_guard is not None:
+            lease_guard.ensure_owned()
+        browser.close()
+        replacement_browser, driver = _restart_automation_browser(chrome_factory, config)
+        replacement = client_factory(driver, config)
+        replacement.open_editor_and_verify_account()
+        replacement.configure_gem()
+        return replacement_browser, replacement
+
+
+def _bind_domain_context(context: RunContext, profile: DomainProfile) -> None:
+    """Fence resumable parsed stages to the exact domain profile that authored them."""
+
+    stage = "domain-context"
+    current = profile.identity()
+    cached = context.load_stage(stage)
+    other_cached = any(path.stem != stage for path in context.batches.glob("*.json"))
+    if (cached is not None and cached != current) or (cached is None and other_cached):
+        context.discard_parsed_stages()
+    context.save_stage(stage, current)
+
+
+def run_generation(
+    config: GeneratorConfig,
+    *,
+    resume_run_id: str | None = None,
+    replace_existing: bool = False,
+    auto_target_subchapter_id: str | None = None,
+    auto_target_chapter: str | int | None = None,
+    chrome_factory: Callable[[GeneratorConfig], ChromeSession] = ChromeSession,
+    client_factory: Callable[[object, GeneratorConfig], GeminiClient] = GeminiClient,
+    api_client_factory: Callable[[GeneratorConfig, tuple[Path, ...]], GeminiApiClient] = GeminiApiClient,
+    drive_authorizer: Callable[[GeneratorConfig], DriveAuthorization] = authorize_google_drive,
+    drive_client_factory: Callable[[object, int], DriveRestClient] = DriveRestClient,
+    coordinator_factory: Callable[[GeneratorConfig], CoordinatorClient] = CoordinatorClient,
+    auto_coordinator_factory: Callable[[GeneratorConfig], DriveCoordinatorClient] = DriveCoordinatorClient,
+    publisher_factory: Callable[[GeneratorConfig], GitPublisher] = GitPublisher,
+    public_publisher_factory: Callable[[GeneratorConfig], PublicPagesPublisher] = PublicPagesPublisher,
+) -> RunContext:
+    if replace_existing and config.selection_mode != "specific":
+        raise ValidationFailure(
+            "Explicit regeneration is supported only in specific selection mode",
+            ["Use --selection-mode specific together with --regenerate."],
+        )
+    if resume_run_id and (config.selection_mode in {"auto", "distributed"} or config.git_publish):
+        raise ValidationFailure(
+            "Automatic resume is disabled for leased or Git-published runs",
+            ["Inspect the recorded job branch and coordinator row, then retry or release it deliberately."],
+        )
+    context = RunContext.create(config.state_dir, resume_run_id)
+    configure_logging(context.logs / "run.jsonl", config.log_level)
+    store = context.store
+    original_source_metadata = list(store.state.source_metadata)
+
+    with WorkerLock(config.state_dir, config.gem_url):
+        if resume_run_id:
+            store.resume()
+        else:
+            store.transition(RunPhase.CONFIG_LOADED)
+        store.transition(RunPhase.WORKER_LOCK_ACQUIRED)
+        temporary_source: Path | None = None
+        temporary_sources: list[Path] = []
+        browser: ChromeSession | None = None
+        coordinator: CoordinatorClient | DriveCoordinatorClient | None = None
+        lease: JobLease | None = None
+        lease_guard: LeaseGuard | None = None
+        active_config = config
+        domain_profile: DomainProfile | None = None
+        branch = ""
+        try:
+            if config.git_publish:
+                publisher_factory(config).sync_base()
+            drive_source: ResolvedDriveSource | None = None
+            drive_corpus: tuple[ResolvedDriveSource, ...] = ()
+            drive_client: DriveRestClient | None = None
+            if config.uses_google_drive:
+                authorization = drive_authorizer(config)
+                store.transition(RunPhase.DRIVE_AUTHENTICATED)
+                drive_client = drive_client_factory(authorization.session, config.drive_api_timeout_seconds)
+                domain_inventory = discover_drive_sources_with_corpus_keys(
+                    drive_client,
+                    sourcepath=config.sourcepath,
+                    target_filename=config.target_filename,
+                    max_folders=config.max_drive_folders,
+                )
+                domain_profile = ensure_drive_domain(config, drive_client, domain_inventory)
+                store.update(domain_id=domain_profile.id, domain_profile_version=domain_profile.profile_version)
+                if config.selection_mode in {"auto", "distributed"}:
+                    inventory = (
+                        domain_inventory
+                        if config.selection_mode == "auto"
+                        else discover_drive_sources(
+                            drive_client,
+                            sourcepath=config.sourcepath,
+                            target_filename=config.target_filename,
+                            max_folders=config.max_drive_folders,
+                        )
+                    )
+                    if config.selection_mode == "auto":
+                        inventory = restrict_auto_inventory(
+                            inventory,
+                            target_subchapter_id=auto_target_subchapter_id,
+                            target_chapter=auto_target_chapter,
+                        )
+                    store.transition(RunPhase.DRIVE_INVENTORIED)
+                    coordinator = (
+                        auto_coordinator_factory(config)
+                        if config.selection_mode == "auto"
+                        else coordinator_factory(config)
+                    )
+                    if config.selection_mode == "auto":
+                        local_completed = {
+                            source.job_key
+                            for source in inventory
+                            if config.for_subchapter(source.subchapter_id).package_path.exists()
+                            and (
+                                not getattr(config, "public_deploy", False)
+                                or has_current_public_deployment(
+                                    config.repo_root, config.for_subchapter(source.subchapter_id)
+                                )
+                            )
+                        }
+                        lease = coordinator.claim_auto(
+                            inventory,
+                            local_completed_job_keys=local_completed,
+                        )
+                    else:
+                        inventory = _unprocessed_sources(config, inventory)
+                        lease = coordinator.claim(inventory)
+                    drive_source = next(
+                        (source for source in inventory if source.file_id == lease.drive_file_id),
+                        None,
+                    )
+                    if drive_source is None or drive_source.job_key != lease.job_key:
+                        raise SourceSetMismatch("Coordinator returned a source outside the current Drive inventory")
+                    active_config = config.for_subchapter(drive_source.subchapter_id)
+                    store.transition(
+                        RunPhase.JOB_LEASED,
+                        job_key=lease.job_key,
+                        worker_id=lease.worker_id,
+                        lease_expires_at=lease.lease_expires_at,
+                    )
+                    lease_guard = LeaseGuard(
+                        coordinator,
+                        lease,
+                        config.heartbeat_seconds,
+                        config.lease_seconds,
+                    )
+                    if config.selection_mode == "auto":
+                        checkpoint_store = CoordinatorCheckpointStore(coordinator, lease)
+                        restored = checkpoint_store.restore_into(context)
+                        context = context.with_checkpoint(checkpoint_store)
+                        store = context.store
+                        if restored:
+                            LOGGER.info(
+                                "Restored durable generation checkpoints",
+                                extra={"run_id": context.run_id, "stage_count": restored, "job_key": lease.job_key},
+                            )
+                else:
+                    drive_source = resolve_drive_source(
+                        drive_client,
+                        sourcepath=config.sourcepath,
+                        pdf_subchapter_path=config.pdf_subchapter_path,
+                        target_filename=config.target_filename,
+                        max_folders=config.max_drive_folders,
+                    )
+                    active_config = config.for_subchapter(drive_source.subchapter_id)
+                drive_corpus = discover_topic_corpus(
+                    drive_client,
+                    sourcepath=config.sourcepath,
+                    pdf_subchapter_path=drive_source.subchapter_id,
+                    target_filename=config.target_filename,
+                    max_folders=config.max_drive_folders,
+                )
+                store.transition(
+                    RunPhase.SOURCE_RESOLVED,
+                    source_locator={
+                        **drive_source.metadata(),
+                        "corpus_file_count": len(drive_corpus),
+                        "corpus_job_key": topic_corpus_job_key(drive_corpus),
+                        "corpus_files": [item.metadata() for item in drive_corpus],
+                    },
+                )
+            else:
+                subchapter_id = config.pdf_subchapter_path.replace("\\", "/").split("/")[-1]
+                active_config = config.for_subchapter(subchapter_id)
+                configured_domain_value = str(getattr(config, "domain_id", "auto")).strip()
+                configured_domain = configured_domain_value if configured_domain_value.casefold() != "auto" else None
+                domain_profile = resolve_domain(config.repo_root, configured_domain)
+                store.update(domain_id=domain_profile.id, domain_profile_version=domain_profile.profile_version)
+
+            preflight_artifact_install(
+                active_config.repo_root,
+                _relative_paths(active_config),
+                replace_existing=replace_existing,
+            )
+
+            if domain_profile is None:
+                raise ValidationFailure("No active subject-domain profile was resolved for generation", [])
+            _bind_domain_context(context, domain_profile)
+
+            guard_context = lease_guard if lease_guard is not None else nullcontext()
+            with guard_context:
+                if drive_source is not None:
+                    assert drive_client is not None
+                    temporary_sources = [
+                        drive_client.download_file(item, context.sources / item.filename)
+                        for item in drive_corpus
+                    ]
+                    temporary_source = temporary_sources[0]
+                    store.transition(RunPhase.SOURCE_DOWNLOADED)
+                    sources = inspect_sources(tuple(temporary_sources))
+                    job_key = topic_corpus_job_key(drive_corpus)
+                else:
+                    sources = inspect_sources(active_config.source_files)
+                    job_key = _local_job_key(active_config, sources[0].path)
+
+                current_source_metadata = [source.metadata() for source in sources]
+                if resume_run_id and original_source_metadata and current_source_metadata != original_source_metadata:
+                    raise SourceSetMismatch("The source bytes or metadata changed since the failed run; resume stopped safely")
+                store.update(source_metadata=current_source_metadata)
+
+                publisher = publisher_factory(active_config) if active_config.git_publish else None
+                if publisher is not None:
+                    if lease_guard is not None:
+                        lease_guard.ensure_owned()
+                    branch = publisher.prepare_branch(
+                        subchapter_id=active_config.pdf_subchapter_path,
+                        job_key=job_key,
+                    )
+                    store.transition(RunPhase.GIT_BRANCH_PREPARED, branch=branch)
+
+                if active_config.llm_backend == "gemini_api":
+                    api_client = api_client_factory(
+                        active_config,
+                        tuple(source.path for source in sources),
+                    )
+                    api_client.prepare()
+                    generation_client = api_client
+                    store.update(
+                        llm_backend="gemini_api",
+                        prompt_sha256=api_client.prompt_sha256,
+                    )
+                    store.transition(RunPhase.MODEL_SELECTED, actual_model=api_client.actual_model)
+                    store.transition(RunPhase.SOURCE_ATTACHED)
+                    if temporary_sources:
+                        for path in temporary_sources:
+                            _remove_temporary_source(path, context.sources)
+                        temporary_sources = []
+                        temporary_source = None
+                        store.transition(RunPhase.TEMPORARY_SOURCE_REMOVED)
+                else:
+                    browser = chrome_factory(active_config)
+                    browser.open_window()
+                    browser.wait_for_manual_sign_in()
+                    driver = browser.start()
+                    store.transition(RunPhase.CHROME_STARTED)
+                    client = client_factory(driver, active_config)
+                    client.open_editor_and_verify_account()
+                    store.transition(RunPhase.GOOGLE_ACCOUNT_VERIFIED)
+                    browser, client = _configure_gem_with_session_recovery(
+                        browser,
+                        client,
+                        active_config,
+                        chrome_factory=chrome_factory,
+                        client_factory=client_factory,
+                        lease_guard=lease_guard,
+                    )
+                    store.transition(RunPhase.GEM_CONFIG_CHECKED)
+                    client.open_conversation_select_model_and_attach(tuple(source.path for source in sources))
+                    store.transition(RunPhase.MODEL_SELECTED, actual_model=client.actual_model)
+                    store.transition(RunPhase.SOURCE_ATTACHED)
+                    if temporary_sources:
+                        for path in temporary_sources:
+                            _remove_temporary_source(path, context.sources)
+                        temporary_sources = []
+                        temporary_source = None
+                        store.transition(RunPhase.TEMPORARY_SOURCE_REMOVED)
+
+                    def restart_gemini_session() -> GeminiClient:
+                        nonlocal browser, temporary_source, temporary_sources
+                        if lease_guard is not None:
+                            lease_guard.ensure_owned()
+                        if browser is not None:
+                            browser.close()
+                            browser = None
+                        store.transition(RunPhase.GEMINI_SESSION_RESTARTING)
+
+                        recovery_source = sources[0].path
+                        session_ready = False
+                        try:
+                            if drive_source is not None:
+                                assert drive_client is not None
+                                temporary_sources = [
+                                    drive_client.download_file(item, context.sources / item.filename)
+                                    for item in drive_corpus
+                                ]
+                                temporary_source = temporary_sources[0]
+                                store.transition(RunPhase.SOURCE_DOWNLOADED)
+                                recovery_sources = inspect_sources(tuple(temporary_sources))
+                                if [item.metadata() for item in recovery_sources] != current_source_metadata:
+                                    raise SourceSetMismatch(
+                                        "The controlled source corpus changed before Gemini session recovery"
+                                    )
+                                recovery_source = temporary_source
+
+                            browser, driver = _restart_automation_browser(
+                                chrome_factory,
+                                active_config,
+                            )
+                            store.transition(RunPhase.CHROME_STARTED)
+                            replacement = client_factory(driver, active_config)
+                            replacement.open_editor_and_verify_account()
+                            store.transition(RunPhase.GOOGLE_ACCOUNT_VERIFIED)
+                            replacement.configure_gem()
+                            store.transition(RunPhase.GEM_CONFIG_CHECKED)
+                            replacement.open_conversation_select_model_and_attach(
+                                tuple(source.path for source in recovery_sources)
+                                if drive_source is not None else recovery_source
+                            )
+                            store.transition(
+                                RunPhase.MODEL_SELECTED,
+                                actual_model=replacement.actual_model,
+                            )
+                            store.transition(RunPhase.SOURCE_ATTACHED)
+                            session_ready = True
+                            return replacement
+                        finally:
+                            if temporary_sources:
+                                for path in temporary_sources:
+                                    _remove_temporary_source(path, context.sources)
+                                temporary_sources = []
+                                temporary_source = None
+                                store.transition(RunPhase.TEMPORARY_SOURCE_REMOVED)
+                            if session_ready:
+                                store.transition(RunPhase.GENERATING)
+
+                    generation_client = RecoveringGeminiClient(
+                        client,
+                        restart_gemini_session,
+                        max_restarts=active_config.max_gemini_session_restarts,
+                        diagnostics_dir=context.diagnostics,
+                    )
+                    store.update(llm_backend="gemini_browser")
+                protocol = GenerationProtocol(generation_client, context, domain_profile=domain_profile)
+                store.transition(RunPhase.GENERATING)
+                run_metadata = {
+                    "packageId": active_config.package_id,
+                    "chapter": active_config.chapter,
+                    "subchapterId": active_config.pdf_subchapter_path,
+                    "learningBoundary": (
+                        "The complete controlled topic PDF corpus defines the included concepts; concepts not supported "
+                        "by that corpus are excluded."
+                    ),
+                    "sourceFilenames": [source.controlled_filename for source in sources],
+                    "pageRange": active_config.page_range,
+                    "attachmentMode": "fresh-conversation",
+                }
+                source_location = f"Section {active_config.pdf_subchapter_path}; {active_config.page_range}"
+                package, analysis, _ = protocol.generate(
+                    config=active_config,
+                    run_metadata=run_metadata,
+                    source_location=source_location,
+                )
+                active_config = materialize_source_metadata(active_config, analysis)
+                package = apply_source_metadata(package, active_config)
+                manifest = (
+                    load_existing_manifest(active_config.existing_source_manifest, sources[0], active_config)
+                    if active_config.existing_source_manifest
+                    else build_manifest(
+                        active_config,
+                        sources,
+                        drive_file_ids=tuple(item.file_id for item in drive_corpus) if drive_source else (),
+                    )
+                )
+                manifest_errors = validate_manifest(active_config.repo_root, manifest)
+                if manifest_errors:
+                    raise ValidationFailure(
+                        "Source manifest is incompatible with the current repository schema",
+                        manifest_errors,
+                    )
+                store.transition(RunPhase.SOURCE_MANIFEST_READY)
+                store.transition(
+                    RunPhase.PACKAGE_ASSEMBLED,
+                    actual_model=generation_client.actual_model,
+                )
+                package_relative = _stage_complete_artifacts(context, active_config, package, manifest)
+
+                for attempt in range(active_config.max_repair_attempts + 1):
+                    if lease_guard is not None:
+                        lease_guard.ensure_owned()
+                    store.transition(RunPhase.VALIDATING)
+                    errors = _candidate_errors(active_config, context, package, manifest, package_relative)
+                    write_json_atomic(context.validation / f"validation-{attempt:02d}.json", {"errors": errors})
+                    if not errors:
+                        break
+                    if attempt >= active_config.max_repair_attempts:
+                        raise RepairLimitExceeded("The package did not converge within the configured repair limit")
+                    repairable = any("activity[" in error for error in errors)
+                    if not repairable:
+                        raise ValidationFailure("Non-activity validation errors require deterministic correction", errors)
+                    store.transition(RunPhase.REPAIRING)
+                    package = protocol.repair_validation_errors(package, errors, attempt + 1)
+                    _stage_complete_artifacts(context, active_config, package, manifest)
+                store.transition(RunPhase.CONTENT_VALIDATED)
+
+                package, findings = protocol.audit_and_repair(package)
+                write_json_atomic(context.validation / "semantic-findings.json", {"findings": findings})
+                _stage_complete_artifacts(context, active_config, package, manifest)
+                package = _repair_post_semantic_validation(
+                    active_config,
+                    context,
+                    package,
+                    manifest,
+                    package_relative,
+                    protocol,
+                    store,
+                    lease_guard,
+                )
+                store.transition(
+                    RunPhase.SEMANTIC_REVIEW_COMPLETED,
+                    actual_model=generation_client.actual_model,
+                )
+
+                installed = install_new_artifacts(
+                    active_config.repo_root,
+                    context.candidate,
+                    _relative_paths(active_config),
+                    verify=lambda: run_repository_validator(active_config.repo_root),
+                    replace_existing=replace_existing,
+                )
+                store.transition(RunPhase.FINAL_PACKAGE_WRITTEN, installed_paths=[str(path) for path in installed])
+                json.loads(active_config.package_path.read_text(encoding="utf-8"))
+                run_repository_validator(active_config.repo_root)
+                store.transition(RunPhase.FINAL_PACKAGE_REVERIFIED)
+
+                if publisher is not None:
+                    ensure_lease = lease_guard.ensure_owned if lease_guard is not None else (lambda: None)
+                    published = publisher.publish(
+                        branch=branch,
+                        installed_paths=installed,
+                        subchapter=active_config.subchapter,
+                        package_id=active_config.package_id,
+                        ensure_lease=ensure_lease,
+                    )
+                    store.transition(
+                        RunPhase.GIT_MERGED if published.merged else RunPhase.GIT_PUBLISHED,
+                        branch=published.branch,
+                        commit=published.commit,
+                        pr_url=published.pr_url,
+                        merged=published.merged,
+                    )
+                if getattr(active_config, "public_deploy", False):
+                    ensure_lease = lease_guard.ensure_owned if lease_guard is not None else (lambda: None)
+                    store.transition(RunPhase.PUBLIC_DEPLOYING)
+                    public = public_publisher_factory(active_config).publish(
+                        package_path=active_config.package_path,
+                        subchapter_id=active_config.pdf_subchapter_path,
+                        ensure_lease=ensure_lease,
+                    )
+                    if not public.merged:
+                        raise GitPublishError("Public deployment did not merge")
+                    store.transition(
+                        RunPhase.PUBLIC_DEPLOYED,
+                        public_deployment_branch=public.branch,
+                        public_deployment_pr_url=public.pr_url,
+                        public_deployment_url=public.public_url,
+                        public_package_sha256=public.package_sha256,
+                        public_deployed=public.merged,
+                    )
+                if coordinator is not None and lease is not None:
+                    assert lease_guard is not None
+                    lease_guard.ensure_owned()
+                    if config.selection_mode == "auto":
+                        coordinator.checkpoint_clear(lease_guard.lease)
+                    coordinator.mark_generated(
+                        lease_guard.lease,
+                        branch=store.state.branch or "",
+                        pr_url=store.state.pr_url or "",
+                        public_branch=store.state.public_deployment_branch or "",
+                        public_pr_url=store.state.public_deployment_pr_url or "",
+                        public_url=store.state.public_deployment_url or "",
+                        public_package_sha256=store.state.public_package_sha256 or "",
+                    )
+                store.transition(RunPhase.COMPLETE)
+                return context
+        except BaseException as exc:
+            _log_generation_exception(
+                config,
+                context,
+                exc,
+                lease=lease,
+            )
+            coordinator_status = ""
+            if coordinator is not None and lease is not None:
+                try:
+                    coordinator_status = coordinator.mark_failed(
+                        lease_guard.lease if lease_guard is not None else lease,
+                        error_code=str(getattr(exc, "code", exc.__class__.__name__)),
+                        error_message=str(exc),
+                    )
+                except BaseException:
+                    LOGGER.exception("Could not return the failed job to the coordinator")
+            store.fail(exc)
+            if config.selection_mode == "auto" and lease is not None and not isinstance(exc, (AutoJobExecutionError, KeyboardInterrupt)):
+                raise AutoJobExecutionError(
+                    str(exc),
+                    status=coordinator_status or "unknown",
+                    original_code=str(getattr(exc, "code", exc.__class__.__name__)),
+                ) from exc
+            raise
+        finally:
+            for path in temporary_sources:
+                _remove_temporary_source(path, context.sources)
+            if temporary_source is not None and temporary_source not in temporary_sources:
+                _remove_temporary_source(temporary_source, context.sources)
+            if browser is not None:
+                browser.close()
