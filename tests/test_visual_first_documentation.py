@@ -1,0 +1,131 @@
+import unittest
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+
+
+class VisualFirstDocumentationTests(unittest.TestCase):
+    def text(self, relative: str) -> str:
+        return (ROOT / relative).read_text(encoding="utf-8")
+
+    def test_decision_0024_is_accepted_and_declarative(self):
+        text = self.text("docs/decisions/0024-visual-first-physics-learning.md")
+        self.assertIn("## Status\n\nAccepted.", text)
+        self.assertIn("visual-interactive reasoning experiences", text)
+        self.assertIn("declarative specifications", text)
+        self.assertIn("shall not generate arbitrary executable JavaScript", text)
+        self.assertIn("question ? visual ? physics consistency validation", text)
+
+    def test_product_keeps_stage_zero_contract_while_planning_migration(self):
+        text = self.text("docs/PRODUCT_REQUIREMENTS.md")
+        self.assertIn("18 activities", text)
+        self.assertIn("nine multiple-choice and nine interactive", text)
+        self.assertIn("visual-value assessment", text)
+        self.assertIn("versioned declarative visual specification", text)
+        self.assertIn("compatibility requirement", text)
+
+    def test_content_rules_reject_decorative_or_hallucinated_visuals(self):
+        text = self.text("docs/CONTENT_RULES.md")
+        self.assertIn("Visuals are instructional content, not decoration", text)
+        self.assertIn("simplify or use a safe fallback rather than inventing unsupported detail", text)
+        self.assertIn("Question text, answer logic, visual specification, and rendered domain meaning must agree", text)
+        self.assertIn("Source figures may be reused/cropped only", text)
+
+    def test_blueprint_stage_two_is_visual_interactive(self):
+        text = self.text("docs/10_STAGE_BLUEPRINT.md")
+        self.assertIn("# Stage 2 ? Visual-Interactive Activity Framework", text)
+        self.assertIn("visual-value / simulation-value assessment", text)
+        self.assertIn("Decision 0024", text)
+        self.assertIn("unsupported visual requests fail safely", text)
+
+    def test_visual_design_contract_has_algorithm_validation_and_fallback(self):
+        text = self.text("docs/VISUAL_INTERACTION_DESIGN.md")
+        for phrase in (
+            "visual value",
+            "simulation value",
+            "hallucination risk",
+            "template coverage",
+            "Cross-modal validation",
+            "Failure and fallback policy",
+            "parameter_simulation",
+        ):
+            self.assertIn(phrase, text)
+
+    def test_prompt_contract_forbids_pixels_and_arbitrary_code(self):
+        text = self.text("docs/VISUAL_GENERATION_PROMPT_SPEC.md")
+        self.assertIn("Do not emit executable JavaScript, SVG markup, HTML, CSS, image pixels, or animation frames", text)
+        self.assertIn("Stage D ? cross-modal semantic audit", text)
+        self.assertIn("Source-figure association prompt guardrail", text)
+        self.assertIn("force a picture on every activity", text)
+
+    def test_visual_tool_orchestration_separates_provider_roles(self):
+        text = self.text("docs/VISUAL_TOOL_ORCHESTRATION.md")
+        for phrase in (
+            "Gemini",
+            "Wolfram",
+            "Replit",
+            "hybrid_generated_base",
+            "deterministic_simulation",
+            "final multimodal audit",
+            "answer-critical",
+            "A prettier image never outranks a correct one",
+        ):
+            self.assertIn(phrase, text)
+        self.assertIn("development-time template-incubation environment", text)
+        self.assertIn("not a per-activity production dependency", text)
+
+    def test_renderer_and_first_simulation_foundation_are_documented_as_available(self):
+        design = self.text("docs/VISUAL_INTERACTION_DESIGN.md")
+        architecture = self.text("docs/ARCHITECTURE.md")
+        self.assertIn("domains/university-level physics/visuals/physics-renderers.js", design)
+        self.assertIn("cart-collision-v1", design)
+        self.assertIn("qualitative-graph-v1", design)
+        self.assertIn("mechanics.motion_1d_slider` is now an available bounded deterministic simulation", design)
+        self.assertIn("x = x0 + v t", design)
+        self.assertIn("Hybrid contextual imagery is composited as a non-authoritative background layer", architecture)
+
+
+    def test_domain_profile_architecture_and_onboarding_are_documented(self):
+        decision = self.text("docs/decisions/0025-domain-profile-architecture.md")
+        guide = self.text("docs/DOMAIN_PROFILES.md")
+        architecture = self.text("docs/ARCHITECTURE.md")
+        self.assertIn("## Status\n\nAccepted.", decision)
+        self.assertIn("domains/university-level physics/", decision)
+        self.assertIn("Alternative A - LLM-assisted domain authoring", guide)
+        self.assertIn("Alternative B - minimal text-first domain", guide)
+        self.assertIn("Alternative C - clone the closest installed domain structurally", guide)
+        self.assertIn("Alternative D - expert-authored profile", guide)
+        self.assertIn("Stage 0 now performs textbook-level domain discovery", guide)
+        self.assertIn("DOMAIN_PROFILE_REQUIRED", guide)
+        self.assertIn("domain-binding.json", guide)
+        self.assertIn("generic engine, active domain profile, and project/course policy", architecture)
+
+    def test_stage_zero_domain_discovery_decision_is_accepted_and_fail_closed(self):
+        decision = self.text("docs/decisions/0026-stage0-textbook-domain-discovery.md")
+        blueprint = self.text("docs/10_STAGE_BLUEPRINT.md")
+        config = self.text("config/README.md")
+        generator = self.text("app_generator/README.md")
+        self.assertIn("## Status\n\nAccepted.", decision)
+        self.assertIn("before any content job is claimed or generated", decision)
+        self.assertIn("whole-root fingerprint", decision)
+        self.assertIn("DOMAIN_PROFILE_REQUIRED", decision)
+        self.assertIn("DOMAIN_DISCOVERY_FAILED", decision)
+        self.assertIn("Stage 0 now performs textbook-level domain discovery", blueprint)
+        self.assertIn('domain_id = "auto"', config)
+        self.assertIn("domain_min_confidence = 0.85", config)
+        self.assertIn("domain-discovery-status.json", generator)
+        self.assertIn("does **not** start activity/content generation", generator)
+
+    def test_architecture_and_ai_workflow_include_visual_pipeline(self):
+        architecture = self.text("docs/ARCHITECTURE.md")
+        workflow = self.text("docs/AI_WORKFLOW.md")
+        self.assertIn("Visual planner producing declarative, versioned visual specifications", architecture)
+        self.assertIn("final multimodal question ? answer ? rendered-visual audit", architecture)
+        self.assertIn("Wolfram", workflow)
+        self.assertIn("Replit", workflow)
+        self.assertIn("visual-value/simulation-value assessment", workflow)
+        self.assertIn("simplification or fallback rather than invention", workflow)
+
+
+if __name__ == "__main__":
+    unittest.main()
