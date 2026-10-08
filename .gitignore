@@ -1,0 +1,45 @@
+# Secrets and environment
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*oauth-client*.json
+*oauth-token*.json
+credentials.json
+token.json
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.venv/
+venv/
+
+# JavaScript
+node_modules/
+.next/
+dist/
+coverage/
+
+# Editors and operating systems
+.DS_Store
+Thumbs.db
+desktop.ini
+.idea/
+.vscode/
+
+# Generated and sensitive data
+*.log
+*.sqlite*
+uploads/
+exports/
+student-data/
+source-pdfs/
+*.pdf
+*.zip
+generator*.local.toml
+generator*.local*.toml
+project.local*.toml
+generator-runs/
