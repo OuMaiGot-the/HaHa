@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Learning Activity</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="domain-styles.css">
+  </head>
+  <body>
+    <main class="shell">
+      <header class="topbar">
+        <select id="locale" aria-label="Language">
+          <option value="en">English</option>
+          <option value="ms">Bahasa Melayu</option>
+          <option value="zh">简体中文</option>
+        </select>
+      </header>
+      <section id="app" aria-live="polite" data-package-url="">
+        <p>Select a generated learning package to begin.</p>
+      </section>
+    </main>
+    <script src="domain-renderers.js"></script>
+    <script src="visual-renderers.js"></script>
+    <script type="module" src="app.js"></script>
+  </body>
+</html>
