@@ -1,7 +1,5 @@
 name: One-time upstream history import
 on:
-  push:
-    branches: [main]
   workflow_dispatch:
 permissions:
   contents: write
@@ -12,7 +10,7 @@ jobs:
     steps:
       - name: Mirror upstream Git branches and tags
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.MIGRATION_TOKEN }}
         run: |
           set -euo pipefail
           git clone --mirror https://github.com/tlyoon/brilliant.org-style-learning-apps.git upstream.git
