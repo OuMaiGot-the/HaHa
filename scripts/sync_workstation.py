@@ -1,0 +1,897 @@
+#!/usr/bin/env python3
+"""Safely synchronize and validate a Windows generator workstation."""
+
+from __future__ import annotations
+
+import argparse
+import hashlib
+import os
+import re
+import shutil
+import socket
+import subprocess
+import sys
+import tomllib
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Any, Callable, Mapping
+
+from app_generator.domains import resolve_domain
+from app_generator.project import (
+    ProjectIdentity,
+    ProjectIdentityError,
+    identity_from_payload,
+    load_project_identity,
+    state_root_for,
+    validate_project_name,
+)
+
+
+ROOT = Path(__file__).resolve().parents[1]
+BRANCH = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._/-]*$")
+REMOTE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]*$")
+MAX_PROJECT_CONFIG_BYTES = 256 * 1024
+PROJECT_CONFIG_RELATIVE_PATH = Path("config") / "project.toml"
+INSTALL_FINGERPRINT_FILES = (
+    Path("pyproject.toml"),
+    Path("requirements-generator.txt"),
+    Path("requirements-dev.txt"),
+)
+INSTALL_FINGERPRINT_VERSION = b"workstation-sync-install-v1\0"
+INSTALL_STAMP_NAME = ".workstation-install.sha256"
+VALIDATION_FINGERPRINT_VERSION = b"workstation-sync-validation-v2\0"
+VALIDATION_STAMP_NAME = "workstation-validation.sha256"
+MANAGED_CONFIG_HEADER = (
+    "# Managed by scripts/sync_workstation.py. Repository defaults come from the tracked project TOML.\n"
+    "# Workstation-only Gemini overrides belong in [local_gemini] below and are preserved by sync.\n"
+)
+LOCAL_GEMINI_OVERRIDE_KEYS = ("login_name", "gem_url", "gem_edit_url")
+ALLOWED_PROJECT_KEYS = {
+    "project": {"project_name"},
+    "placeholders": {
+        "sourcepath", "pdf_subchapter_path", "target_filename", "target_file",
+    },
+    "google": {"oauth_login"},
+    "gemini": {"login_name", "gem_url", "gem_edit_url", "browser_mode"},
+    "llm": {
+        "backend", "gemini_api_model", "gemini_api_location", "gemini_api_thinking_level",
+        "gemini_api_timeout_seconds", "gemini_api_upload_timeout_seconds",
+        "gemini_api_max_attempts", "gemini_api_retry_backoff_seconds",
+    },
+    "google_drive": {"drive_api_timeout_seconds", "max_drive_folders"},
+    "domain": {"domain_id", "domain_sample_count", "domain_min_confidence"},
+    "source_tree": {"source_id_prefix"},
+    "automation": {
+        "selection_mode", "coordination_backend", "coordinator_url", "coordinator_token_env",
+        "coordinator_timeout_seconds", "lease_seconds", "heartbeat_seconds",
+        "max_job_attempts", "public_deploy", "public_deploy_repository",
+        "public_deploy_base_url", "public_deploy_base_branch", "public_deploy_branch_prefix",
+        "public_deploy_auto_merge", "stall_check_seconds", "stall_after_seconds",
+        "stall_max_consecutive_checks", "stall_terminate_grace_seconds",
+    },
+    "repository": {"repo_root"},
+    "paths": {
+        "state_root", "workstation_settings", "drive_oauth_client_file",
+        "drive_token_file", "gemini_api_token_file", "chrome_profile_dir", "state_dir",
+    },
+    "run": {
+        "package_id", "chapter", "subchapter", "chapter_dir", "section_dir",
+        "learning_boundary", "source_id", "edition", "heading", "page_range",
+        "reviewer", "rights_note", "drive_file_id", "existing_source_manifest",
+    },
+    "limits": {
+        "max_repair_attempts", "ui_timeout_seconds", "login_timeout_seconds",
+        "response_timeout_seconds", "max_gemini_session_restarts", "log_level",
+    },
+    "git": {
+        "git_publish", "git_remote", "git_base_branch", "git_branch_prefix",
+        "git_create_draft_pr", "git_run_full_tests", "git_auto_merge",
+    },
+    "models": {"model_preference_patterns", "allow_unknown_model_fallback"},
+}
+
+
+class WorkstationSyncError(RuntimeError):
+    """A safe synchronization precondition or operation failed."""
+
+
+@dataclass(frozen=True)
+class SyncSettings:
+    settings_path: Path
+    repo_root: Path
+    remote: str
+    branch: str
+    project_name: str
+    env_prefix: str
+    state_root: Path
+    project_config_file: Path
+    login_name: str
+    oauth_client_file: Path
+    oauth_token_file: Path
+    generated_config_file: Path
+    run_tests: bool
+    run_doctor: bool
+
+
+CommandRunner = Callable[[list[str], Path], str]
+
+
+def _state_root(project_name: str) -> Path:
+    return state_root_for(project_name)
+
+
+def _default_settings_path(project_name: str) -> Path:
+    return _state_root(project_name) / "workstation-sync.toml"
+
+
+def _toml_string(value: str) -> str:
+    return '"' + value.replace("\\", "\\\\").replace('"', '\\"') + '"'
+
+
+def _write_initial_settings(
+    path: Path,
+    *,
+    login_name: str,
+    branch: str,
+    project_name: str,
+    repo_root: Path | None = None,
+    worker_id: str | None = None,
+) -> None:
+    state = _state_root(project_name)
+    bound_root = (repo_root or ROOT).resolve()
+    bound_worker = (worker_id or socket.gethostname()).strip()
+    content = "\n".join(
+        (
+            "# Machine-local, non-secret workstation synchronization settings.",
+            "[project]",
+            f"project_name = {_toml_string(project_name)}",
+            "",
+            "[repository]",
+            'remote = "origin"',
+            f"branch = {_toml_string(branch)}",
+            f"expected_repo_root = {_toml_string(str(bound_root))}",
+            f"expected_worker_id = {_toml_string(bound_worker)}",
+            "",
+            "[drive]",
+            f"login_name = {_toml_string(login_name)}",
+            f"oauth_client_file = {_toml_string(str(state / 'credentials' / 'drive-oauth-client.json'))}",
+            f"oauth_token_file = {_toml_string(str(state / 'credentials' / 'drive-oauth-token.json'))}",
+            "",
+            "[output]",
+            'generated_config_file = "project.local.toml"',
+            "",
+            "[checks]",
+            "run_tests = true",
+            "run_doctor = true",
+            "",
+        )
+    )
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = path.with_name(path.name + ".part")
+    temporary.write_text(content, encoding="utf-8")
+    os.replace(temporary, path)
+
+
+
+
+def _normalize_worker_identity(value: str) -> str:
+    return re.sub(r"[^a-z0-9]+", "", value.strip().casefold())
+
+
+def _validate_repository_binding(
+    repository: Mapping[str, Any],
+    *,
+    repo_root: Path,
+    worker_id: str | None = None,
+) -> None:
+    expected_root = str(repository.get("expected_repo_root", "")).strip()
+    expected_worker = str(repository.get("expected_worker_id", "")).strip()
+    if not expected_root or not expected_worker:
+        raise WorkstationSyncError(
+            "Workstation settings are not bound to one repository and PC. "
+            "Run sync-workstation with --init-settings-only from the intended local repository once."
+        )
+    bound_root = Path(expected_root).expanduser().resolve()
+    if os.path.normcase(str(bound_root)) != os.path.normcase(str(repo_root.resolve())):
+        raise WorkstationSyncError(
+            f"Workstation repository binding expects {bound_root}, not {repo_root.resolve()}"
+        )
+    actual_worker = worker_id or socket.gethostname()
+    if _normalize_worker_identity(actual_worker) != _normalize_worker_identity(expected_worker):
+        raise WorkstationSyncError(
+            f"Workstation repository binding expects PC {expected_worker!r}, not {actual_worker!r}"
+        )
+
+
+def _bind_repository_settings(path: Path, *, repo_root: Path, worker_id: str) -> None:
+    try:
+        text = path.read_text(encoding="utf-8")
+        payload = tomllib.loads(text)
+    except (OSError, tomllib.TOMLDecodeError) as exc:
+        raise WorkstationSyncError(f"Could not read workstation settings {path}: {exc}") from exc
+    repository = _read_table(payload, "repository")
+    existing_root = str(repository.get("expected_repo_root", "")).strip()
+    existing_worker = str(repository.get("expected_worker_id", "")).strip()
+    if existing_root or existing_worker:
+        _validate_repository_binding(repository, repo_root=repo_root, worker_id=worker_id)
+        return
+    match = re.search(r"(?m)^\[repository\][ \t]*$", text)
+    if not match:
+        raise WorkstationSyncError("Workstation settings are missing the [repository] table")
+    addition = (
+        f"\nexpected_repo_root = {_toml_string(str(repo_root.resolve()))}"
+        f"\nexpected_worker_id = {_toml_string(worker_id.strip())}"
+    )
+    updated = text[:match.end()] + addition + text[match.end():]
+    temporary = path.with_name(path.name + ".part")
+    temporary.write_text(updated, encoding="utf-8", newline="\n")
+    os.replace(temporary, path)
+
+def _read_table(payload: Mapping[str, Any], name: str) -> Mapping[str, Any]:
+    value = payload.get(name, {})
+    if not isinstance(value, Mapping):
+        raise WorkstationSyncError(f"[{name}] must be a TOML table in the workstation settings")
+    return value
+
+
+def _expand_path(value: str) -> Path:
+    return Path(os.path.expandvars(value)).expanduser().resolve()
+
+
+def load_settings(
+    path: Path,
+    *,
+    repo_root: Path = ROOT,
+    project_name: str,
+) -> SyncSettings:
+    try:
+        with path.open("rb") as handle:
+            payload = tomllib.load(handle)
+    except (OSError, tomllib.TOMLDecodeError) as exc:
+        raise WorkstationSyncError(f"Could not read workstation settings {path}: {exc}") from exc
+    settings_project = _read_table(payload, "project")
+    recorded_name = str(settings_project.get("project_name", project_name)).strip()
+    if recorded_name != project_name:
+        raise WorkstationSyncError(
+            f"Workstation settings belong to {recorded_name!r}, not {project_name!r}"
+        )
+    repository = _read_table(payload, "repository")
+    _validate_repository_binding(repository, repo_root=repo_root)
+    drive = _read_table(payload, "drive")
+    output = _read_table(payload, "output")
+    checks = _read_table(payload, "checks")
+    remote = str(repository.get("remote", "origin")).strip()
+    branch = str(repository.get("branch", "main")).strip()
+    if not REMOTE.fullmatch(remote):
+        raise WorkstationSyncError(f"Unsafe Git remote name: {remote!r}")
+    if not BRANCH.fullmatch(branch) or ".." in branch or branch.endswith("/"):
+        raise WorkstationSyncError(f"Unsafe Git branch name: {branch!r}")
+    login_name = str(drive.get("login_name", "")).strip()
+    if not login_name:
+        raise WorkstationSyncError("Drive login_name is required")
+    identity = ProjectIdentity(
+        name=validate_project_name(project_name),
+        env_prefix=identity_from_payload({"project": {"project_name": project_name}}).env_prefix,
+        state_root=_state_root(project_name),
+    )
+    state = identity.state_root
+    oauth_client = _expand_path(
+        str(drive.get("oauth_client_file", state / "credentials" / "drive-oauth-client.json"))
+    )
+    oauth_token = _expand_path(
+        str(drive.get("oauth_token_file", state / "credentials" / "drive-oauth-token.json"))
+    )
+    for credential_path in (oauth_client, oauth_token):
+        try:
+            credential_path.relative_to(repo_root.resolve())
+        except ValueError:
+            pass
+        else:
+            raise WorkstationSyncError("OAuth client and token paths must remain outside the repository")
+    output_name = str(output.get("generated_config_file", "project.local.toml")).strip()
+    if Path(output_name).name != output_name or not re.fullmatch(
+        r"(?:project|generator.*)\.local.*\.toml", output_name
+    ):
+        raise WorkstationSyncError(
+            "generated_config_file must be an ignored project.local*.toml basename"
+        )
+    generated = (repo_root / output_name).resolve()
+    if generated.parent != repo_root.resolve():
+        raise WorkstationSyncError("The generated configuration must remain in the repository root")
+    project_config = (repo_root / PROJECT_CONFIG_RELATIVE_PATH).resolve()
+    return SyncSettings(
+        settings_path=path.resolve(),
+        repo_root=repo_root.resolve(),
+        remote=remote,
+        branch=branch,
+        project_name=identity.name,
+        env_prefix=identity.env_prefix,
+        state_root=identity.state_root.resolve(),
+        project_config_file=project_config,
+        login_name=login_name,
+        oauth_client_file=oauth_client,
+        oauth_token_file=oauth_token,
+        generated_config_file=generated,
+        run_tests=bool(checks.get("run_tests", True)),
+        run_doctor=bool(checks.get("run_doctor", True)),
+    )
+
+
+def _command(arguments: list[str], cwd: Path) -> str:
+    try:
+        result = subprocess.run(
+            arguments,
+            cwd=cwd,
+            check=False,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+        )
+    except OSError as exc:
+        raise WorkstationSyncError(f"Could not execute {arguments[0]}: {exc}") from exc
+    output = (result.stdout + "\n" + result.stderr).strip()
+    if result.returncode:
+        raise WorkstationSyncError(f"Command failed ({' '.join(arguments)}):\n{output}")
+    return output
+
+
+def sync_repository(settings: SyncSettings, *, runner: CommandRunner = _command) -> str:
+    repo = settings.repo_root
+    if not (repo / ".git").exists():
+        raise WorkstationSyncError(f"Not a Git checkout: {repo}")
+    if runner(["git", "status", "--porcelain", "--untracked-files=all"], repo):
+        raise WorkstationSyncError(
+            "The repository has local changes. Commit, stash, or remove them before synchronization."
+        )
+    remote = settings.remote
+    branch = settings.branch
+    remote_ref = f"refs/remotes/{remote}/{branch}"
+    runner([
+        "git", "fetch", remote, "--prune",
+        f"+refs/heads/{branch}:{remote_ref}",
+    ], repo)
+    runner(["git", "rev-parse", "--verify", remote_ref], repo)
+    current = runner(["git", "branch", "--show-current"], repo).strip()
+    if current != branch:
+        try:
+            runner(["git", "rev-parse", "--verify", f"refs/heads/{branch}"], repo)
+        except WorkstationSyncError:
+            runner(["git", "switch", "--track", "-c", branch, f"{remote}/{branch}"], repo)
+        else:
+            runner(["git", "switch", branch], repo)
+    counts = runner(
+        ["git", "rev-list", "--left-right", "--count", f"HEAD...{remote}/{branch}"], repo
+    ).split()
+    if len(counts) != 2 or not all(item.isdigit() for item in counts):
+        raise WorkstationSyncError("Git returned an unexpected ahead/behind count")
+    ahead, behind = (int(item) for item in counts)
+    if ahead:
+        raise WorkstationSyncError(
+            f"Local {branch} has {ahead} commit(s) not on {remote}/{branch}; refusing to overwrite or reset them."
+        )
+    if behind:
+        runner(["git", "merge", "--ff-only", f"{remote}/{branch}"], repo)
+    local_commit = runner(["git", "rev-parse", "HEAD"], repo).strip()
+    remote_commit = runner(["git", "rev-parse", f"{remote}/{branch}"], repo).strip()
+    if not local_commit or local_commit != remote_commit:
+        raise WorkstationSyncError("Local and remote commit IDs still differ after synchronization")
+    return local_commit
+
+
+def _venv_python(repo_root: Path) -> Path:
+    if os.name == "nt":
+        return repo_root / ".venv" / "Scripts" / "python.exe"
+    return repo_root / ".venv" / "bin" / "python"
+
+
+def _installation_fingerprint(repo_root: Path) -> str:
+    digest = hashlib.sha256()
+    digest.update(INSTALL_FINGERPRINT_VERSION)
+    for relative in INSTALL_FINGERPRINT_FILES:
+        path = repo_root / relative
+        if not path.is_file():
+            raise WorkstationSyncError(f"Dependency manifest is missing: {relative.as_posix()}")
+        try:
+            content = path.read_bytes()
+        except OSError as exc:
+            raise WorkstationSyncError(f"Could not read dependency manifest {path}: {exc}") from exc
+        digest.update(relative.as_posix().encode("utf-8"))
+        digest.update(b"\0")
+        digest.update(content)
+        digest.update(b"\0")
+    return digest.hexdigest()
+
+
+def _validation_fingerprint(settings: SyncSettings) -> str:
+    digest = hashlib.sha256()
+    digest.update(VALIDATION_FINGERPRINT_VERSION)
+    digest.update(os.path.normcase(str(settings.repo_root)).encode("utf-8"))
+    digest.update(b"\0")
+    commit = _command(["git", "rev-parse", "HEAD"], settings.repo_root).strip()
+    if not re.fullmatch(r"[0-9a-fA-F]{40,64}", commit):
+        raise WorkstationSyncError("Git returned an unexpected commit ID")
+    digest.update(commit.lower().encode("ascii"))
+    digest.update(b"\0")
+    digest.update(_installation_fingerprint(settings.repo_root).encode("ascii"))
+    digest.update(b"\0")
+    digest.update(_read_project_config(settings))
+    digest.update(b"\0")
+    if settings.generated_config_file.is_file():
+        try:
+            digest.update(settings.generated_config_file.read_bytes())
+        except OSError as exc:
+            raise WorkstationSyncError(
+                f"Could not read generated local configuration {settings.generated_config_file}: {exc}"
+            ) from exc
+    return digest.hexdigest()
+
+
+def _validation_stamp_path(settings: SyncSettings) -> Path:
+    return settings.state_root / VALIDATION_STAMP_NAME
+
+
+def has_current_validation(settings: SyncSettings) -> bool:
+    stamp = _validation_stamp_path(settings)
+    try:
+        recorded = stamp.read_text(encoding="utf-8").strip()
+    except FileNotFoundError:
+        return False
+    except OSError as exc:
+        raise WorkstationSyncError(f"Could not read workstation validation stamp {stamp}: {exc}") from exc
+    return recorded == _validation_fingerprint(settings)
+
+
+def record_current_validation(settings: SyncSettings) -> None:
+    stamp = _validation_stamp_path(settings)
+    temporary = stamp.with_name(stamp.name + ".part")
+    try:
+        stamp.parent.mkdir(parents=True, exist_ok=True)
+        temporary.write_text(
+            _validation_fingerprint(settings) + "\n",
+            encoding="utf-8",
+            newline="\n",
+        )
+        os.replace(temporary, stamp)
+    except OSError as exc:
+        raise WorkstationSyncError(f"Could not write workstation validation stamp {stamp}: {exc}") from exc
+    finally:
+        try:
+            temporary.unlink()
+        except FileNotFoundError:
+            pass
+
+
+def _ensure_pip(python: Path, repo_root: Path) -> None:
+    try:
+        _command([str(python), "-m", "pip", "--version"], repo_root)
+    except WorkstationSyncError:
+        print("pip is unavailable; bootstrapping pip with ensurepip...")
+        try:
+            _command([str(python), "-m", "ensurepip", "--upgrade"], repo_root)
+        except WorkstationSyncError as exc:
+            raise WorkstationSyncError(
+                "pip is unavailable and automatic bootstrapping failed; "
+                "install pip in the Python 3.12 environment and retry."
+            ) from exc
+
+
+def prepare_environment(settings: SyncSettings) -> Path:
+    python = _venv_python(settings.repo_root)
+    if not python.is_file():
+        if sys.version_info[:2] != (3, 12):
+            raise WorkstationSyncError("Python 3.12 is required to create .venv")
+        print("Creating the Python 3.12 virtual environment...")
+        _command([sys.executable, "-m", "venv", str(settings.repo_root / ".venv")], settings.repo_root)
+    version = _command(
+        [str(python), "-c", "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')"],
+        settings.repo_root,
+    ).strip()
+    if version != "3.12":
+        raise WorkstationSyncError(f"Existing .venv uses Python {version}; Python 3.12 is required")
+
+    fingerprint = _installation_fingerprint(settings.repo_root)
+    stamp = settings.repo_root / ".venv" / INSTALL_STAMP_NAME
+    try:
+        installed_fingerprint = stamp.read_text(encoding="utf-8").strip()
+    except FileNotFoundError:
+        installed_fingerprint = ""
+    except OSError as exc:
+        raise WorkstationSyncError(f"Could not read installation fingerprint {stamp}: {exc}") from exc
+
+    if installed_fingerprint == fingerprint:
+        try:
+            _command(
+                [
+                    str(python),
+                    "-c",
+                    "import app_generator, google.auth, google.genai, google_auth_oauthlib, jsonschema, requests, selenium",
+                ],
+                settings.repo_root,
+            )
+        except WorkstationSyncError:
+            print("Cached package verification failed; reinstalling the synchronized package...")
+        else:
+            print("Synchronized package installation is current; skipping pip install.")
+            return python
+
+    print("Installing the synchronized package into .venv...")
+    _ensure_pip(python, settings.repo_root)
+    _command([str(python), "-m", "pip", "install", "-e", "."], settings.repo_root)
+    temporary = stamp.with_name(stamp.name + ".part")
+    try:
+        temporary.write_text(fingerprint + "\n", encoding="utf-8", newline="\n")
+        os.replace(temporary, stamp)
+    except OSError as exc:
+        raise WorkstationSyncError(f"Could not write installation fingerprint {stamp}: {exc}") from exc
+    finally:
+        try:
+            temporary.unlink()
+        except FileNotFoundError:
+            pass
+    return python
+
+
+def _validate_project_tables(payload: Mapping[str, Any]) -> None:
+    required = {"project", "placeholders", "repository", "paths"}
+    missing_sections = required - set(payload)
+    if missing_sections:
+        raise WorkstationSyncError(
+            "Project configuration is missing required section(s): "
+            + ", ".join(sorted(missing_sections))
+        )
+    unknown_sections = set(payload) - set(ALLOWED_PROJECT_KEYS)
+    if unknown_sections:
+        raise WorkstationSyncError(
+            "Project configuration contains unsupported section(s): "
+            + ", ".join(sorted(unknown_sections))
+        )
+    for section, raw in payload.items():
+        if not isinstance(raw, Mapping):
+            raise WorkstationSyncError(f"Project configuration [{section}] must be a TOML table")
+        unknown = set(raw) - ALLOWED_PROJECT_KEYS[section]
+        if unknown:
+            names = ", ".join(f"{section}.{name}" for name in sorted(unknown))
+            raise WorkstationSyncError(f"Project configuration contains disallowed key(s): {names}")
+    try:
+        validate_project_name(_read_table(payload, "project").get("project_name", ""))
+    except ProjectIdentityError as exc:
+        raise WorkstationSyncError(str(exc)) from exc
+
+
+def render_project_config(raw: bytes, *, repo_root: Path, state_root: Path) -> str:
+    if len(raw) > MAX_PROJECT_CONFIG_BYTES:
+        raise WorkstationSyncError("Project configuration exceeds the 256 KiB size limit")
+    try:
+        text = raw.decode("utf-8")
+        text = text.replace("\r\n", "\n").replace("\r", "\n")
+    except UnicodeDecodeError as exc:
+        raise WorkstationSyncError("Project configuration is not valid UTF-8") from exc
+    try:
+        unrendered = tomllib.loads(text)
+        _validate_project_tables(unrendered)
+        parsed_identity = identity_from_payload(unrendered)
+    except (tomllib.TOMLDecodeError, ProjectIdentityError) as exc:
+        raise WorkstationSyncError(f"Repository project configuration is invalid: {exc}") from exc
+    identity = ProjectIdentity(
+        name=parsed_identity.name,
+        env_prefix=parsed_identity.env_prefix,
+        state_root=state_root,
+    )
+    replacements = identity.tokens(repo_root=repo_root)
+    for token, value in replacements.items():
+        text = text.replace(token, value)
+    remaining = sorted(set(re.findall(r"\$\{[A-Z0-9_]+\}", text)))
+    if remaining:
+        raise WorkstationSyncError("Unknown project configuration token(s): " + ", ".join(remaining))
+    try:
+        payload = tomllib.loads(text)
+    except tomllib.TOMLDecodeError as exc:
+        raise WorkstationSyncError(f"Repository project configuration is invalid TOML: {exc}") from exc
+    _validate_project_tables(payload)
+    if "repository" not in payload:
+        raise WorkstationSyncError("Project configuration must contain a [repository] table")
+    repository = _read_table(payload, "repository")
+    if "repo_root" not in repository:
+        raise WorkstationSyncError("Project configuration must contain repository.repo_root")
+    configured_root = Path(str(repository["repo_root"])).resolve()
+    if configured_root != repo_root.resolve():
+        raise WorkstationSyncError("Project configuration must set repository.repo_root to ${REPO_ROOT}")
+    return MANAGED_CONFIG_HEADER + text.rstrip() + "\n"
+
+
+def _read_project_config(settings: SyncSettings) -> bytes:
+    path = settings.project_config_file
+    expected = (settings.repo_root / PROJECT_CONFIG_RELATIVE_PATH).resolve()
+    if path.resolve() != expected:
+        raise WorkstationSyncError(
+            f"Project configuration must be the tracked repository file {PROJECT_CONFIG_RELATIVE_PATH.as_posix()}"
+        )
+    if path.is_symlink() or not path.is_file():
+        raise WorkstationSyncError(
+            f"Tracked project configuration is missing or not a regular file: {path}"
+        )
+    try:
+        size = path.stat().st_size
+        if size > MAX_PROJECT_CONFIG_BYTES:
+            raise WorkstationSyncError("Project configuration exceeds the 256 KiB size limit")
+        raw = path.read_bytes()
+    except WorkstationSyncError:
+        raise
+    except OSError as exc:
+        raise WorkstationSyncError(f"Could not read tracked project configuration {path}: {exc}") from exc
+    if len(raw) != size:
+        raise WorkstationSyncError("Project configuration changed while it was being read")
+    return raw
+
+
+def _read_local_gemini_overrides(path: Path) -> dict[str, str]:
+    """Read only the explicitly local Gemini override table from an existing generated TOML."""
+
+    if not path.is_file():
+        return {}
+    try:
+        with path.open("rb") as handle:
+            payload = tomllib.load(handle)
+    except (OSError, tomllib.TOMLDecodeError) as exc:
+        raise WorkstationSyncError(
+            f"Could not read existing local project configuration {path}: {exc}"
+        ) from exc
+    raw = payload.get("local_gemini", {})
+    if raw in ({}, None):
+        return {}
+    if not isinstance(raw, Mapping):
+        raise WorkstationSyncError("[local_gemini] in the local project TOML must be a table")
+    unknown = set(raw) - set(LOCAL_GEMINI_OVERRIDE_KEYS)
+    if unknown:
+        raise WorkstationSyncError(
+            "Unsupported [local_gemini] key(s): " + ", ".join(sorted(unknown))
+        )
+    overrides: dict[str, str] = {}
+    for key in LOCAL_GEMINI_OVERRIDE_KEYS:
+        if key not in raw:
+            continue
+        value = raw[key]
+        if not isinstance(value, str):
+            raise WorkstationSyncError(f"local_gemini.{key} must be a string")
+        overrides[key] = value
+    return overrides
+
+
+def _append_workstation_binding(rendered: str, settings: SyncSettings) -> str:
+    block = "\n".join(
+        (
+            "",
+            "[workstation]",
+            "# Machine-local guard: direct generator runs must stay on this PC and checkout.",
+            f"expected_repo_root = {_toml_string(str(settings.repo_root.resolve()))}",
+            f"expected_worker_id = {_toml_string(socket.gethostname())}",
+            "",
+        )
+    )
+    return rendered.rstrip() + "\n" + block
+
+
+def _append_local_gemini_overrides(rendered: str, overrides: Mapping[str, str]) -> str:
+    values = {key: str(overrides.get(key, "")) for key in LOCAL_GEMINI_OVERRIDE_KEYS}
+    block = "\n".join(
+        (
+            "",
+            "[local_gemini]",
+            "# Optional workstation-only overrides. Blank values inherit tracked [gemini] defaults.",
+            "# These three values are preserved when sync-workstation regenerates this local file.",
+            f"login_name = {_toml_string(values['login_name'])}",
+            f"gem_url = {_toml_string(values['gem_url'])}",
+            f"gem_edit_url = {_toml_string(values['gem_edit_url'])}",
+            "",
+        )
+    )
+    return rendered.rstrip() + "\n" + block
+
+
+def install_project_config(settings: SyncSettings) -> str:
+    raw = _read_project_config(settings)
+    local_gemini = _read_local_gemini_overrides(settings.generated_config_file)
+    rendered = render_project_config(
+        raw,
+        repo_root=settings.repo_root,
+        state_root=settings.state_root,
+    )
+    rendered = _append_workstation_binding(rendered, settings)
+    rendered = _append_local_gemini_overrides(rendered, local_gemini)
+    temporary = settings.generated_config_file.with_name(settings.generated_config_file.name + ".part")
+    from app_generator.config import load_config
+    try:
+        temporary.write_text(rendered, encoding="utf-8", newline="\n")
+        config = load_config(temporary)
+        if config.oauth_login.casefold() != settings.login_name.casefold():
+            raise WorkstationSyncError(
+                f"Project Google OAuth configuration expects {config.oauth_login}, but workstation "
+                f"Drive settings expect {settings.login_name}"
+            )
+        if config.drive_oauth_client_file != settings.oauth_client_file:
+            raise WorkstationSyncError("Rendered OAuth client path does not match the project-derived path")
+        if config.drive_token_file != settings.oauth_token_file:
+            raise WorkstationSyncError("Rendered OAuth token path does not match the project-derived path")
+        if config.chrome_profile_dir != settings.state_root / "chrome-profile":
+            raise WorkstationSyncError("Rendered Chrome profile path does not match the project-derived path")
+        if config.state_dir != settings.state_root / "runs":
+            raise WorkstationSyncError("Rendered run-state path does not match the project-derived path")
+        os.replace(temporary, settings.generated_config_file)
+    except WorkstationSyncError:
+        raise
+    except Exception as exc:
+        raise WorkstationSyncError(f"Repository generator configuration is not usable: {exc}") from exc
+    finally:
+        try:
+            temporary.unlink()
+        except FileNotFoundError:
+            pass
+    digest = hashlib.sha256(raw).hexdigest()
+    return digest
+
+
+def run_checks(
+    settings: SyncSettings,
+    python: Path,
+    *,
+    run_generator: bool,
+    reuse_validation: bool = False,
+) -> None:
+    run_tests = not reuse_validation and (settings.run_tests or run_generator)
+    run_doctor = not reuse_validation and (settings.run_doctor or run_generator)
+    if reuse_validation:
+        print(
+            "Reusing successful checks for this synchronized revision; "
+            "the live run will verify the selected Drive source and provenance."
+        )
+    elif run_generator and (not settings.run_tests or not settings.run_doctor):
+        print("Live generation requires repository tests and doctor; forcing both checks.")
+    if run_tests:
+        print("Running repository validation tests...")
+        commands = (
+            [str(python), "scripts/lint.py"],
+            [str(python), "scripts/validate_content.py"],
+            [str(python), "-m", "unittest", "discover", "-s", "tests", "-v"],
+        )
+        for command in commands:
+            _command(command, settings.repo_root)
+        node = shutil.which("node")
+        if not node:
+            raise WorkstationSyncError("Node.js is required for the JavaScript syntax check")
+        _command([node, "--check", "app/app.js"], settings.repo_root)
+        _command([node, "--check", "app/visual-renderers.js"], settings.repo_root)
+        active_domain = resolve_domain(settings.repo_root)
+        _command([node, "--check", str(active_domain.path("visuals", "rendererScript"))], settings.repo_root)
+    if run_doctor:
+        print("Running generator doctor (Drive/provenance/domain checks; bounded domain discovery may use Gemini API)...")
+        _command(
+            [str(python), "-m", "app_generator", "doctor", "--config", str(settings.generated_config_file)],
+            settings.repo_root,
+        )
+    if run_tests and run_doctor:
+        record_current_validation(settings)
+    if run_generator:
+        print("Starting the explicitly requested live Gemini generation run...")
+        _command(
+            [str(python), "-m", "app_generator", "run", "--config", str(settings.generated_config_file)],
+            settings.repo_root,
+        )
+
+
+def _parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--settings", type=Path)
+    parser.add_argument("--projects-folder", help=argparse.SUPPRESS)
+    parser.add_argument("--login-name")
+    parser.add_argument("--branch")
+    parser.add_argument("--post-sync", action="store_true", help=argparse.SUPPRESS)
+    parser.add_argument(
+        "--init-settings-only",
+        action="store_true",
+        help="Create or verify project-derived workstation settings without fetching Git or running checks.",
+    )
+    mode = parser.add_mutually_exclusive_group()
+    mode.add_argument(
+        "--quick",
+        action="store_true",
+        help="Synchronize and render local configuration without repository tests or Drive doctor.",
+    )
+    mode.add_argument(
+        "--run-generator",
+        action="store_true",
+        help=(
+            "Synchronize and explicitly start the live Gemini generation run, reusing a successful "
+            "full validation of the same checkout when available."
+        ),
+    )
+    return parser
+
+
+def _ensure_settings(
+    args: argparse.Namespace,
+    *,
+    identity: ProjectIdentity,
+    default_login_name: str,
+) -> Path:
+    path = (args.settings or identity.settings_path).expanduser().resolve()
+    if path.is_file():
+        return path
+    login = (args.login_name or default_login_name).strip()
+    branch = (args.branch or input("Git branch to synchronize [main]: ").strip() or "main").strip()
+    if not login:
+        raise WorkstationSyncError("Google account email is required")
+    _write_initial_settings(
+        path,
+        login_name=login,
+        branch=branch,
+        project_name=identity.name,
+        repo_root=ROOT,
+        worker_id=socket.gethostname(),
+    )
+    print(f"Created machine-local settings: {path}")
+    return path
+
+
+def main(argv: list[str] | None = None) -> int:
+    args = _parser().parse_args(argv)
+    try:
+        project_path = ROOT / PROJECT_CONFIG_RELATIVE_PATH
+        try:
+            identity = load_project_identity(project_path)
+            with project_path.open("rb") as handle:
+                project_payload = tomllib.load(handle)
+            default_login = str(_read_table(project_payload, "google").get("oauth_login", "")).strip()
+        except (ProjectIdentityError, OSError, tomllib.TOMLDecodeError) as exc:
+            raise WorkstationSyncError(str(exc)) from exc
+        settings_path = _ensure_settings(
+            args,
+            identity=identity,
+            default_login_name=default_login,
+        )
+        if args.init_settings_only:
+            _bind_repository_settings(
+                settings_path,
+                repo_root=ROOT,
+                worker_id=socket.gethostname(),
+            )
+            print(f"Workstation settings ready and repository-bound: {settings_path}")
+            return 0
+        settings = load_settings(settings_path, project_name=identity.name)
+        if not args.post_sync:
+            commit = sync_repository(settings)
+            print(f"Repository synchronized at {commit[:12]} ({settings.remote}/{settings.branch}).")
+            python = prepare_environment(settings)
+            command = [
+                str(python), str(settings.repo_root / "scripts" / "sync_workstation.py"),
+                "--settings", str(settings.settings_path), "--post-sync",
+            ]
+            if args.quick:
+                command.append("--quick")
+            if args.run_generator:
+                command.append("--run-generator")
+            return subprocess.run(command, cwd=settings.repo_root, check=False).returncode
+        digest = install_project_config(settings)
+        project_name = settings.project_config_file.relative_to(settings.repo_root).as_posix()
+        print(
+            f"Installed {project_name} as {settings.generated_config_file.name} "
+            f"(sha256={digest})."
+        )
+        if args.quick:
+            print("Quick synchronization complete; repository tests and Drive doctor were skipped.")
+        else:
+            reuse_validation = args.run_generator and has_current_validation(settings)
+            run_checks(
+                settings,
+                Path(sys.executable),
+                run_generator=args.run_generator,
+                reuse_validation=reuse_validation,
+            )
+        print("Workstation synchronization and configured checks completed successfully.")
+        return 0
+    except WorkstationSyncError as exc:
+        print(f"WORKSTATION_SYNC_ERROR: {exc}", file=sys.stderr)
+        return 2
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
