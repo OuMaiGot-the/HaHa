@@ -1,0 +1,402 @@
+"""PowerShell-friendly command-line interface."""
+
+from __future__ import annotations
+
+import argparse
+import shutil
+import sys
+import tempfile
+from pathlib import Path
+
+from app_generator.config import GeneratorConfig, load_config
+from app_generator.domains import ensure_drive_domain
+from app_generator.deployments import (
+    DEFAULT_DEPLOYMENT_REGISTRY,
+    deployment_rows,
+    render_deployments,
+)
+from app_generator.coordinator.client import CoordinatorClient
+from app_generator.coordinator.managed import bootstrap_managed_coordinator, managed_status
+from app_generator.coordinator.verified import ensure_coordinator_ready
+from app_generator.errors import GeneratorError, NoAvailableJob
+from app_generator.llm.gemini_api import build_gemini_sdk_client
+from app_generator.prompts import gem_description, gem_instructions
+from app_generator.runtime.orchestrator import run_generation
+from app_generator.runtime.auto import inspect_auto_queue, retry_failed_auto_job, run_continuous_auto
+from app_generator.sources.google_drive import (
+    DriveRestClient,
+    discover_drive_sources,
+    discover_drive_sources_with_corpus_keys,
+    discover_topic_corpus,
+    resolve_drive_source,
+)
+from app_generator.sources.google_drive_auth import authorize_google_drive
+from app_generator.sources.local_sources import inspect_sources
+from app_generator.sources.manifest import build_manifest, load_existing_manifest
+from app_generator.validation.schema_validation import validate_manifest
+
+
+DEFAULT_CONFIG = Path("project.local.toml")
+
+
+def _chapter_number(value: str) -> int:
+    try:
+        chapter = int(value)
+    except ValueError as exc:
+        raise argparse.ArgumentTypeError("chapter must be a positive integer") from exc
+    if chapter < 1:
+        raise argparse.ArgumentTypeError("chapter must be a positive integer")
+    return chapter
+
+
+def _add_config_arguments(command: argparse.ArgumentParser) -> None:
+    command.add_argument(
+        "--config",
+        type=Path,
+        default=DEFAULT_CONFIG,
+        help="configuration file (default: .\\project.local.toml)",
+    )
+    command.add_argument("--repo-root", type=Path)
+    command.add_argument("--gem-url")
+    command.add_argument("--gem-edit-url")
+    command.add_argument(
+        "--login-name",
+        help="Gemini browser Google account (overrides gemini.login_name)",
+    )
+    command.add_argument(
+        "--oauth-login",
+        help="Google Drive/coordinator OAuth account (overrides google.oauth_login)",
+    )
+    command.add_argument("--chrome-profile-dir", type=Path)
+    command.add_argument("--sourcepath")
+    command.add_argument("--pdf-subchapter-path")
+    command.add_argument("--drive-oauth-client-file", type=Path)
+    command.add_argument("--selection-mode", choices=("specific", "auto", "distributed"))
+    command.add_argument("--domain-id", help="auto or an explicitly registered active domain id")
+    command.add_argument(
+        "--chapter",
+        type=_chapter_number,
+        help="in auto mode, claim only subchapters belonging to this chapter",
+    )
+
+
+def _parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(prog="learning-app-content-generator")
+    subparsers = parser.add_subparsers(dest="command", required=True)
+    for name in ("doctor", "run"):
+        command = subparsers.add_parser(name)
+        _add_config_arguments(command)
+        if name == "run":
+            command.add_argument("--resume", metavar="RUN_ID")
+            command.add_argument(
+                "--regenerate",
+                action="store_true",
+                help=(
+                    "explicitly replace existing generated artifacts only after a fully "
+                    "validated candidate succeeds; supported only with --selection-mode specific"
+                ),
+            )
+    complete = subparsers.add_parser("coordinator-complete")
+    _add_config_arguments(complete)
+    complete.add_argument("--job-key", required=True)
+    complete.add_argument("--pr-url", default="")
+    retry_failed = subparsers.add_parser(
+        "coordinator-retry-failed",
+        help="explicitly return one exact terminal auto target to the interrupted queue",
+    )
+    _add_config_arguments(retry_failed)
+    retry_failed.add_argument(
+        "--confirm",
+        action="store_true",
+        help="confirm that the selected terminal failure was reviewed and should receive a new attempt budget",
+    )
+    for name in ("coordinator-bootstrap", "coordinator-ensure", "coordinator-status"):
+        command = subparsers.add_parser(name)
+        _add_config_arguments(command)
+    deployments = subparsers.add_parser(
+        "deployments",
+        help="list generated packages and tracked public deployment URLs",
+    )
+    deployments.add_argument(
+        "--repo-root",
+        type=Path,
+        default=Path("."),
+        help="repository root (default: current directory)",
+    )
+    deployments.add_argument(
+        "--registry",
+        type=Path,
+        default=DEFAULT_DEPLOYMENT_REGISTRY,
+        help="tracked deployment registry relative to the repository root",
+    )
+    subparsers.add_parser("show-gem-config")
+    return parser
+
+
+def _load(args: argparse.Namespace) -> GeneratorConfig:
+    overrides = {
+        "repo_root": getattr(args, "repo_root", None),
+        "gem_url": getattr(args, "gem_url", None),
+        "gem_edit_url": getattr(args, "gem_edit_url", None),
+        "login_name": getattr(args, "login_name", None),
+        "oauth_login": getattr(args, "oauth_login", None),
+        "chrome_profile_dir": getattr(args, "chrome_profile_dir", None),
+        "sourcepath": getattr(args, "sourcepath", None),
+        "pdf_subchapter_path": getattr(args, "pdf_subchapter_path", None),
+        "drive_oauth_client_file": getattr(args, "drive_oauth_client_file", None),
+        "selection_mode": getattr(args, "selection_mode", None),
+        "domain_id": getattr(args, "domain_id", None),
+    }
+    return load_config(args.config, cli_overrides=overrides)
+
+
+def doctor(
+    config: GeneratorConfig,
+    *,
+    auto_target_subchapter_id: str | None = None,
+    auto_target_chapter: int | None = None,
+) -> int:
+    if getattr(config, "llm_backend", "gemini_browser") == "gemini_api":
+        build_gemini_sdk_client(config)
+        print("Gemini API authentication: ready")
+
+    if config.selection_mode == "auto":
+        snapshot = inspect_auto_queue(
+            config,
+            target_subchapter_id=auto_target_subchapter_id,
+            target_chapter=auto_target_chapter,
+        )
+        if auto_target_subchapter_id:
+            print(f"Auto target: {auto_target_subchapter_id} (Drive-leased; no fallback section)")
+        elif auto_target_chapter is not None:
+            print(
+                f"Auto chapter scope: {auto_target_chapter} "
+                "(Drive-leased; workers cannot claim outside this chapter)"
+            )
+        print(
+            "Auto queue: "
+            f"total={snapshot.total}, generated={snapshot.generated}, review_pending={snapshot.review_pending}, "
+            f"completed={snapshot.completed}, interrupted={snapshot.interrupted}, fresh={snapshot.queued}, "
+            f"leased={snapshot.leased}, failed={snapshot.failed}"
+        )
+        if auto_target_subchapter_id and snapshot.target_status:
+            diagnostic = snapshot.target_error_code or "none recorded"
+            print(
+                f"Auto target state: status={snapshot.target_status}, "
+                f"attempts={snapshot.target_attempt_count}, last_error={diagnostic}"
+            )
+        if snapshot.next_subchapter_id:
+            print(f"Next non-claiming candidate preview: {snapshot.next_subchapter_id}")
+        elif snapshot.leased:
+            print("No job is currently claimable; remaining work is leased by another worker.")
+        elif snapshot.failed:
+            print("No job is currently claimable; terminal failures require intervention.")
+        else:
+            print("No job is currently claimable; all discovered sources are globally successful.")
+        print("Auto doctor does not claim a generation job or exercise the Gemini UI.")
+        return 0
+
+    drive_source = None
+    effective_config = config
+    with tempfile.TemporaryDirectory(prefix="content-generator-doctor-") as directory:
+        if config.uses_google_drive:
+            authorization = authorize_google_drive(config)
+            drive_client = DriveRestClient(authorization.session, config.drive_api_timeout_seconds)
+            domain_inventory = discover_drive_sources_with_corpus_keys(
+                drive_client,
+                sourcepath=config.sourcepath,
+                target_filename=config.target_filename,
+                max_folders=config.max_drive_folders,
+            )
+            domain_profile = ensure_drive_domain(config, drive_client, domain_inventory)
+            print(
+                f"Stage 0 domain: {domain_profile.id} "
+                f"(profile {domain_profile.profile_version}; textbook-level Source Root binding verified)"
+            )
+            if config.selection_mode == "distributed":
+                config = ensure_coordinator_ready(config)
+                inventory = discover_drive_sources(
+                    drive_client,
+                    sourcepath=config.sourcepath,
+                    target_filename=config.target_filename,
+                    max_folders=config.max_drive_folders,
+                )
+                eligible = tuple(
+                    source for source in inventory
+                    if not config.for_subchapter(source.subchapter_id).package_path.exists()
+                )
+                if not eligible:
+                    raise NoAvailableJob("No unprocessed Drive source remains in the local main-branch view")
+                drive_source = eligible[0]
+                print(f"Discovered source jobs: {len(inventory)} total, {len(eligible)} absent from this checkout")
+            else:
+                drive_source = resolve_drive_source(
+                    drive_client,
+                    sourcepath=config.sourcepath,
+                    pdf_subchapter_path=config.pdf_subchapter_path,
+                    target_filename=config.target_filename,
+                    max_folders=config.max_drive_folders,
+                )
+            effective_config = config.for_subchapter(drive_source.subchapter_id)
+            drive_corpus = discover_topic_corpus(
+                drive_client,
+                sourcepath=config.sourcepath,
+                pdf_subchapter_path=drive_source.subchapter_id,
+                target_filename=config.target_filename,
+                max_folders=config.max_drive_folders,
+            )
+            local_paths = tuple(
+                drive_client.download_file(item, Path(directory) / item.filename)
+                for item in drive_corpus
+            )
+            sources = inspect_sources(local_paths)
+            print(f"Google Drive account: {authorization.email}")
+            print(f"Source root: {config.sourcepath}")
+            print(f"Target locator: {config.target_locator}")
+            print(f"Examined target: {drive_source.relative_path}")
+            print(f"Drive file ID: {drive_source.file_id}")
+        else:
+            effective_config = config.for_subchapter(config.pdf_subchapter_path.split("/")[-1])
+            sources = inspect_sources(config.source_files)
+        manifest = (
+            load_existing_manifest(effective_config.existing_source_manifest, sources[0], effective_config)
+            if effective_config.existing_source_manifest
+            else build_manifest(
+                effective_config,
+                sources,
+                drive_file_ids=tuple(item.file_id for item in drive_corpus) if drive_source else (),
+            )
+        )
+        manifest_errors = validate_manifest(effective_config.repo_root, manifest)
+        if manifest_errors:
+            print("Manifest validation failed:")
+            for error in manifest_errors:
+                print(f"- {error}")
+            return 1
+        source_summary = ", ".join(
+            f"{source.controlled_filename} sha256={source.sha256}" for source in sources
+        )
+    chrome = shutil.which("chrome") or shutil.which("chrome.exe") or shutil.which("google-chrome")
+    print(f"Repository: {effective_config.repo_root}")
+    print(f"Output: {effective_config.package_path}")
+    print(f"Source: {source_summary}")
+    print(f"Chrome on PATH: {chrome or 'not found (Selenium Manager may still locate installed Chrome)'}")
+    scope = "Drive, coordinator, and deterministic provenance" if config.selection_mode == "distributed" else "Drive and deterministic provenance"
+    print(f"Configuration, {scope} checks passed. Gemini UI was not exercised.")
+    return 0
+
+
+def main(argv: list[str] | None = None) -> int:
+    args = _parser().parse_args(argv)
+    if args.command == "show-gem-config":
+        print("Gem Description\n===============\n" + gem_description())
+        print("\nGem Instructions\n================\n" + gem_instructions())
+        return 0
+    try:
+        if args.command == "deployments":
+            rows = deployment_rows(args.repo_root, args.registry)
+            print(render_deployments(rows))
+            return 0
+        config = _load(args)
+        requested_subchapter = getattr(args, "pdf_subchapter_path", None)
+        requested_chapter = getattr(args, "chapter", None)
+        if args.command == "run" and getattr(args, "regenerate", False) and config.selection_mode != "specific":
+            raise GeneratorError("--regenerate requires --selection-mode specific")
+        if args.command in {"doctor", "run"} and requested_chapter is not None:
+            if config.selection_mode != "auto":
+                raise GeneratorError("--chapter is supported only with --selection-mode auto")
+            if requested_subchapter:
+                raise GeneratorError(
+                    "--chapter cannot be combined with --pdf-subchapter-path in auto mode"
+                )
+        auto_target_subchapter_id = (
+            requested_subchapter if config.selection_mode == "auto" else None
+        )
+        auto_target_chapter = (
+            requested_chapter if config.selection_mode == "auto" else None
+        )
+        if args.command == "coordinator-status":
+            print(f"Managed coordinator: {managed_status(config)}")
+            return 0
+        if args.command == "coordinator-bootstrap":
+            # Bootstrap stores the privileged refreshable Google token in GitHub Actions;
+            # the live-health gate then verifies the deployed runtime before reporting success.
+            bootstrap_managed_coordinator(config)
+            ready = ensure_coordinator_ready(config)
+            print(f"Managed coordinator bootstrap completed: {ready.coordinator_url}")
+            return 0
+        if args.command == "coordinator-ensure":
+            ready = ensure_coordinator_ready(config)
+            print(f"Managed coordinator ready: {ready.coordinator_url}")
+            return 0
+        if args.command == "doctor":
+            return doctor(
+                config,
+                auto_target_subchapter_id=auto_target_subchapter_id,
+                auto_target_chapter=auto_target_chapter,
+            )
+        if args.command == "coordinator-complete":
+            config = ensure_coordinator_ready(config)
+            CoordinatorClient(config).mark_completed(args.job_key, pr_url=args.pr_url)
+            print(f"Coordinator job {args.job_key} marked completed.")
+            return 0
+        if args.command == "coordinator-retry-failed":
+            if not args.pdf_subchapter_path:
+                raise GeneratorError("coordinator-retry-failed requires --pdf-subchapter-path")
+            if not args.confirm:
+                raise GeneratorError(
+                    "Refusing to reset a terminal job without --confirm after reviewing its failure"
+                )
+            section, attempts, error_code = retry_failed_auto_job(
+                config,
+                target_subchapter_id=args.pdf_subchapter_path,
+            )
+            diagnostic = error_code or "none recorded"
+            print(
+                f"Coordinator target {section} returned to interrupted state; "
+                f"previous attempts={attempts}, last error={diagnostic}."
+            )
+            print("Run auto doctor again before starting the recovered target.")
+            return 0
+        def report_context(context):
+            print(f"Run {context.run_id} completed.")
+            for path in context.store.state.installed_paths:
+                print(f"Generated: {path}")
+            if context.store.state.pr_url:
+                print(f"Content pull request: {context.store.state.pr_url}")
+            print("Status: automated validation complete; eligible for configured publication.")
+
+        if config.selection_mode == "auto":
+            if args.resume:
+                raise GeneratorError("--resume is not supported with continuous auto mode")
+            return run_continuous_auto(
+                config,
+                target_subchapter_id=auto_target_subchapter_id,
+                target_chapter=auto_target_chapter,
+                on_completed=report_context,
+            )
+        if config.selection_mode == "distributed":
+            config = ensure_coordinator_ready(config)
+
+        context = run_generation(
+            config,
+            resume_run_id=args.resume,
+            replace_existing=getattr(args, "regenerate", False),
+        )
+        report_context(context)
+        return 0
+    except KeyboardInterrupt:
+        print("AUTO_INTERRUPTED: worker stopped by user; any active auto lease was returned to the coordinator.", file=sys.stderr)
+        return 130
+    except GeneratorError as exc:
+        print(f"{exc.code}: {exc}", file=sys.stderr)
+        if exc.detail:
+            print(exc.detail, file=sys.stderr)
+        return 2
+    except Exception as exc:
+        print(f"UNEXPECTED_ERROR: {exc}", file=sys.stderr)
+        return 3
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
