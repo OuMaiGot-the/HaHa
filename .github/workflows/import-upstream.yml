@@ -1,5 +1,7 @@
 name: One-time upstream history import
 on:
+  push:
+    branches: [main]
   workflow_dispatch:
 permissions:
   contents: write
