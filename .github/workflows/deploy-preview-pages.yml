@@ -1,0 +1,32 @@
+name: Deploy HaHa learning preview
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: haha-pages
+  cancel-in-progress: false
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Build independent learner preview
+        run: python scripts/build_public_release.py content/chapter-9/section-9-1/package.json preview
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+      - name: Upload static site
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: preview
+      - name: Deploy to HaHa GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
