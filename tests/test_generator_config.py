@@ -1,0 +1,423 @@
+import json
+import tempfile
+import unittest
+import warnings
+from pathlib import Path
+from unittest.mock import patch
+
+from app_generator.config import DEFAULTS, load_config
+from app_generator.errors import ConfigurationError, RepositoryCompatibilityError
+
+
+class GeneratorConfigTests(unittest.TestCase):
+    def make_config(self, root: Path, source_files: list[Path]) -> Path:
+        repo = root / "repo"
+        (repo / "content" / "schema").mkdir(parents=True)
+        (repo / "AGENTS.md").write_text("# test\n", encoding="utf-8")
+        config = root / "generator.toml"
+        quoted_sources = ", ".join(json.dumps(str(path)) for path in source_files)
+        config.write_text(
+            "[project]\n"
+            'project_name = "ExampleProject"\n'
+            "[placeholders]\n"
+            'sourcepath = "https://drive.google.com/open?id=test-root"\n'
+            'pdf_subchapter_path = "8.1"\n'
+            'target_filename = "source.pdf"\n'
+            'target_file = "{sourcepath}/**/{pdf_subchapter_path}/{target_filename}"\n'
+            "[source_tree]\n"
+            'source_id_prefix = "example"\n'
+            "[compatibility]\n"
+            'legacy_environment_prefix = ""\n'
+            "[google]\n"
+            'oauth_login = "oauth@example.com"\n'
+            "[gemini]\n"
+            'gem_url = "https://gemini.google.com/gem/test"\n'
+            'gem_edit_url = "https://gemini.google.com/gem/test/edit"\n'
+            'login_name = "file@example.com"\n'
+            "[paths]\n"
+            f"chrome_profile_dir = {json.dumps(str(root / 'state' / 'chrome-profile'))}\n"
+            f"state_dir = {json.dumps(str(root / 'state' / 'runs'))}\n"
+            f"drive_oauth_client_file = {json.dumps(str(root / 'state' / 'credentials' / 'client.json'))}\n"
+            f"drive_token_file = {json.dumps(str(root / 'state' / 'credentials' / 'token.json'))}\n"
+            "[automation]\n"
+            'coordinator_token_env = "EXAMPLE_PROJECT_COORDINATOR_TOKEN"\n'
+            "[repository]\n"
+            f"repo_root = {json.dumps(str(repo))}\n"
+            "[run]\n"
+            'package_id = "chapter-8-section-8-1"\n'
+            'chapter = "Chapter"\n'
+            'subchapter = "8.1 Topic"\n'
+            'chapter_dir = "chapter-8"\n'
+            'section_dir = "section-8-1"\n'
+            'learning_boundary = "Controlled boundary"\n'
+            f"source_files = [{quoted_sources}]\n"
+            'source_id = "source-eight-one"\n'
+            'edition = "Edition"\n'
+            'heading = "Heading"\n'
+            'page_range = "1-3"\n'
+            'reviewer = "Reviewer"\n'
+            'rights_note = "Controlled access"\n',
+            encoding="utf-8",
+        )
+        return config
+
+    def test_precedence_cli_then_environment_then_file_then_defaults(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = root / "source.pdf"
+            source.write_bytes(b"synthetic")
+            path = self.make_config(root, [source])
+            config = load_config(
+                path,
+                cli_overrides={"login_name": "cli@example.com"},
+                environ={"EXAMPLE_PROJECT_GENERATOR_LOGIN_NAME": "env@example.com", "EXAMPLE_PROJECT_GENERATOR_LOG_LEVEL": "debug"},
+            )
+            self.assertEqual("cli@example.com", config.login_name)
+            self.assertEqual("oauth@example.com", config.oauth_login)
+            self.assertEqual("DEBUG", config.log_level)
+            self.assertEqual(4, config.max_repair_attempts)
+            self.assertEqual(2, config.max_gemini_session_restarts)
+            self.assertEqual("auto", config.domain_id)
+            self.assertEqual(3, config.domain_sample_count)
+            self.assertEqual(0.85, config.domain_min_confidence)
+            self.assertEqual("EXAMPLE_PROJECT_GENERATOR_", config.env_prefix)
+
+    def test_auto_mode_rejects_browser_backend(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            path = self.make_config(root, [])
+            with self.assertRaisesRegex(ConfigurationError, "Auto mode requires llm_backend=gemini_api"):
+                load_config(
+                    path,
+                    cli_overrides={
+                        "selection_mode": "auto",
+                        "llm_backend": "gemini_browser",
+                        "git_publish": True,
+                    },
+                    environ={},
+                )
+
+    def test_workstation_binding_rejects_wrong_repository(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = root / "source.pdf"
+            source.write_bytes(b"synthetic")
+            path = self.make_config(root, [source])
+            with path.open("a", encoding="utf-8") as handle:
+                handle.write(
+                    "\n[workstation]\n"
+                    f'expected_repo_root = {json.dumps(str(root / "wrong-repo"))}\n'
+                    'expected_worker_id = "test-host"\n'
+                )
+            with patch("app_generator.config.socket.gethostname", return_value="test-host"):
+                with self.assertRaisesRegex(ConfigurationError, "refuses repository"):
+                    load_config(path, environ={})
+
+    def test_workstation_binding_rejects_wrong_pc(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = root / "source.pdf"
+            source.write_bytes(b"synthetic")
+            path = self.make_config(root, [source])
+            repo = root / "repo"
+            with path.open("a", encoding="utf-8") as handle:
+                handle.write(
+                    "\n[workstation]\n"
+                    f'expected_repo_root = {json.dumps(str(repo))}\n'
+                    'expected_worker_id = "expected-pc"\n'
+                )
+            with patch("app_generator.config.socket.gethostname", return_value="other-pc"):
+                with self.assertRaisesRegex(ConfigurationError, "refuses host"):
+                    load_config(path, environ={})
+
+    def test_local_gemini_overrides_do_not_change_google_oauth_identity(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = root / "source.pdf"
+            source.write_bytes(b"synthetic")
+            path = self.make_config(root, [source])
+            with path.open("a", encoding="utf-8") as handle:
+                handle.write(
+                    "\n[local_gemini]\n"
+                    'login_name = "alternate@gmail.com"\n'
+                    'gem_url = "https://gemini.google.com/gem/alternate"\n'
+                    'gem_edit_url = "https://gemini.google.com/gems/edit/alternate"\n'
+                )
+
+            config = load_config(path, environ={})
+
+            self.assertEqual("oauth@example.com", config.oauth_login)
+            self.assertEqual("alternate@gmail.com", config.login_name)
+            self.assertEqual("https://gemini.google.com/gem/alternate", config.gem_url)
+            self.assertEqual("https://gemini.google.com/gems/edit/alternate", config.gem_edit_url)
+            self.assertFalse(hasattr(config, "gem_name"))
+
+    def test_local_gemini_url_overrides_must_be_supplied_together(self):
+        for override in (
+            'gem_url = "https://gemini.google.com/gem/alternate"\n',
+            'gem_edit_url = "https://gemini.google.com/gems/edit/alternate"\n',
+        ):
+            with self.subTest(override=override.strip()):
+                with tempfile.TemporaryDirectory() as directory:
+                    root = Path(directory)
+                    source = root / "source.pdf"
+                    source.write_bytes(b"synthetic")
+                    path = self.make_config(root, [source])
+                    with path.open("a", encoding="utf-8") as handle:
+                        handle.write("\n[local_gemini]\n" + override)
+
+                    with self.assertRaisesRegex(ConfigurationError, "must be set together"):
+                        load_config(path, environ={})
+
+    def test_legacy_shared_identity_survives_local_gemini_overrides(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = self.make_config(Path(directory), [])
+            text = path.read_text(encoding="utf-8")
+            text = text.replace('[google]\noauth_login = "oauth@example.com"\n', "")
+            text = text.replace('login_name = "file@example.com"\n', "")
+            text = text.replace('gem_url = "https://gemini.google.com/gem/test"\n', "")
+            text = text.replace(
+                '[placeholders]\n',
+                '[placeholders]\nloginname = "file@example.com"\n'
+                'gemini-gem = "https://gemini.google.com/gem/test"\n',
+            )
+            text += (
+                '\n[local_gemini]\nlogin_name = "local@example.com"\n'
+                'gem_url = "https://gemini.google.com/gem/local"\n'
+                'gem_edit_url = "https://gemini.google.com/gems/edit/local"\n'
+            )
+            path.write_text(text, encoding="utf-8")
+
+            config = load_config(path, environ={})
+
+            self.assertEqual("file@example.com", config.oauth_login)
+            self.assertEqual("local@example.com", config.login_name)
+            self.assertEqual("https://gemini.google.com/gem/local", config.gem_url)
+
+    def test_local_gemini_rejects_non_table_values_even_when_empty(self):
+        for value in ("[]", '""', "false"):
+            with self.subTest(value=value), tempfile.TemporaryDirectory() as directory:
+                path = self.make_config(Path(directory), [])
+                text = path.read_text(encoding="utf-8")
+                path.write_text(f"local_gemini = {value}\n" + text, encoding="utf-8")
+                with self.assertRaisesRegex(ConfigurationError, "must be a TOML table"):
+                    load_config(path, environ={})
+
+    def test_auto_merge_requires_publishing_and_a_non_draft_pr(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = root / "source.pdf"
+            source.write_bytes(b"synthetic")
+            path = self.make_config(root, [source])
+            original = path.read_text(encoding="utf-8")
+            path.write_text(original + "[git]\ngit_auto_merge = true\n", encoding="utf-8")
+            with self.assertRaisesRegex(ConfigurationError, "git_publish=true"):
+                load_config(path, environ={})
+            path.write_text(
+                original
+                + "[git]\ngit_publish = true\ngit_auto_merge = true\n",
+                encoding="utf-8",
+            )
+            with self.assertRaisesRegex(ConfigurationError, "git_create_draft_pr=false"):
+                load_config(path, environ={})
+            path.write_text(
+                original
+                + "[git]\ngit_publish = true\ngit_create_draft_pr = false\n"
+                + "git_auto_merge = true\n",
+                encoding="utf-8",
+            )
+            config = load_config(path, environ={})
+            self.assertTrue(config.git_auto_merge)
+
+    def test_domain_discovery_configuration_is_bounded(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = root / "source.pdf"
+            source.write_bytes(b"synthetic")
+            path = self.make_config(root, [source])
+            original = path.read_text(encoding="utf-8")
+            path.write_text(original + "[domain]\ndomain_sample_count = 6\n", encoding="utf-8")
+            with self.assertRaisesRegex(ConfigurationError, "domain_sample_count"):
+                load_config(path, environ={})
+            path.write_text(original + "[domain]\ndomain_min_confidence = 0.4\n", encoding="utf-8")
+            with self.assertRaisesRegex(ConfigurationError, "domain_min_confidence"):
+                load_config(path, environ={})
+
+    def test_project_specific_values_have_no_python_defaults(self):
+        for key in (
+            "gem_url", "login_name", "oauth_login", "chrome_profile_dir", "state_dir",
+            "sourcepath", "pdf_subchapter_path", "target_filename", "target_file",
+            "source_id_prefix",
+            "drive_oauth_client_file", "drive_token_file", "coordinator_token_env",
+        ):
+            self.assertNotIn(key, DEFAULTS)
+
+    def test_configured_legacy_environment_prefix_is_bounded(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = root / "source.pdf"
+            source.write_bytes(b"synthetic")
+            path = self.make_config(root, [source])
+            text = path.read_text(encoding="utf-8").replace(
+                'legacy_environment_prefix = ""',
+                'legacy_environment_prefix = "OLD_GENERATOR_"',
+            )
+            path.write_text(text, encoding="utf-8")
+            with warnings.catch_warnings(record=True) as caught:
+                warnings.simplefilter("always")
+                config = load_config(
+                    path,
+                    environ={"OLD_GENERATOR_LOG_LEVEL": "debug"},
+                )
+            self.assertEqual("DEBUG", config.log_level)
+            self.assertTrue(any("deprecated" in str(item.message) for item in caught))
+
+    def test_unconfigured_legacy_environment_prefix_is_ignored(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = root / "source.pdf"
+            source.write_bytes(b"synthetic")
+            config = load_config(
+                self.make_config(root, [source]),
+                environ={"OLD_GENERATOR_LOG_LEVEL": "debug"},
+            )
+            self.assertEqual("INFO", config.log_level)
+
+    def test_missing_project_identity_is_rejected(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "config.toml"
+            path.write_text("[repository]\nrepo_root = \".\"\n", encoding="utf-8")
+            with self.assertRaisesRegex(ConfigurationError, "project_name"):
+                load_config(path, environ={})
+
+    def test_current_manifest_contract_rejects_multiple_sources(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            sources = [root / "a.pdf", root / "b.pdf"]
+            for source in sources:
+                source.write_bytes(b"synthetic")
+            with self.assertRaises(RepositoryCompatibilityError):
+                load_config(self.make_config(root, sources), environ={})
+
+    def test_requested_remote_placeholders_are_loaded_and_aliased(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            repo = root / "repo"
+            (repo / "content" / "schema").mkdir(parents=True)
+            (repo / "AGENTS.md").write_text("# test\n", encoding="utf-8")
+            config_path = root / "remote.toml"
+            config_path.write_text(
+                "[project]\n"
+                'project_name = "RemoteProject"\n'
+                "[placeholders]\n"
+                'sourcepath = "https://drive.google.com/open?id=synthetic-folder-id"\n'
+                'gemini-gem = "https://gemini.google.com/gem/remote"\n'
+                'loginname = "learner@example.com"\n'
+                'pdf_subchapter_path = "8.1"\n'
+                'target_filename = "source.pdf"\n'
+                'target_file = "{sourcepath}/**/{pdf_subchapter_path}/{target_filename}"\n'
+                "[source_tree]\n"
+                'source_id_prefix = "remote"\n'
+                "[paths]\n"
+                f"chrome_profile_dir = {json.dumps(str(root / 'state' / 'chrome-profile'))}\n"
+                f"state_dir = {json.dumps(str(root / 'state' / 'runs'))}\n"
+                f"drive_oauth_client_file = {json.dumps(str(root / 'state' / 'credentials' / 'client.json'))}\n"
+                f"drive_token_file = {json.dumps(str(root / 'state' / 'credentials' / 'token.json'))}\n"
+                "[automation]\n"
+                'coordinator_token_env = "REMOTE_PROJECT_COORDINATOR_TOKEN"\n'
+                "[repository]\n"
+                f"repo_root = {json.dumps(str(repo))}\n"
+                "[run]\n"
+                'package_id = "chapter-8-section-8-1"\n'
+                'chapter = "Chapter"\n'
+                'subchapter = "8.1 Topic"\n'
+                'chapter_dir = "chapter-8"\n'
+                'section_dir = "section-8-1"\n'
+                'learning_boundary = "Controlled boundary"\n'
+                'source_id = "source-eight-one"\n'
+                'edition = "Edition"\n'
+                'heading = "Heading"\n'
+                'page_range = "1-3"\n'
+                'reviewer = "Reviewer"\n'
+                'rights_note = "Controlled access"\n',
+                encoding="utf-8",
+            )
+            config = load_config(config_path, environ={})
+            self.assertTrue(config.uses_google_drive)
+            self.assertEqual("https://gemini.google.com/gem/remote", config.gem_url)
+            self.assertEqual("learner@example.com", config.login_name)
+            self.assertEqual("learner@example.com", config.oauth_login)
+            self.assertIn("/**/8.1/source.pdf", config.target_locator)
+
+    def test_run_state_cannot_be_stored_inside_repository(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = root / "source.pdf"
+            source.write_bytes(b"synthetic")
+            path = self.make_config(root, [source])
+            with self.assertRaises(ConfigurationError):
+                load_config(
+                    path,
+                    environ={"EXAMPLE_PROJECT_GENERATOR_STATE_DIR": str(root / "repo" / "generator-runs")},
+                )
+
+    def test_distributed_templates_materialize_for_a_claimed_subchapter(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            repo = root / "repo"
+            (repo / "content" / "schema").mkdir(parents=True)
+            (repo / "AGENTS.md").write_text("# test\n", encoding="utf-8")
+            path = root / "distributed.toml"
+            path.write_text(
+                "[project]\n"
+                'project_name = "DistributedProject"\n'
+                "[placeholders]\n"
+                'sourcepath = "https://drive.google.com/open?id=test-root"\n'
+                'pdf_subchapter_path = "8.1"\n'
+                'target_filename = "source.pdf"\n'
+                'target_file = "{sourcepath}/**/{pdf_subchapter_path}/{target_filename}"\n'
+                "[source_tree]\n"
+                'source_id_prefix = "distributed"\n'
+                "[google]\n"
+                'oauth_login = "oauth@example.com"\n'
+                "[gemini]\n"
+                'gem_url = "https://gemini.google.com/gem/test"\n'
+                'login_name = "person@example.com"\n'
+                "[paths]\n"
+                f"chrome_profile_dir = {json.dumps(str(root / 'state' / 'chrome-profile'))}\n"
+                f"state_dir = {json.dumps(str(root / 'state' / 'runs'))}\n"
+                f"drive_oauth_client_file = {json.dumps(str(root / 'state' / 'credentials' / 'client.json'))}\n"
+                f"drive_token_file = {json.dumps(str(root / 'state' / 'credentials' / 'token.json'))}\n"
+                "[repository]\n"
+                f"repo_root = {json.dumps(str(repo))}\n"
+                "[automation]\n"
+                'selection_mode = "distributed"\n'
+                'coordinator_url = "https://script.google.com/macros/s/test/exec"\n'
+                'coordinator_token_env = "DISTRIBUTED_PROJECT_COORDINATOR_TOKEN"\n'
+                "[git]\n"
+                "git_publish = true\n"
+                "[run]\n"
+                'package_id = "chapter-{chapter_number}-section-{section_slug}"\n'
+                'chapter = "Chapter {chapter_number}"\n'
+                'subchapter = "Section {subchapter_id}"\n'
+                'chapter_dir = "chapter-{chapter_number}"\n'
+                'section_dir = "section-{section_slug}"\n'
+                'learning_boundary = "Controlled {subchapter_id}"\n'
+                'source_id = "{source_id_prefix}-section-{section_slug}"\n'
+                'edition = "Edition"\n'
+                'heading = "Section {subchapter_id}"\n'
+                'page_range = "Complete PDF"\n'
+                'reviewer = "Reviewer"\n'
+                'rights_note = "Controlled access"\n',
+                encoding="utf-8",
+            )
+            config = load_config(path, environ={})
+            selected = config.for_subchapter("12.3")
+            self.assertEqual("chapter-12-section-12-3", selected.package_id)
+            self.assertEqual("section-12-3", selected.section_dir)
+            self.assertEqual("Section 12.3", selected.subchapter)
+            self.assertEqual("distributed-section-12-3", selected.source_id)
+
+
+if __name__ == "__main__":
+    unittest.main()

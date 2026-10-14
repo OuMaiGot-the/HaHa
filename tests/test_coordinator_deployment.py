@@ -1,0 +1,269 @@
+import unittest
+from unittest.mock import patch
+
+from app_generator.coordinator.managed import ADMIN_SCOPES
+from coordinator.deployment.manage import (
+    _ensure_deployment,
+    _wait_for_coordinator_version,
+    _web_app_is_reachable,
+)
+
+
+class CoordinatorDeploymentTests(unittest.TestCase):
+    def test_admin_scopes_explicitly_include_google_identity_bundle(self):
+        self.assertIn("openid", ADMIN_SCOPES)
+        self.assertIn("https://www.googleapis.com/auth/userinfo.email", ADMIN_SCOPES)
+
+    def test_create_deployment_posts_deployment_config_directly(self):
+        calls = []
+
+        class Response:
+            status_code = 200
+            text = ""
+
+            def __init__(self, payload):
+                self.payload = payload
+
+            def raise_for_status(self):
+                return None
+
+            def json(self):
+                return self.payload
+
+        class Session:
+            def get(self, url, *, timeout):
+                return Response({"deployments": []})
+
+            def post(self, url, *, json, timeout):
+                calls.append((url, json, timeout))
+                return Response(
+                    {
+                        "deploymentId": "deployment-id",
+                        "entryPoints": [
+                            {
+                                "entryPointType": "WEB_APP",
+                                "webApp": {"url": "https://script.google.com/macros/s/deployment-id/exec"},
+                            }
+                        ],
+                    }
+                )
+
+        with patch("coordinator.deployment.manage._web_app_is_reachable", return_value=True):
+            deployment_id, url = _ensure_deployment(
+                Session(),
+                script_id="script-id",
+                version_number=7,
+                project_name="ManagedProject",
+            )
+
+        self.assertEqual("deployment-id", deployment_id)
+        self.assertEqual("https://script.google.com/macros/s/deployment-id/exec", url)
+        self.assertEqual("script-id", calls[0][1]["scriptId"])
+        self.assertEqual(7, calls[0][1]["versionNumber"])
+        self.assertNotIn("deploymentConfig", calls[0][1])
+
+    def test_reachability_probe_sends_no_credentials(self):
+        url = "https://script.google.com/macros/s/deployment-id/exec"
+
+        class Response:
+            def raise_for_status(self):
+                return None
+
+            def json(self):
+                return {"ok": False, "code": "UNAUTHORIZED"}
+
+        deployment = {
+            "entryPoints": [
+                {"entryPointType": "WEB_APP", "webApp": {"url": url}}
+            ]
+        }
+        with patch(
+            "coordinator.deployment.manage.requests.post",
+            return_value=Response(),
+        ) as request:
+            self.assertTrue(_web_app_is_reachable(deployment))
+
+        request.assert_called_once_with(url, json={}, timeout=60)
+
+    def test_explicit_web_app_url_is_validated_and_used_without_api_mutation(self):
+        url = "https://script.google.com/macros/s/manual-deployment/exec"
+        get_calls = []
+
+        class Response:
+            status_code = 200
+            text = ""
+
+            def raise_for_status(self):
+                return None
+
+            def json(self):
+                return {"deploymentId": "manual-deployment"}
+
+        class Session:
+            def get(self, request_url, *, timeout):
+                get_calls.append((request_url, timeout))
+                return Response()
+
+            def __getattr__(self, name):
+                raise AssertionError(f"Apps Script API must not be called: {name}")
+
+        with patch("coordinator.deployment.manage._web_app_is_reachable", return_value=True):
+            deployment_id, resolved_url = _ensure_deployment(
+                Session(), script_id="script-id", version_number=8,
+                project_name="ManagedProject", web_app_url_override=url,
+            )
+
+        self.assertEqual("manual-deployment", deployment_id)
+        self.assertEqual(url, resolved_url)
+        self.assertEqual(
+            [
+                (
+                    "https://script.googleapis.com/v1/projects/"
+                    "script-id/deployments/manual-deployment",
+                    60,
+                )
+            ],
+            get_calls,
+        )
+
+    def test_explicit_web_app_url_from_another_script_is_rejected_before_probe(self):
+        class Response:
+            status_code = 404
+            text = "not found"
+
+        class Session:
+            def get(self, request_url, *, timeout):
+                return Response()
+
+            def __getattr__(self, name):
+                raise AssertionError(f"Apps Script API must not be called: {name}")
+
+        with patch("coordinator.deployment.manage._web_app_is_reachable") as reachable:
+            with self.assertRaises(RuntimeError) as raised:
+                _ensure_deployment(
+                    Session(),
+                    script_id="expected-script-id",
+                    version_number=8,
+                    project_name="ManagedProject",
+                    web_app_url_override=(
+                        "https://script.google.com/macros/s/"
+                        "other-project-deployment/exec"
+                    ),
+                )
+
+        self.assertIn(
+            "https://script.google.com/home/projects/expected-script-id/edit",
+            str(raised.exception),
+        )
+        reachable.assert_not_called()
+
+    def test_wait_for_coordinator_version_retries_until_live_code_matches(self):
+        class Response:
+            def __init__(self, version):
+                self.version = version
+
+            def raise_for_status(self):
+                return None
+
+            def json(self):
+                return {"ok": True, "coordinator_version": self.version}
+
+        sleeps = []
+        with patch(
+            "coordinator.deployment.manage.requests.post",
+            side_effect=[Response(2), Response(3)],
+        ) as request:
+            _wait_for_coordinator_version(
+                "https://script.google.com/macros/s/deployment-id/exec",
+                project_name="ManagedProject",
+                worker_token="secret",
+                expected_version=3,
+                timeout_seconds=30,
+                sleeper=sleeps.append,
+            )
+
+        self.assertEqual([5.0], sleeps)
+        self.assertEqual(2, request.call_count)
+        self.assertEqual("health", request.call_args.kwargs["json"]["action"])
+        self.assertEqual("secret", request.call_args.kwargs["json"]["token"])
+
+    def test_list_fallback_prefers_recorded_deployment_among_multiple_web_apps(self):
+        get_calls = []
+        put_calls = []
+        recorded_url = "https://script.google.com/macros/s/recorded-deployment/exec"
+
+        class Response:
+            status_code = 200
+            text = ""
+
+            def __init__(self, payload):
+                self.payload = payload
+
+            def raise_for_status(self):
+                return None
+
+            def json(self):
+                return self.payload
+
+        class Session:
+            def put(self, url, *, json, timeout):
+                put_calls.append((url, json, timeout))
+                return Response({
+                    "deploymentId": "recorded-deployment",
+                    "entryPoints": [
+                        {"entryPointType": "WEB_APP", "webApp": {"url": recorded_url}}
+                    ],
+                })
+
+            def get(self, url, *, timeout):
+                get_calls.append(url)
+                if url.endswith("/recorded-deployment"):
+                    return Response({"deploymentId": "recorded-deployment"})
+                return Response(
+                    {
+                        "deployments": [
+                            {
+                                "deploymentId": "recorded-deployment",
+                                "entryPoints": [
+                                    {"entryPointType": "WEB_APP", "webApp": {"url": recorded_url}}
+                                ],
+                            },
+                            {
+                                "deploymentId": "historical-deployment",
+                                "entryPoints": [
+                                    {
+                                        "entryPointType": "WEB_APP",
+                                        "webApp": {
+                                            "url": "https://script.google.com/macros/s/historical/exec"
+                                        },
+                                    }
+                                ],
+                            },
+                        ]
+                    }
+                )
+
+        with patch(
+            "coordinator.deployment.manage._web_app_is_reachable",
+            side_effect=lambda deployment: bool(deployment.get("entryPoints")),
+        ):
+            deployment_id, url = _ensure_deployment(
+                Session(),
+                script_id="script-id",
+                version_number=8,
+                project_name="ManagedProject",
+                preferred_id="recorded-deployment",
+            )
+
+        self.assertEqual("recorded-deployment", deployment_id)
+        self.assertEqual(recorded_url, url)
+        self.assertEqual(2, len(get_calls))
+        self.assertTrue(get_calls[0].endswith("/recorded-deployment"))
+        self.assertEqual(1, len(put_calls))
+        self.assertTrue(put_calls[0][0].endswith("/deployments/recorded-deployment"))
+        self.assertEqual({"deploymentConfig"}, set(put_calls[0][1]))
+        self.assertEqual(8, put_calls[0][1]["deploymentConfig"]["versionNumber"])
+
+
+if __name__ == "__main__":
+    unittest.main()
