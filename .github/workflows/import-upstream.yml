@@ -1,4 +1,4 @@
-name: One-time upstream history import
+name: Complete source migration
 on:
   push:
     branches: [main]
@@ -6,17 +6,17 @@ on:
 permissions:
   contents: write
 jobs:
-  import:
-    if: github.repository == 'OuMaiGot-the/HaHa'
+  migrate:
     runs-on: ubuntu-latest
     steps:
-      - name: Mirror upstream Git branches and tags
-        env:
-          GH_TOKEN: ${{ secrets.MIGRATION_TOKEN }}
-        run: |
-          set -euo pipefail
-          git clone --mirror https://github.com/tlyoon/brilliant.org-style-learning-apps.git upstream.git
-          cd upstream.git
-          git remote add destination "https://x-access-token:${GH_TOKEN}@github.com/OuMaiGot-the/HaHa.git"
-          git push --force destination 'refs/heads/*:refs/heads/*'
-          git push destination 'refs/tags/*:refs/tags/*'
+      - uses: actions/checkout@v4
+      - run: git clone --depth 1 https://github.com/tlyoon/brilliant.org-style-learning-apps.git /tmp/upstream
+      - run: |
+          rsync -a --exclude='.git/' --exclude='.github/workflows/' /tmp/upstream/ ./
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          if ! git diff --cached --quiet; then
+            git commit -m 'Complete upstream source migration'
+            git push
+          fi
