@@ -67,9 +67,10 @@ coordinator_timeout_seconds = 30
 lease_seconds = 3600
 heartbeat_seconds = 300
 max_job_attempts = 3
+# Migration safety: public deployment is disabled until HaHa-owned targets and credentials are configured.
 # Continuous auto publishes validated packages as explicitly labelled public
 # validated learning apps. Publication is permitted after automated validation succeeds.
-public_deploy = true
+public_deploy = false
 public_deploy_repository = "tlyoon/section-8-1-learning-app"
 public_deploy_base_url = "https://tlyoon.github.io/section-8-1-learning-app/"
 public_deploy_base_branch = "main"
