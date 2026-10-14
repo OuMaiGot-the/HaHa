@@ -61,3 +61,9 @@ After synchronization, read the documentation from that local checkout. The sync
 ## Credentials are not documentation artifacts
 
 OAuth client JSON files, OAuth tokens, administrator tokens, browser profiles, source PDFs, and run state remain outside Git. The repository documents where they belong, but never distributes their values.
+
+## Repository migration baseline (HaHa)
+
+The source snapshot was migrated into `OuMaiGot-the/HaHa` in October 2026. The import restored `.github/workflows/ensure-coordinator.yml` separately from its original documentation history, so the first validation run flagged the documentation-impact gate. This note records that the coordinator workflow was reviewed as part of the migration; its original operating instructions remain in `docs/CONTINUOUS_AUTO_TESTING.md` and `docs/DRIVE_NATIVE_AUTO_COORDINATION.md`. The restored workflow does not by itself authorize running the original author's coordinator or publishing into their repositories.
+
+Before operating the generator under a different owner, replace source-account identities and external deployment destinations in `config/configure_project.toml`, then verify the destination repository, OAuth account, and permissions. Do not enable automated publication to a repository owned by the original author.
