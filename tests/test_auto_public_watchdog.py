@@ -22,7 +22,7 @@ class AutoPublicConfigurationTests(unittest.TestCase):
     def test_project_public_deploy_config_and_digest_are_valid(self):
         with (ROOT / "config/configure_project.toml").open("rb") as handle:
             automation = tomllib.load(handle)["automation"]
-        self.assertTrue(automation["public_deploy"])
+        self.assertFalse(automation["public_deploy"], "Imported repository must not publish to upstream by default")
         self.assertEqual("tlyoon/section-8-1-learning-app", automation["public_deploy_repository"])
         records = {record.app_id: record for record in load_deployment_registry(ROOT)}
         self.assertEqual(
