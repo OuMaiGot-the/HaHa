@@ -1,0 +1,28 @@
+name: Build HaHa learner preview
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  preview:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Build standalone physics learning preview
+        run: python scripts/build_public_release.py content/chapter-9/section-9-1/package.json preview
+      - name: Verify static preview assets
+        run: |
+          test -s preview/index.html
+          test -s preview/app/app.js
+          test -s preview/app/domain-renderers.js
+          test -s preview/content/package.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: haha-learning-preview
+          path: preview/
+          include-hidden-files: true
