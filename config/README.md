@@ -158,3 +158,7 @@ The current Stage-0/1A implementation discovers sibling PDFs beneath the selecte
 ## Compatibility file
 
 `config/project.toml` remains only for compatibility with older tooling/tests during the current migration. It is not a second project configuration authority. Normal workstation operation enters through `sync-workstation.cmd`, which selects `config/configure_project.toml`.
+
+## HaHa migration publication safeguard
+
+In `OuMaiGot-the/HaHa`, `automation.public_deploy` is deliberately `false` until the new owner supplies and verifies a destination repository, Pages URL, Google Drive source root, and account identities. Imported `tlyoon` destinations are historical upstream settings, not approved HaHa publishing targets. Do not turn on unattended auto-publication until the owner-specific configuration and deployment checks are tested. Local learner preview and offline package validation can proceed without enabling public deployment.
