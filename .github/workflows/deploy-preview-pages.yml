@@ -25,6 +25,8 @@ jobs:
         run: python scripts/build_public_release.py content/chapter-9/section-9-1/package.json preview
       - name: Configure Pages
         uses: actions/configure-pages@v5
+        with:
+          enablement: true
       - name: Upload static site
         uses: actions/upload-pages-artifact@v3
         with:
