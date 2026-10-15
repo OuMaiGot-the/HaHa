@@ -17,6 +17,17 @@ jobs:
           python-version: '3.12'
       - name: Build learner website
         run: python scripts/build_public_release.py content/chapter-9/section-9-1/package.json preview
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install browser smoke dependencies
+        run: |
+          npm install --no-save playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Verify learner experience before publishing
+        run: |
+          python -m http.server 8765 --directory preview >/tmp/haha-preview-server.log 2>&1 &
+          node scripts/smoke_preview_browser.cjs
       - name: Publish static files to gh-pages branch
         run: |
           set -euo pipefail
