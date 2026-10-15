@@ -1,0 +1,28 @@
+name: Browser smoke test
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  browser:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Build learner preview
+        run: python scripts/build_public_release.py content/chapter-9/section-9-1/package.json preview
+      - name: Install browser test dependencies
+        run: |
+          npm install --no-save playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Run browser smoke test
+        run: |
+          python -m http.server 8765 --directory preview >/tmp/haha-preview-server.log 2>&1 &
+          node scripts/smoke_preview_browser.cjs
