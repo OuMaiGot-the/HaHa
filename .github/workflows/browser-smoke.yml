@@ -26,3 +26,4 @@ jobs:
         run: |
           python -m http.server 8765 --directory preview >/tmp/haha-preview-server.log 2>&1 &
           node scripts/smoke_preview_browser.cjs
+          node scripts/smoke_catalog_browser.cjs
