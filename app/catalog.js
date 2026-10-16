@@ -27,6 +27,18 @@
         const count = document.createElement('small');
         count.textContent = lesson.activities + ' activities';
         detail.append(count);
+        try {
+          const saved = JSON.parse(localStorage.getItem('haha:progress:v1:' + lesson.id) || '{}');
+          const completed = Array.isArray(saved.completed) ? new Set(saved.completed.filter((id) => typeof id === 'string')).size : 0;
+          if (completed > 0) {
+            const progress = document.createElement('p');
+            progress.className = 'lesson-progress';
+            progress.textContent = Math.min(completed, lesson.activities) + ' of ' + lesson.activities + ' completed on this device';
+            detail.append(progress);
+          }
+        } catch (_error) {
+          // Progress is optional; the catalog must work with storage disabled.
+        }
         card.append(link, detail);
         grid.append(card);
       }
