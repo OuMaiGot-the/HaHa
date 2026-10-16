@@ -8,6 +8,8 @@ permissions:
 jobs:
   publish:
     runs-on: ubuntu-latest
+    env:
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -40,3 +42,12 @@ jobs:
           git commit -m "Publish standalone HaHa learning preview"
           git remote add origin "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/OuMaiGot-the/HaHa.git"
           git push --force origin HEAD:gh-pages
+      - name: Deploy validated website to Vercel
+        if: ${{ env.VERCEL_TOKEN != '' }}
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: team_urMZbyiHo8i4lhBvELhtYW5c
+          VERCEL_PROJECT_ID: prj_1cJudJvQX7wVzAfq3o7hfsqcbG6c
+        run: |
+          set -euo pipefail
+          npx --yes vercel@latest deploy preview --prod --yes --token "$VERCEL_TOKEN" --scope "$VERCEL_ORG_ID"
