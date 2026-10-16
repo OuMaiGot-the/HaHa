@@ -31,7 +31,7 @@ The catalog smoke test covers all published packages on desktop and mobile, loca
 
 The existing generator supports a Gemini API backend (environment variable `GOOGLE_API_KEY` or `GEMINI_API_KEY`) and Google Drive PDF sources. `scripts/gemini_api_smoke.py` requires configured authorized Google Drive access and a real PDF. Do not reuse inherited account credentials or change original-owner publication destinations. Use project-owned authorization and test with a controlled source PDF.
 
-**Important:** the current catalog builder accepts `draft`, `review`, `approved`, and `published` packages. Thus the current site is a learning preview, **not** an approval-gated production curriculum. A review gate must be introduced and existing draft lessons reviewed before claiming automatic approved-content publication.
+**Important:** the current catalog builder accepts `draft`, `review`, `approved`, and `published` packages. Thus the current site is a learning preview, **not** an approval-gated production curriculum. An opt-in review gate is now available: `python scripts/build_catalog_release.py approved-release --approved-only` includes only `approved` and `published` packages. The default preview still includes draft lessons, and existing drafts must be reviewed before switching production to approved-only builds.
 
 ## Release recovery
 
