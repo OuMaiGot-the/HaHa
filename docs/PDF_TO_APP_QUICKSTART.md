@@ -67,8 +67,8 @@ For a new PC:
 
 ```powershell
 cd <projects-folder>
-git clone https://github.com/tlyoon/brilliant.org-style-learning-apps.git
-cd brilliant.org-style-learning-apps
+git clone https://github.com/OuMaiGot-the/HaHa.git
+cd HaHa
 git fetch origin
 git status -sb
 ```
