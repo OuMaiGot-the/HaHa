@@ -11,14 +11,16 @@ const copy = {
 const localized = (value) => typeof value === "string" ? value : value?.[state.locale] ?? value?.en ?? "";
 
 const PROGRESS_PREFIX = "haha:progress:v1:";
-function recordProgress(activityId) {
+function recordProgress(activityId, assisted = false) {
   try {
     if (!state.package?.packageId || !activityId) return;
     const key = PROGRESS_PREFIX + state.package.packageId;
     const previous = JSON.parse(localStorage.getItem(key) || "{}");
     const completed = Array.isArray(previous.completed) ? previous.completed.filter((id) => typeof id === "string") : [];
     if (!completed.includes(activityId)) completed.push(activityId);
-    localStorage.setItem(key, JSON.stringify({ completed, updatedAt: new Date().toISOString() }));
+    const independent = Array.isArray(previous.independent) ? previous.independent.filter((id) => typeof id === "string") : [];
+    if (!assisted && !independent.includes(activityId)) independent.push(activityId);
+    localStorage.setItem(key, JSON.stringify({ completed, independent, updatedAt: new Date().toISOString() }));
   } catch (_error) {
     // Private browsing and blocked storage must not interrupt learning.
   }
@@ -276,7 +278,7 @@ function render() {
   check.disabled = !responseComplete(activity);
   check.addEventListener("click", () => {
     if (!state.checked) state.checked = true;
-    else if (responseCorrect(activity)) { recordProgress(activity.id); state.activityIndex += 1; resetActivity(); }
+    else if (responseCorrect(activity)) { recordProgress(activity.id, state.hint); state.activityIndex += 1; resetActivity(); }
     else resetActivity();
     render();
   });
