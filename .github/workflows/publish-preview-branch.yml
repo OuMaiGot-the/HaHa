@@ -50,4 +50,30 @@ jobs:
           VERCEL_PROJECT_ID: prj_1cJudJvQX7wVzAfq3o7hfsqcbG6c
         run: |
           set -euo pipefail
-          npx --yes vercel@latest deploy preview --prod --yes --token "$VERCEL_TOKEN" --scope "$VERCEL_ORG_ID"
+          deployment_url="$(npx --yes vercel@latest deploy preview --prod --yes --token "$VERCEL_TOKEN" --scope "$VERCEL_ORG_ID")"
+          echo "Deployment URL: $deployment_url"
+          DEPLOYMENT_URL="$deployment_url" python - <<'PY'
+          import json
+          import os
+          import time
+          from urllib.request import urlopen
+
+          base = os.environ["DEPLOYMENT_URL"].strip().rstrip("/")
+          if not base.startswith("https://"):
+              raise SystemExit("Vercel did not return a valid HTTPS deployment URL")
+          for attempt in range(12):
+              try:
+                  with urlopen(base + "/catalog.json", timeout=15) as response:
+                      catalog = json.load(response)
+                  if not isinstance(catalog, list) or len(catalog) < 15:
+                      raise ValueError("Production catalog is missing expected lessons")
+                  with urlopen(base + "/" + catalog[0]["url"], timeout=15) as response:
+                      if response.status != 200:
+                          raise ValueError("First lesson did not return HTTP 200")
+                  print("Production verification passed:", len(catalog), "lessons")
+                  break
+              except Exception:
+                  if attempt == 11:
+                      raise
+                  time.sleep(10)
+          PY
