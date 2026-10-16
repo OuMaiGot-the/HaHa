@@ -5,8 +5,8 @@ const fs = require('node:fs');
 const assert = require('node:assert/strict');
 
 (async () => {
-  const base = process.env.PREVIEW_URL || 'http://127.0.0.1:8765';
-  const pkg = JSON.parse(fs.readFileSync('preview/content/package.json', 'utf8'));
+  const base = process.env.PREVIEW_URL || 'http://127.0.0.1:8765/learn/chapter-9/section-9-1/';
+  const pkg = JSON.parse(fs.readFileSync('preview/learn/chapter-9/section-9-1/content/package.json', 'utf8'));
   assert(pkg.activities.length > 0, 'Preview has no activities');
   const browser = await chromium.launch({ headless: true });
   try {
