@@ -17,7 +17,7 @@ jobs:
         with:
           node-version: '22'
       - name: Build learner preview
-        run: python scripts/build_public_release.py content/chapter-9/section-9-1/package.json preview
+        run: python scripts/build_catalog_release.py preview
       - name: Install browser test dependencies
         run: |
           npm install --no-save playwright@1.56.1
