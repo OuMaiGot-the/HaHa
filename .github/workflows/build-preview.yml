@@ -14,13 +14,13 @@ jobs:
         with:
           python-version: '3.12'
       - name: Build standalone physics learning preview
-        run: python scripts/build_public_release.py content/chapter-9/section-9-1/package.json preview
+        run: python scripts/build_catalog_release.py preview
       - name: Verify static preview assets
         run: |
-          test -s preview/index.html
-          test -s preview/app/app.js
-          test -s preview/app/domain-renderers.js
-          test -s preview/content/package.json
+          test -s preview/index.html\n          test -s preview/catalog.json
+          test -s preview/learn/chapter-9/section-9-1/app/app.js
+          test -s preview/learn/chapter-9/section-9-1/app/domain-renderers.js
+          test -s preview/learn/chapter-9/section-9-1/content/package.json
       - uses: actions/upload-artifact@v4
         with:
           name: haha-learning-preview
