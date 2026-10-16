@@ -17,7 +17,8 @@ jobs:
         run: python scripts/build_catalog_release.py preview
       - name: Verify static preview assets
         run: |
-          test -s preview/index.html\n          test -s preview/catalog.json
+          test -s preview/index.html
+          test -s preview/catalog.json
           test -s preview/learn/chapter-9/section-9-1/app/app.js
           test -s preview/learn/chapter-9/section-9-1/app/domain-renderers.js
           test -s preview/learn/chapter-9/section-9-1/content/package.json
