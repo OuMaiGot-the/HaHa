@@ -1,4 +1,4 @@
-name: Deploy HaHa learning preview
+name: Deploy HaHa learning catalog to Pages
 on:
   workflow_dispatch:
 permissions:
@@ -20,7 +20,19 @@ jobs:
         with:
           python-version: '3.12'
       - name: Build independent learner preview
-        run: python scripts/build_public_release.py content/chapter-9/section-9-1/package.json preview
+        run: python scripts/build_catalog_release.py preview
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install browser smoke dependencies
+        run: |
+          npm install --no-save playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Verify complete catalog before Pages deployment
+        run: |
+          python -m http.server 8765 --directory preview >/tmp/haha-pages-server.log 2>&1 &
+          node scripts/smoke_preview_browser.cjs
+          node scripts/smoke_catalog_browser.cjs
       - name: Configure Pages
         uses: actions/configure-pages@v5
         with:
