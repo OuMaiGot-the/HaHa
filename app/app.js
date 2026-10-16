@@ -10,6 +10,27 @@ const copy = {
 
 const localized = (value) => typeof value === "string" ? value : value?.[state.locale] ?? value?.en ?? "";
 
+const PROGRESS_PREFIX = "haha:progress:v1:";
+function recordProgress(activityId) {
+  try {
+    if (!state.package?.packageId || !activityId) return;
+    const key = PROGRESS_PREFIX + state.package.packageId;
+    const previous = JSON.parse(localStorage.getItem(key) || "{}");
+    const completed = Array.isArray(previous.completed) ? previous.completed.filter((id) => typeof id === "string") : [];
+    if (!completed.includes(activityId)) completed.push(activityId);
+    localStorage.setItem(key, JSON.stringify({ completed, updatedAt: new Date().toISOString() }));
+  } catch (_error) {
+    // Private browsing and blocked storage must not interrupt learning.
+  }
+}
+function clearProgress() {
+  try {
+    if (state.package?.packageId) localStorage.removeItem(PROGRESS_PREFIX + state.package.packageId);
+  } catch (_error) {
+    // Storage is optional.
+  }
+}
+
 const ACTIVITY_QUERY_KEY = "activity";
 
 function activityIdFromLocation() {
@@ -205,7 +226,7 @@ function renderComplete(root) {
     element("h1", { text: copy[state.locale].complete }),
   );
   const restart = element("button", { className: "action", text: copy[state.locale].restart, attributes: { id: "restart" } });
-  restart.addEventListener("click", () => { state.activityIndex = 0; resetActivity(); render(); });
+  restart.addEventListener("click", () => { clearProgress(); state.activityIndex = 0; resetActivity(); render(); });
   card.append(restart);
   root.replaceChildren(card);
 }
@@ -255,7 +276,7 @@ function render() {
   check.disabled = !responseComplete(activity);
   check.addEventListener("click", () => {
     if (!state.checked) state.checked = true;
-    else if (responseCorrect(activity)) { state.activityIndex += 1; resetActivity(); }
+    else if (responseCorrect(activity)) { recordProgress(activity.id); state.activityIndex += 1; resetActivity(); }
     else resetActivity();
     render();
   });
