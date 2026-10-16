@@ -1,0 +1,122 @@
+[
+  {
+    "id": "chapter-1-section-1-1",
+    "chapter": "Physics and Measurement",
+    "subchapter": "Standards of Length, Mass, and Time",
+    "activities": 18,
+    "url": "learn/chapter-1/section-1-1/index.html",
+    "status": "review"
+  },
+  {
+    "id": "chapter-8-section-8-1",
+    "chapter": "Chapter 8",
+    "subchapter": "Section 8.1",
+    "activities": 18,
+    "url": "learn/chapter-8/section-8-1/index.html",
+    "status": "draft"
+  },
+  {
+    "id": "chapter-8-section-8-2",
+    "chapter": "Chapter 8",
+    "subchapter": "8.2 Analysis Model: Isolated System (Energy)",
+    "activities": 18,
+    "url": "learn/chapter-8/section-8-2/index.html",
+    "status": "draft"
+  },
+  {
+    "id": "chapter-8-section-8-3",
+    "chapter": "Chapter 8",
+    "subchapter": "8.3 Situations Involving Kinetic Friction",
+    "activities": 18,
+    "url": "learn/chapter-8/section-8-3/index.html",
+    "status": "draft"
+  },
+  {
+    "id": "chapter-8-section-8-4",
+    "chapter": "Chapter 8",
+    "subchapter": "8.4 Changes in Mechanical Energy for Nonconservative Forces",
+    "activities": 18,
+    "url": "learn/chapter-8/section-8-4/index.html",
+    "status": "draft"
+  },
+  {
+    "id": "chapter-8-section-8-5",
+    "chapter": "Chapter 8",
+    "subchapter": "8.5 Power",
+    "activities": 18,
+    "url": "learn/chapter-8/section-8-5/index.html",
+    "status": "draft"
+  },
+  {
+    "id": "chapter-9-section-9-1",
+    "chapter": "Chapter 9",
+    "subchapter": "9.1 Linear Momentum",
+    "activities": 18,
+    "url": "learn/chapter-9/section-9-1/index.html",
+    "status": "draft"
+  },
+  {
+    "id": "chapter-9-section-9-2",
+    "chapter": "Chapter 9",
+    "subchapter": "9.2 Analysis Model: Isolated System (Momentum)",
+    "activities": 18,
+    "url": "learn/chapter-9/section-9-2/index.html",
+    "status": "draft"
+  },
+  {
+    "id": "chapter-9-section-9-3",
+    "chapter": "Chapter 9",
+    "subchapter": "9.3 Analysis Model: Nonisolated System (Momentum)",
+    "activities": 18,
+    "url": "learn/chapter-9/section-9-3/index.html",
+    "status": "draft"
+  },
+  {
+    "id": "chapter-9-section-9-4",
+    "chapter": "Chapter 9",
+    "subchapter": "9.4 Collisions in One Dimension",
+    "activities": 18,
+    "url": "learn/chapter-9/section-9-4/index.html",
+    "status": "draft"
+  },
+  {
+    "id": "chapter-9-section-9-5",
+    "chapter": "Chapter 9",
+    "subchapter": "9.5 Collisions in Two Dimensions",
+    "activities": 18,
+    "url": "learn/chapter-9/section-9-5/index.html",
+    "status": "draft"
+  },
+  {
+    "id": "chapter-9-section-9-6",
+    "chapter": "Chapter 9",
+    "subchapter": "9.6 The Center of Mass",
+    "activities": 18,
+    "url": "learn/chapter-9/section-9-6/index.html",
+    "status": "draft"
+  },
+  {
+    "id": "chapter-9-section-9-7",
+    "chapter": "Chapter 9",
+    "subchapter": "9.7 Systems of Many Particles",
+    "activities": 18,
+    "url": "learn/chapter-9/section-9-7/index.html",
+    "status": "draft"
+  },
+  {
+    "id": "chapter-9-section-9-8",
+    "chapter": "Chapter 9",
+    "subchapter": "9.8 Deformable Systems",
+    "activities": 18,
+    "url": "learn/chapter-9/section-9-8/index.html",
+    "status": "draft"
+  },
+  {
+    "id": "chapter-9-section-9-9",
+    "chapter": "Chapter 9",
+    "subchapter": "9.9 Rocket Propulsion",
+    "activities": 18,
+    "url": "learn/chapter-9/section-9-9/index.html",
+    "status": "draft"
+  }
+]
