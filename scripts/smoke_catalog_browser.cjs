@@ -24,7 +24,7 @@ const fs = require('node:fs');
         assert.equal(response.status(), 200, lesson.id + ' failed to load');
         await page.locator('.question').waitFor();
         const pkg = JSON.parse(fs.readFileSync('preview/' + lesson.url.replace(/index\.html$/, 'content/package.json'), 'utf8'));
-        assert.equal((await page.locator('.question').innerText()).replace(/\\s+/g, ' ').trim(), pkg.activities[0].prompt.en.replace(/\\s+/g, ' ').trim(), lesson.id);
+        assert.equal((await page.locator('.question').innerText()).replace(/\s+/g, ' ').trim(), pkg.activities[0].prompt.en.replace(/\s+/g, ' ').trim(), lesson.id);
         await page.locator('#locale').selectOption('ms');
         assert(await page.locator('.question').innerText(), lesson.id + ' missing Malay question');
         await page.locator('#locale').selectOption('zh');
