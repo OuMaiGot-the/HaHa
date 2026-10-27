@@ -18,6 +18,30 @@ const fs = require('node:fs');
       await page.goto(base, { waitUntil: 'networkidle' });
       await page.locator('#chapters .grid a').first().waitFor();
       assert.equal(await page.locator('#chapters .grid a').count(), catalog.length, 'Catalog link count');
+      assert.equal(await page.locator('.recommendation').count(), 1, 'Recommendation panel exists');
+      assert.equal(await page.locator('.recommendation h2').innerText(), 'Start learning', 'Fresh learners receive a starting suggestion');
+      const firstLesson = catalog[0];
+      await page.evaluate((lesson) => {
+        localStorage.setItem('haha:progress:v1:' + lesson.id, JSON.stringify({
+          completed: ['test-assisted'],
+          independent: [],
+          updatedAt: new Date().toISOString()
+        }));
+      }, firstLesson);
+      await page.reload({ waitUntil: 'networkidle' });
+      assert.equal(await page.locator('.recommendation h2').innerText(), 'Review with confidence', 'Assisted completion triggers review');
+      assert.match(await page.locator('.recommendation a').getAttribute('href'), /learn\//, 'Recommendation targets a lesson');
+      await page.evaluate((lesson) => {
+        localStorage.setItem('haha:progress:v1:' + lesson.id, JSON.stringify({
+          completed: ['test-independent'],
+          independent: ['test-independent']
+        }));
+      }, firstLesson);
+      await page.reload({ waitUntil: 'networkidle' });
+      assert.equal(await page.locator('.recommendation h2').innerText(), 'Continue learning', 'Partial independent progress triggers continuation');
+      await page.evaluate((lesson) => localStorage.removeItem('haha:progress:v1:' + lesson.id), firstLesson);
+      await page.reload({ waitUntil: 'networkidle' });
+
       for (const lesson of catalog) {
         const url = new URL(lesson.url, base).href;
         const response = await page.goto(url, { waitUntil: 'networkidle' });
