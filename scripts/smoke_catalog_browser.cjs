@@ -18,6 +18,8 @@ const fs = require('node:fs');
       await page.goto(base, { waitUntil: 'networkidle' });
       await page.locator('#chapters .grid a').first().waitFor();
       assert.equal(await page.locator('#chapters .grid a').count(), catalog.length, 'Catalog link count');
+      await page.evaluate(() => localStorage.clear());
+      await page.reload({ waitUntil: 'networkidle' });
       assert.equal(await page.locator('.recommendation').count(), 1, 'Recommendation panel exists');
       assert.equal(await page.locator('.recommendation h2').innerText(), 'Start learning', 'Fresh learners receive a starting suggestion');
       const firstLesson = catalog[0];
