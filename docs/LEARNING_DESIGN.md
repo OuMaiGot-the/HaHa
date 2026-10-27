@@ -44,3 +44,8 @@ Use XP, named mastery levels, learning streaks, restrained achievements, satisfy
 The tutor may explain, question, diagnose misconceptions, create bounded variants, and refer to the same validated representation vocabulary used by the learning package. It must ground responses in the approved package plus standard prerequisites, disclose uncertainty, and avoid treating generated visual detail as scientific evidence unless that detail is supported by the package or a trusted template invariant.
 
 Potential package defects or low-confidence visual/question inconsistencies should be flagged for quality review. Optional instructor review does not gate normal automated publication.
+
+## Milestone 4 implementation
+
+See [device-local mastery](MILESTONE_4_MASTERY.md) for the attempt contract,
+scoring thresholds, recommendation priorities, privacy boundaries, and test gates.

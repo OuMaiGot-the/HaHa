@@ -52,6 +52,8 @@ def build(output: Path, package_path: Path, *, source_root: Path = ROOT) -> None
     ).replace(
         'src="app.js"', 'src="app/app.js"'
     ).replace(
+        'src="learning.js"', 'src="app/learning.js"'
+    ).replace(
         'data-package-url=""',
         'data-package-url="./content/package.json"',
     )
@@ -60,6 +62,7 @@ def build(output: Path, package_path: Path, *, source_root: Path = ROOT) -> None
 
     for source, relative_target in (
         (source_root / "app" / "app.js", Path("app/app.js")),
+        (source_root / "app" / "learning.js", Path("app/learning.js")),
         (domain.path("visuals", "rendererScript"), Path("app/domain-renderers.js")),
         (source_root / "app" / "visual-renderers.js", Path("app/visual-renderers.js")),
         (source_root / "app" / "styles.css", Path("app/styles.css")),

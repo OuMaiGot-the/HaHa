@@ -10,29 +10,17 @@ const copy = {
 
 const localized = (value) => typeof value === "string" ? value : value?.[state.locale] ?? value?.en ?? "";
 
-const PROGRESS_PREFIX = "haha:progress:v1:";
-function recordProgress(activityId, assisted = false) {
-  try {
-    if (!state.package?.packageId || !activityId) return;
-    const key = PROGRESS_PREFIX + state.package.packageId;
-    const previous = JSON.parse(localStorage.getItem(key) || "{}");
-    const completed = Array.isArray(previous.completed) ? previous.completed.filter((id) => typeof id === "string") : [];
-    if (!completed.includes(activityId)) completed.push(activityId);
-    const independent = Array.isArray(previous.independent) ? previous.independent.filter((id) => typeof id === "string") : [];
-    if (!assisted && !independent.includes(activityId)) independent.push(activityId);
-    localStorage.setItem(key, JSON.stringify({ completed, independent, updatedAt: new Date().toISOString() }));
-  } catch (_error) {
-    // Private browsing and blocked storage must not interrupt learning.
-  }
+let attemptStarted = Date.now();
+let visitFailed = false;
+function recordAttempt(activity, result) {
+  if (typeof HahaLearning === "undefined") return;
+  try { HahaLearning.record(localStorage, state.package, activity, {
+    id: typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`,
+    result, hint: state.hint, retry: visitFailed, timestamp: new Date().toISOString(),
+    durationMs: Date.now() - attemptStarted, locale: state.locale,
+  }); } catch (_) { /* Device storage is optional. */ }
+  if (result === "incorrect") visitFailed = true;
 }
-function clearProgress() {
-  try {
-    if (state.package?.packageId) localStorage.removeItem(PROGRESS_PREFIX + state.package.packageId);
-  } catch (_error) {
-    // Storage is optional.
-  }
-}
-
 const ACTIVITY_QUERY_KEY = "activity";
 
 function activityIdFromLocation() {
@@ -45,6 +33,7 @@ function activityIdFromLocation() {
 }
 
 function applyActivityDeepLink(activities) {
+  visitFailed = false;
   const requestedId = activityIdFromLocation();
   const requestedIndex = requestedId ? activities.findIndex((activity) => activity.id === requestedId) : -1;
   state.activityIndex = requestedIndex >= 0 ? requestedIndex : 0;
@@ -72,6 +61,7 @@ function element(tag, { className, text, attributes } = {}) {
 }
 
 function resetActivity() {
+  attemptStarted = Date.now();
   state.response = null;
   state.checked = false;
   state.hint = false;
@@ -228,7 +218,7 @@ function renderComplete(root) {
     element("h1", { text: copy[state.locale].complete }),
   );
   const restart = element("button", { className: "action", text: copy[state.locale].restart, attributes: { id: "restart" } });
-  restart.addEventListener("click", () => { clearProgress(); state.activityIndex = 0; resetActivity(); render(); });
+  restart.addEventListener("click", () => { visitFailed = false; state.activityIndex = 0; resetActivity(); render(); });
   card.append(restart);
   root.replaceChildren(card);
 }
@@ -277,8 +267,8 @@ function render() {
   const check = element("button", { className: "action", text: checkLabel, attributes: { id: "check" } });
   check.disabled = !responseComplete(activity);
   check.addEventListener("click", () => {
-    if (!state.checked) state.checked = true;
-    else if (responseCorrect(activity)) { recordProgress(activity.id, state.hint); state.activityIndex += 1; resetActivity(); }
+    if (!state.checked) { recordAttempt(activity, responseCorrect(activity) ? "correct" : "incorrect"); state.checked = true; }
+    else if (responseCorrect(activity)) { state.activityIndex += 1; visitFailed = false; resetActivity(); }
     else resetActivity();
     render();
   });
@@ -287,7 +277,9 @@ function render() {
   actions.append(check, hint);
   const skip = element("button", { className: "action secondary skip-action", text: labels.skip, attributes: { id: "skip" } });
   skip.addEventListener("click", () => {
+    recordAttempt(activity, "skip");
     state.activityIndex += 1;
+    visitFailed = false;
     resetActivity();
     render();
   });

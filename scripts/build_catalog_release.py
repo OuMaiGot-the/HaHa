@@ -35,6 +35,7 @@ def main():
                 "chapter": data.get("chapter", relative.parts[0]),
                 "subchapter": data.get("subchapter", relative.parts[1]),
                 "activities": len(data["activities"]),
+                "activityMetadata": [{k: a.get(k, "") for k in ("id", "objective", "difficulty")} for a in data["activities"]],
                 "url": "learn/" + relative.as_posix() + "/index.html",
                 "status": data.get("status"),
             })
@@ -48,6 +49,7 @@ def main():
     # No HTML is assembled from untrusted package strings. Browser renders textContent.
     shutil.copyfile(ROOT / "app" / "catalog.html", output / "index.html")
     shutil.copyfile(ROOT / "app" / "catalog.js", output / "catalog.js")
+    shutil.copyfile(ROOT / "app" / "learning.js", output / "learning.js")
     print(f"Published {len(packages)} packages in {len(set(p['chapter'] for p in packages))} chapters" + (" (approved only)" if approved_only else " (preview mode)"))
 
 if __name__ == "__main__":

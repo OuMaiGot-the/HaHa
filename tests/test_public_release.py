@@ -24,6 +24,7 @@ class PublicReleaseTests(unittest.TestCase):
                 ".nojekyll",
                 "index.html",
                 "app/app.js",
+                "app/learning.js",
                 "app/domain-renderers.js",
                 "app/visual-renderers.js",
                 "app/styles.css",
@@ -36,6 +37,7 @@ class PublicReleaseTests(unittest.TestCase):
             self.assertIn('src="app/domain-renderers.js"', index)
             self.assertIn('src="app/visual-renderers.js"', index)
             self.assertIn('src="app/app.js"', index)
+            self.assertIn('src="app/learning.js"', index)
             self.assertIn('data-package-url="./content/package.json"', index)
             self.assertNotIn("Section 1.1", index)
 

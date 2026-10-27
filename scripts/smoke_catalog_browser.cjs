@@ -25,7 +25,7 @@ const fs = require('node:fs');
       const firstLesson = catalog[0];
       await page.evaluate((lesson) => {
         localStorage.setItem('haha:progress:v1:' + lesson.id, JSON.stringify({
-          completed: ['test-assisted'],
+          completed: [lesson.activityMetadata[0].id],
           independent: [],
           updatedAt: new Date().toISOString()
         }));
@@ -35,8 +35,8 @@ const fs = require('node:fs');
       assert.match(await page.locator('.recommendation a').getAttribute('href'), /learn\//, 'Recommendation targets a lesson');
       await page.evaluate((lesson) => {
         localStorage.setItem('haha:progress:v1:' + lesson.id, JSON.stringify({
-          completed: ['test-independent'],
-          independent: ['test-independent']
+          completed: [lesson.activityMetadata[0].id],
+          independent: [lesson.activityMetadata[0].id]
         }));
       }, firstLesson);
       await page.reload({ waitUntil: 'networkidle' });
