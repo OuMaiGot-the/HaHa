@@ -1,0 +1,1502 @@
+[
+  {
+    "id": "chapter-1-section-1-1",
+    "chapter": "Physics and Measurement",
+    "subchapter": "Standards of Length, Mass, and Time",
+    "activities": 18,
+    "activityMetadata": [
+      {
+        "id": "mcq-standard-for-every-lab",
+        "objective": "Identify a reproducible measurement standard",
+        "difficulty": "easy"
+      },
+      {
+        "id": "mcq-base-unit-match",
+        "objective": "Match an SI base quantity to its unit",
+        "difficulty": "easy"
+      },
+      {
+        "id": "mcq-instant-or-interval",
+        "objective": "Distinguish an instant from a duration",
+        "difficulty": "easy"
+      },
+      {
+        "id": "mcq-current-kilogram",
+        "objective": "Recognize the current constant-based kilogram definition",
+        "difficulty": "moderate"
+      },
+      {
+        "id": "mcq-derived-quantity",
+        "objective": "Distinguish derived from fundamental quantities",
+        "difficulty": "moderate"
+      },
+      {
+        "id": "mcq-mass-not-weight",
+        "objective": "Distinguish mass from weight",
+        "difficulty": "moderate"
+      },
+      {
+        "id": "mcq-universal-definition",
+        "objective": "Evaluate universal measurement definitions",
+        "difficulty": "challenging"
+      },
+      {
+        "id": "mcq-density-same-volume",
+        "objective": "Reason qualitatively about density with equal volumes",
+        "difficulty": "challenging"
+      },
+      {
+        "id": "mcq-prefix-role",
+        "objective": "Interpret an SI prefix without conversion arithmetic",
+        "difficulty": "challenging"
+      },
+      {
+        "id": "interactive-sort-reference-quality",
+        "objective": "Classify proposed standards by stability and reproducibility",
+        "difficulty": "easy"
+      },
+      {
+        "id": "interactive-match-quantity-role",
+        "objective": "Match base quantities to their SI base units",
+        "difficulty": "easy"
+      },
+      {
+        "id": "interactive-time-card",
+        "objective": "Classify time descriptions as instants or intervals",
+        "difficulty": "easy"
+      },
+      {
+        "id": "interactive-sort-fundamental-derived",
+        "objective": "Classify fundamental and derived quantities in mechanics",
+        "difficulty": "moderate"
+      },
+      {
+        "id": "interactive-current-or-historical",
+        "objective": "Distinguish current constant-based SI definitions from historical definitions",
+        "difficulty": "moderate"
+      },
+      {
+        "id": "interactive-prefix-family",
+        "objective": "Match prefixed SI units to their unchanged physical quantities",
+        "difficulty": "moderate"
+      },
+      {
+        "id": "interactive-density-equal-mass",
+        "objective": "Order equal-mass samples by density using qualitative volume relationships",
+        "difficulty": "challenging"
+      },
+      {
+        "id": "interactive-definition-chain",
+        "objective": "Connect SI base units with both their quantities and current defining constants",
+        "difficulty": "challenging"
+      },
+      {
+        "id": "interactive-diagnose-disagreement",
+        "objective": "Diagnose multiple causes of disagreement from unsuitable standards",
+        "difficulty": "challenging"
+      }
+    ],
+    "url": "learn/chapter-1/section-1-1/index.html",
+    "status": "review"
+  },
+  {
+    "id": "chapter-8-section-8-1",
+    "chapter": "Chapter 8",
+    "subchapter": "Section 8.1",
+    "activities": 18,
+    "activityMetadata": [
+      {
+        "id": "sec8-1-mcq-easy-1",
+        "objective": "Identify a nonisolated system as one where energy crosses the system boundary via interactions with the environment.",
+        "difficulty": "easy"
+      },
+      {
+        "id": "sec8-1-mcq-easy-2",
+        "objective": "Distinguish among kinetic, potential, and internal energy as forms of energy stored within a system.",
+        "difficulty": "easy"
+      },
+      {
+        "id": "sec8-1-mcq-easy-3",
+        "objective": "Classify the six mechanisms of energy transfer across a system boundary.",
+        "difficulty": "easy"
+      },
+      {
+        "id": "sec8-1-mcq-mod-1",
+        "objective": "Distinguish energy transfers crossing a system boundary from internal energy transformations within a system.",
+        "difficulty": "moderate"
+      },
+      {
+        "id": "sec8-1-mcq-mod-2",
+        "objective": "Reduce the general nonisolated system energy equation to terms relevant to a specific physical scenario.",
+        "difficulty": "moderate"
+      },
+      {
+        "id": "sec8-1-mcq-mod-3",
+        "objective": "Apply the conservation of energy principle Delta E_system = Sigma T to analyze energy balance in nonisolated systems.",
+        "difficulty": "moderate"
+      },
+      {
+        "id": "sec8-1-mcq-chal-1",
+        "objective": "Distinguish energy transfers crossing a system boundary from internal energy transformations within a system.",
+        "difficulty": "challenging"
+      },
+      {
+        "id": "sec8-1-mcq-chal-2",
+        "objective": "Reduce the general nonisolated system energy equation to terms relevant to a specific physical scenario.",
+        "difficulty": "challenging"
+      },
+      {
+        "id": "sec8-1-mcq-chal-3",
+        "objective": "Apply the conservation of energy principle Delta E_system = Sigma T to analyze energy balance in nonisolated systems.",
+        "difficulty": "challenging"
+      },
+      {
+        "id": "sec8-1-int-easy-1",
+        "objective": "Distinguish among kinetic, potential, and internal energy as forms of energy stored within a system.",
+        "difficulty": "easy"
+      },
+      {
+        "id": "sec8-1-int-easy-2",
+        "objective": "Classify the six mechanisms of energy transfer across a system boundary.",
+        "difficulty": "easy"
+      },
+      {
+        "id": "sec8-1-int-easy-3",
+        "objective": "Identify a nonisolated system as one where energy crosses the system boundary via interactions with the environment.",
+        "difficulty": "easy"
+      },
+      {
+        "id": "sec8-1-int-mod-1",
+        "objective": "Classify the six mechanisms of energy transfer across a system boundary.",
+        "difficulty": "moderate"
+      },
+      {
+        "id": "sec8-1-int-mod-2",
+        "objective": "Reduce the general nonisolated system energy equation to terms relevant to a specific physical scenario.",
+        "difficulty": "moderate"
+      },
+      {
+        "id": "sec8-1-int-mod-3",
+        "objective": "Reduce the general nonisolated system energy equation to terms relevant to a specific physical scenario.",
+        "difficulty": "moderate"
+      },
+      {
+        "id": "sec8-1-int-chal-1",
+        "objective": "Distinguish energy transfers crossing a system boundary from internal energy transformations within a system.",
+        "difficulty": "challenging"
+      },
+      {
+        "id": "sec8-1-int-chal-2",
+        "objective": "Reduce the general nonisolated system energy equation to terms relevant to a specific physical scenario.",
+        "difficulty": "challenging"
+      },
+      {
+        "id": "sec8-1-int-chal-3",
+        "objective": "Apply the conservation of energy principle Delta E_system = Sigma T to analyze energy balance in nonisolated systems.",
+        "difficulty": "challenging"
+      }
+    ],
+    "url": "learn/chapter-8/section-8-1/index.html",
+    "status": "draft"
+  },
+  {
+    "id": "chapter-8-section-8-2",
+    "chapter": "Chapter 8",
+    "subchapter": "8.2 Analysis Model: Isolated System (Energy)",
+    "activities": 18,
+    "activityMetadata": [
+      {
+        "id": "mcq-easy-isolated-system-definition",
+        "objective": "Identify whether a chosen system is isolated or nonisolated based on energy transfers across its boundary.",
+        "difficulty": "easy"
+      },
+      {
+        "id": "mcq-easy-free-fall-potential-energy",
+        "objective": "Apply conservation of mechanical energy to isolated systems where only conservative forces act.",
+        "difficulty": "easy"
+      },
+      {
+        "id": "mcq-easy-transformation-vs-transfer",
+        "objective": "Differentiate between energy transfer across a boundary and energy transformation within an isolated system.",
+        "difficulty": "easy"
+      },
+      {
+        "id": "mcq-mod-path-independence-gravity",
+        "objective": "Apply conservation of mechanical energy to isolated systems where only conservative forces act.",
+        "difficulty": "moderate"
+      },
+      {
+        "id": "mcq-mod-boundary-choice-single-vs-system",
+        "objective": "Analyze how choosing different system boundaries alters whether interactions are internal potential energy or external work.",
+        "difficulty": "moderate"
+      },
+      {
+        "id": "mcq-mod-internal-energy-nonconservative",
+        "objective": "Account for internal energy changes when nonconservative forces act within an isolated system.",
+        "difficulty": "moderate"
+      },
+      {
+        "id": "mcq-chal-spring-gravity-tradeoff",
+        "objective": "Relate kinetic, gravitational potential, and elastic potential energies in multi-component isolated systems.",
+        "difficulty": "challenging"
+      },
+      {
+        "id": "mcq-chal-pendulum-tension-isolation",
+        "objective": "Identify whether a chosen system is isolated or nonisolated based on energy transfers across its boundary.",
+        "difficulty": "challenging"
+      },
+      {
+        "id": "mcq-chal-sliding-block-thermal-total",
+        "objective": "Account for internal energy changes when nonconservative forces act within an isolated system.",
+        "difficulty": "challenging"
+      },
+      {
+        "id": "interactive-easy-classify-energy-processes",
+        "objective": "Differentiate between energy transfer across a boundary and energy transformation within an isolated system.",
+        "difficulty": "easy"
+      },
+      {
+        "id": "interactive-easy-match-system-descriptions",
+        "objective": "Identify whether a chosen system is isolated or nonisolated based on energy transfers across its boundary.",
+        "difficulty": "easy"
+      },
+      {
+        "id": "interactive-easy-select-isolated-criteria",
+        "objective": "Apply conservation of mechanical energy to isolated systems where only conservative forces act.",
+        "difficulty": "easy"
+      },
+      {
+        "id": "interactive-mod-order-energy-states-fall",
+        "objective": "Apply conservation of mechanical energy to isolated systems where only conservative forces act.",
+        "difficulty": "moderate"
+      },
+      {
+        "id": "interactive-mod-classify-boundary-effects",
+        "objective": "Analyze how choosing different system boundaries alters whether interactions are internal potential energy or external work.",
+        "difficulty": "moderate"
+      },
+      {
+        "id": "interactive-mod-match-force-transformations",
+        "objective": "Account for internal energy changes when nonconservative forces act within an isolated system.",
+        "difficulty": "moderate"
+      },
+      {
+        "id": "interactive-chal-order-popgun-trajectory",
+        "objective": "Relate kinetic, gravitational potential, and elastic potential energies in multi-component isolated systems.",
+        "difficulty": "challenging"
+      },
+      {
+        "id": "interactive-chal-select-conserved-conditions",
+        "objective": "Identify whether a chosen system is isolated or nonisolated based on energy transfers across its boundary.",
+        "difficulty": "challenging"
+      },
+      {
+        "id": "interactive-chal-match-multi-energy-scenarios",
+        "objective": "Relate kinetic, gravitational potential, and elastic potential energies in multi-component isolated systems.",
+        "difficulty": "challenging"
+      }
+    ],
+    "url": "learn/chapter-8/section-8-2/index.html",
+    "status": "draft"
+  },
+  {
+    "id": "chapter-8-section-8-3",
+    "chapter": "Chapter 8",
+    "subchapter": "8.3 Situations Involving Kinetic Friction",
+    "activities": 18,
+    "activityMetadata": [
+      {
+        "id": "mcq-easy-internal-energy-destination",
+        "objective": "Relate the increase in internal energy of a system to the kinetic friction force and path length.",
+        "difficulty": "easy"
+      },
+      {
+        "id": "mcq-easy-microscopic-contact-displacement",
+        "objective": "Describe microscopic contact and deformation mechanisms transforming kinetic energy into internal energy.",
+        "difficulty": "easy"
+      },
+      {
+        "id": "mcq-easy-kinetic-energy-loss-accounting",
+        "objective": "Apply energy conservation equations to nonisolated systems experiencing friction dissipation.",
+        "difficulty": "easy"
+      },
+      {
+        "id": "mcq-mod-work-kinetic-energy-limitation",
+        "objective": "Explain why the work done by kinetic friction cannot be calculated from object displacement alone.",
+        "difficulty": "moderate"
+      },
+      {
+        "id": "mcq-mod-pulling-angle-and-friction",
+        "objective": "Analyze how force angle alters normal force, kinetic friction, and kinetic energy gain.",
+        "difficulty": "moderate"
+      },
+      {
+        "id": "mcq-mod-spring-block-energy-balance",
+        "objective": "Apply energy conservation equations to nonisolated systems experiencing friction dissipation.",
+        "difficulty": "moderate"
+      },
+      {
+        "id": "mcq-chal-optimal-angle-analysis",
+        "objective": "Analyze how force angle alters normal force, kinetic friction, and kinetic energy gain.",
+        "difficulty": "challenging"
+      },
+      {
+        "id": "mcq-chal-point-of-application-paradox",
+        "objective": "Explain why the work done by kinetic friction cannot be calculated from object displacement alone.",
+        "difficulty": "challenging"
+      },
+      {
+        "id": "mcq-chal-system-boundary-energy-tracking",
+        "objective": "Apply energy conservation equations to nonisolated systems experiencing friction dissipation.",
+        "difficulty": "challenging"
+      },
+      {
+        "id": "int-easy-energy-transformation-classification",
+        "objective": "Relate the increase in internal energy of a system to the kinetic friction force and path length.",
+        "difficulty": "easy"
+      },
+      {
+        "id": "int-easy-friction-effects-matching",
+        "objective": "Describe microscopic contact and deformation mechanisms transforming kinetic energy into internal energy.",
+        "difficulty": "easy"
+      },
+      {
+        "id": "int-easy-sliding-distance-ordering",
+        "objective": "Relate the increase in internal energy of a system to the kinetic friction force and path length.",
+        "difficulty": "easy"
+      },
+      {
+        "id": "int-mod-angle-tradeoff-selection",
+        "objective": "Analyze how force angle alters normal force, kinetic friction, and kinetic energy gain.",
+        "difficulty": "moderate"
+      },
+      {
+        "id": "int-mod-energy-formulation-matching",
+        "objective": "Apply energy conservation equations to nonisolated systems experiencing friction dissipation.",
+        "difficulty": "moderate"
+      },
+      {
+        "id": "int-mod-spring-friction-stopping-ordering",
+        "objective": "Apply energy conservation equations to nonisolated systems experiencing friction dissipation.",
+        "difficulty": "moderate"
+      },
+      {
+        "id": "int-chal-microscopic-vs-bulk-classification",
+        "objective": "Explain why the work done by kinetic friction cannot be calculated from object displacement alone.",
+        "difficulty": "challenging"
+      },
+      {
+        "id": "int-chal-pulling-parameter-comparison-ordering",
+        "objective": "Analyze how force angle alters normal force, kinetic friction, and kinetic energy gain.",
+        "difficulty": "challenging"
+      },
+      {
+        "id": "int-chal-energy-conservation-criteria-selection",
+        "objective": "Apply energy conservation equations to nonisolated systems experiencing friction dissipation.",
+        "difficulty": "challenging"
+      }
+    ],
+    "url": "learn/chapter-8/section-8-3/index.html",
+    "status": "draft"
+  },
+  {
+    "id": "chapter-8-section-8-4",
+    "chapter": "Chapter 8",
+    "subchapter": "8.4 Changes in Mechanical Energy for Nonconservative Forces",
+    "activities": 18,
+    "activityMetadata": [
+      {
+        "id": "mcq-friction-internal-energy-concept",
+        "objective": "Relate the increase in internal energy \u0394Eint to the work done against kinetic friction (fk * d).",
+        "difficulty": "easy"
+      },
+      {
+        "id": "mcq-isolated-system-energy-conservation",
+        "objective": "Apply the energy conservation equation \u0394K + \u0394U + \u0394Eint = 0 to isolated systems involving kinetic friction.",
+        "difficulty": "easy"
+      },
+      {
+        "id": "mcq-bar-chart-initial-state",
+        "objective": "Interpret energy bar charts tracking kinetic, potential, internal, and constant total energy in an isolated system.",
+        "difficulty": "easy"
+      },
+      {
+        "id": "mcq-ramp-length-dissipation",
+        "objective": "Predict how changing path length or surface friction affects final speed and mechanical energy dissipation.",
+        "difficulty": "moderate"
+      },
+      {
+        "id": "mcq-spring-compression-friction",
+        "objective": "Analyze systems combining gravitational, elastic potential, and internal energy changes.",
+        "difficulty": "moderate"
+      },
+      {
+        "id": "mcq-bar-chart-intermediate-state",
+        "objective": "Interpret energy bar charts tracking kinetic, potential, internal, and constant total energy in an isolated system.",
+        "difficulty": "moderate"
+      },
+      {
+        "id": "mcq-connected-blocks-energy-balance",
+        "objective": "Analyze systems combining gravitational, elastic potential, and internal energy changes.",
+        "difficulty": "challenging"
+      },
+      {
+        "id": "mcq-two-path-incline-comparison",
+        "objective": "Predict how changing path length or surface friction affects final speed and mechanical energy dissipation.",
+        "difficulty": "challenging"
+      },
+      {
+        "id": "mcq-internal-energy-irreversibility",
+        "objective": "Apply the energy conservation equation \u0394K + \u0394U + \u0394Eint = 0 to isolated systems involving kinetic friction.",
+        "difficulty": "challenging"
+      },
+      {
+        "id": "interactive-energy-type-classification",
+        "objective": "Relate the increase in internal energy \u0394Eint to the work done against kinetic friction (fk * d).",
+        "difficulty": "easy"
+      },
+      {
+        "id": "interactive-friction-distance-matching",
+        "objective": "Relate the increase in internal energy \u0394Eint to the work done against kinetic friction (fk * d).",
+        "difficulty": "easy"
+      },
+      {
+        "id": "interactive-energy-equation-term-selection",
+        "objective": "Apply the energy conservation equation \u0394K + \u0394U + \u0394Eint = 0 to isolated systems involving kinetic friction.",
+        "difficulty": "easy"
+      },
+      {
+        "id": "interactive-bar-chart-stage-ordering",
+        "objective": "Interpret energy bar charts tracking kinetic, potential, internal, and constant total energy in an isolated system.",
+        "difficulty": "moderate"
+      },
+      {
+        "id": "interactive-ramp-angle-comparison-matching",
+        "objective": "Predict how changing path length or surface friction affects final speed and mechanical energy dissipation.",
+        "difficulty": "moderate"
+      },
+      {
+        "id": "interactive-sliding-scenario-classification",
+        "objective": "Apply the energy conservation equation \u0394K + \u0394U + \u0394Eint = 0 to isolated systems involving kinetic friction.",
+        "difficulty": "moderate"
+      },
+      {
+        "id": "interactive-system-stages-energy-ordering",
+        "objective": "Analyze systems combining gravitational, elastic potential, and internal energy changes.",
+        "difficulty": "challenging"
+      },
+      {
+        "id": "interactive-friction-effects-multi-selection",
+        "objective": "Predict how changing path length or surface friction affects final speed and mechanical energy dissipation.",
+        "difficulty": "challenging"
+      },
+      {
+        "id": "interactive-connected-system-energy-matching",
+        "objective": "Analyze systems combining gravitational, elastic potential, and internal energy changes.",
+        "difficulty": "challenging"
+      }
+    ],
+    "url": "learn/chapter-8/section-8-4/index.html",
+    "status": "draft"
+  },
+  {
+    "id": "chapter-8-section-8-5",
+    "chapter": "Chapter 8",
+    "subchapter": "8.5 Power",
+    "activities": 18,
+    "activityMetadata": [
+      {
+        "id": "mcq-power-vs-work-duration",
+        "objective": "Define instantaneous and average power as the time rate of energy transfer or work performed.",
+        "difficulty": "easy"
+      },
+      {
+        "id": "mcq-units-kwh-distinction",
+        "objective": "Distinguish power units like watts and horsepower from energy units like kilowatt-hours and joules.",
+        "difficulty": "easy"
+      },
+      {
+        "id": "mcq-watts-unit-meaning",
+        "objective": "Distinguish power units like watts and horsepower from energy units like kilowatt-hours and joules.",
+        "difficulty": "easy"
+      },
+      {
+        "id": "mcq-dot-product-orientation",
+        "objective": "Relate instantaneous mechanical power to the scalar dot product of force and velocity vectors.",
+        "difficulty": "moderate"
+      },
+      {
+        "id": "mcq-constant-force-speed-variation",
+        "objective": "Analyze the mechanical power required for objects in uniform motion versus accelerating motion.",
+        "difficulty": "moderate"
+      },
+      {
+        "id": "mcq-average-vs-instantaneous-power",
+        "objective": "Define instantaneous and average power as the time rate of energy transfer or work performed.",
+        "difficulty": "moderate"
+      },
+      {
+        "id": "mcq-accelerating-vs-steady-climb",
+        "objective": "Analyze the mechanical power required for objects in uniform motion versus accelerating motion.",
+        "difficulty": "challenging"
+      },
+      {
+        "id": "mcq-variable-angle-power-trends",
+        "objective": "Relate instantaneous mechanical power to the scalar dot product of force and velocity vectors.",
+        "difficulty": "challenging"
+      },
+      {
+        "id": "mcq-energy-rate-budget-comparison",
+        "objective": "Distinguish power units like watts and horsepower from energy units like kilowatt-hours and joules.",
+        "difficulty": "challenging"
+      },
+      {
+        "id": "interactive-classify-units-quantity",
+        "objective": "Distinguish power units like watts and horsepower from energy units like kilowatt-hours and joules.",
+        "difficulty": "easy"
+      },
+      {
+        "id": "interactive-order-power-rates",
+        "objective": "Define instantaneous and average power as the time rate of energy transfer or work performed.",
+        "difficulty": "easy"
+      },
+      {
+        "id": "interactive-match-physical-quantities",
+        "objective": "Distinguish power units like watts and horsepower from energy units like kilowatt-hours and joules.",
+        "difficulty": "easy"
+      },
+      {
+        "id": "interactive-classify-motion-power-demands",
+        "objective": "Analyze the mechanical power required for objects in uniform motion versus accelerating motion.",
+        "difficulty": "moderate"
+      },
+      {
+        "id": "interactive-select-power-statements",
+        "objective": "Define instantaneous and average power as the time rate of energy transfer or work performed.",
+        "difficulty": "moderate"
+      },
+      {
+        "id": "interactive-order-dot-product-power",
+        "objective": "Relate instantaneous mechanical power to the scalar dot product of force and velocity vectors.",
+        "difficulty": "moderate"
+      },
+      {
+        "id": "interactive-match-elevator-loading-regimes",
+        "objective": "Analyze the mechanical power required for objects in uniform motion versus accelerating motion.",
+        "difficulty": "challenging"
+      },
+      {
+        "id": "interactive-select-vector-alignment-conditions",
+        "objective": "Relate instantaneous mechanical power to the scalar dot product of force and velocity vectors.",
+        "difficulty": "challenging"
+      },
+      {
+        "id": "interactive-order-accelerating-power-instants",
+        "objective": "Analyze the mechanical power required for objects in uniform motion versus accelerating motion.",
+        "difficulty": "challenging"
+      }
+    ],
+    "url": "learn/chapter-8/section-8-5/index.html",
+    "status": "draft"
+  },
+  {
+    "id": "chapter-9-section-9-1",
+    "chapter": "Chapter 9",
+    "subchapter": "9.1 Linear Momentum",
+    "activities": 18,
+    "activityMetadata": [
+      {
+        "id": "act-mcq-01-vector-nature",
+        "objective": "Define linear momentum as the product of mass and velocity and identify its vector nature, dimensions, and SI units.",
+        "difficulty": "easy"
+      },
+      {
+        "id": "act-mcq-02-si-units",
+        "objective": "Define linear momentum as the product of mass and velocity and identify its vector nature, dimensions, and SI units.",
+        "difficulty": "easy"
+      },
+      {
+        "id": "act-mcq-03-net-force-definition",
+        "objective": "State and apply Newton's second law as the time rate of change of linear momentum of a particle.",
+        "difficulty": "easy"
+      },
+      {
+        "id": "act-mcq-04-two-particle-opposite-momentum",
+        "objective": "Distinguish linear momentum from kinetic energy in terms of vector directionality and energy transformations.",
+        "difficulty": "moderate"
+      },
+      {
+        "id": "act-mcq-05-third-law-connection",
+        "objective": "Relate momentum conservation in a two-particle system to Newton's third law action-reaction pairs.",
+        "difficulty": "moderate"
+      },
+      {
+        "id": "act-mcq-06-equal-speed-comparison",
+        "objective": "Compare the momenta of objects having equal kinetic energies or equal speeds with different masses.",
+        "difficulty": "moderate"
+      },
+      {
+        "id": "act-mcq-07-equal-ke-momentum-relation",
+        "objective": "Compare the momenta of objects having equal kinetic energies or equal speeds with different masses.",
+        "difficulty": "challenging"
+      },
+      {
+        "id": "act-mcq-08-isolated-subsystem-fallacy",
+        "objective": "State and apply Newton's second law as the time rate of change of linear momentum of a particle.",
+        "difficulty": "challenging"
+      },
+      {
+        "id": "act-mcq-09-no-momentum-conversion",
+        "objective": "Distinguish linear momentum from kinetic energy in terms of vector directionality and energy transformations.",
+        "difficulty": "challenging"
+      },
+      {
+        "id": "act-int-01-scalar-vs-vector-class",
+        "objective": "Define linear momentum as the product of mass and velocity and identify its vector nature, dimensions, and SI units.",
+        "difficulty": "easy"
+      },
+      {
+        "id": "act-int-02-quantity-dimension-match",
+        "objective": "Define linear momentum as the product of mass and velocity and identify its vector nature, dimensions, and SI units.",
+        "difficulty": "easy"
+      },
+      {
+        "id": "act-int-03-linear-momentum-properties-select",
+        "objective": "Define linear momentum as the product of mass and velocity and identify its vector nature, dimensions, and SI units.",
+        "difficulty": "easy"
+      },
+      {
+        "id": "act-int-04-energy-momentum-contrast-class",
+        "objective": "Distinguish linear momentum from kinetic energy in terms of vector directionality and energy transformations.",
+        "difficulty": "moderate"
+      },
+      {
+        "id": "act-int-05-newton-second-law-steps-order",
+        "objective": "Relate momentum conservation in a two-particle system to Newton's third law action-reaction pairs.",
+        "difficulty": "moderate"
+      },
+      {
+        "id": "act-int-06-equal-speed-momentum-rank",
+        "objective": "Compare the momenta of objects having equal kinetic energies or equal speeds with different masses.",
+        "difficulty": "moderate"
+      },
+      {
+        "id": "act-int-07-equal-ke-mass-momentum-rank",
+        "objective": "Compare the momenta of objects having equal kinetic energies or equal speeds with different masses.",
+        "difficulty": "challenging"
+      },
+      {
+        "id": "act-int-08-conservation-validity-select",
+        "objective": "Relate momentum conservation in a two-particle system to Newton's third law action-reaction pairs.",
+        "difficulty": "challenging"
+      },
+      {
+        "id": "act-int-09-mechanics-models-match",
+        "objective": "State and apply Newton's second law as the time rate of change of linear momentum of a particle.",
+        "difficulty": "challenging"
+      }
+    ],
+    "url": "learn/chapter-9/section-9-1/index.html",
+    "status": "draft"
+  },
+  {
+    "id": "chapter-9-section-9-2",
+    "chapter": "Chapter 9",
+    "subchapter": "9.2 Analysis Model: Isolated System (Momentum)",
+    "activities": 18,
+    "activityMetadata": [
+      {
+        "id": "act-mcq-iso-01",
+        "objective": "Define an isolated system in the context of linear momentum as one subject to zero net external force.",
+        "difficulty": "easy"
+      },
+      {
+        "id": "act-mcq-iso-02",
+        "objective": "State and apply the principle of conservation of linear momentum for an isolated system.",
+        "difficulty": "easy"
+      },
+      {
+        "id": "act-mcq-iso-03",
+        "objective": "Distinguish between internal forces that exchange momentum and external forces that alter system momentum.",
+        "difficulty": "easy"
+      },
+      {
+        "id": "act-mcq-iso-04",
+        "objective": "Predict recoil velocities of interacting bodies within an isolated system using directional conservation.",
+        "difficulty": "moderate"
+      },
+      {
+        "id": "act-mcq-iso-05",
+        "objective": "Analyze momentum conservation independently along orthogonal coordinate axes.",
+        "difficulty": "moderate"
+      },
+      {
+        "id": "act-mcq-iso-06",
+        "objective": "State and apply the principle of conservation of linear momentum for an isolated system.",
+        "difficulty": "moderate"
+      },
+      {
+        "id": "act-mcq-iso-07",
+        "objective": "Analyze momentum conservation independently along orthogonal coordinate axes.",
+        "difficulty": "challenging"
+      },
+      {
+        "id": "act-mcq-iso-08",
+        "objective": "Predict recoil velocities of interacting bodies within an isolated system using directional conservation.",
+        "difficulty": "challenging"
+      },
+      {
+        "id": "act-mcq-iso-09",
+        "objective": "Distinguish between internal forces that exchange momentum and external forces that alter system momentum.",
+        "difficulty": "challenging"
+      },
+      {
+        "id": "act-int-iso-01",
+        "objective": "Define an isolated system in the context of linear momentum as one subject to zero net external force.",
+        "difficulty": "easy"
+      },
+      {
+        "id": "act-int-iso-02",
+        "objective": "State and apply the principle of conservation of linear momentum for an isolated system.",
+        "difficulty": "easy"
+      },
+      {
+        "id": "act-int-iso-03",
+        "objective": "Predict recoil velocities of interacting bodies within an isolated system using directional conservation.",
+        "difficulty": "easy"
+      },
+      {
+        "id": "act-int-iso-04",
+        "objective": "Predict recoil velocities of interacting bodies within an isolated system using directional conservation.",
+        "difficulty": "moderate"
+      },
+      {
+        "id": "act-int-iso-05",
+        "objective": "Distinguish between internal forces that exchange momentum and external forces that alter system momentum.",
+        "difficulty": "moderate"
+      },
+      {
+        "id": "act-int-iso-06",
+        "objective": "Analyze momentum conservation independently along orthogonal coordinate axes.",
+        "difficulty": "moderate"
+      },
+      {
+        "id": "act-int-iso-07",
+        "objective": "Predict recoil velocities of interacting bodies within an isolated system using directional conservation.",
+        "difficulty": "challenging"
+      },
+      {
+        "id": "act-int-iso-08",
+        "objective": "Analyze momentum conservation independently along orthogonal coordinate axes.",
+        "difficulty": "challenging"
+      },
+      {
+        "id": "act-int-iso-09",
+        "objective": "Distinguish between internal forces that exchange momentum and external forces that alter system momentum.",
+        "difficulty": "challenging"
+      }
+    ],
+    "url": "learn/chapter-9/section-9-2/index.html",
+    "status": "draft"
+  },
+  {
+    "id": "chapter-9-section-9-3",
+    "chapter": "Chapter 9",
+    "subchapter": "9.3 Analysis Model: Nonisolated System (Momentum)",
+    "activities": 18,
+    "activityMetadata": [
+      {
+        "id": "sec9-3-mcq-01",
+        "objective": "Define linear impulse as the time integral of net external force and the area under a force-time graph.",
+        "difficulty": "easy"
+      },
+      {
+        "id": "sec9-3-mcq-02",
+        "objective": "Relate impulse to a particle's change in momentum using the impulse-momentum theorem.",
+        "difficulty": "easy"
+      },
+      {
+        "id": "sec9-3-mcq-03",
+        "objective": "Explain how extending collision duration reduces average force for a given momentum change in safety devices.",
+        "difficulty": "easy"
+      },
+      {
+        "id": "sec9-3-mcq-04",
+        "objective": "Distinguish between a time-varying force and its equivalent constant time-averaged force.",
+        "difficulty": "moderate"
+      },
+      {
+        "id": "sec9-3-mcq-05",
+        "objective": "Relate impulse to a particle's change in momentum when velocity reverses direction.",
+        "difficulty": "moderate"
+      },
+      {
+        "id": "sec9-3-mcq-06",
+        "objective": "Apply the impulse approximation by identifying dominant impulsive contact forces over brief collision intervals.",
+        "difficulty": "moderate"
+      },
+      {
+        "id": "sec9-3-mcq-07",
+        "objective": "Contrast momentum transfer across a system boundary with energy transfer mechanisms.",
+        "difficulty": "challenging"
+      },
+      {
+        "id": "sec9-3-mcq-08",
+        "objective": "Compare the impulse delivered by identical forces acting over equal distance versus equal time intervals.",
+        "difficulty": "challenging"
+      },
+      {
+        "id": "sec9-3-mcq-09",
+        "objective": "Analyze directional impulse requirements for a projectile redirected at an oblique angle.",
+        "difficulty": "challenging"
+      },
+      {
+        "id": "sec9-3-int-01",
+        "objective": "Define linear impulse as the time integral of net external force and the area under a force-time graph.",
+        "difficulty": "easy"
+      },
+      {
+        "id": "sec9-3-int-02",
+        "objective": "Relate impulse to a particle's change in momentum using the impulse-momentum theorem.",
+        "difficulty": "easy"
+      },
+      {
+        "id": "sec9-3-int-03",
+        "objective": "Explain how extending collision duration reduces average force for a given momentum change in safety devices.",
+        "difficulty": "easy"
+      },
+      {
+        "id": "sec9-3-int-04",
+        "objective": "Relate impulse to momentum change for stopping versus rebounding trajectories.",
+        "difficulty": "moderate"
+      },
+      {
+        "id": "sec9-3-int-05",
+        "objective": "Apply the impulse approximation by identifying dominant impulsive contact forces over brief collision intervals.",
+        "difficulty": "moderate"
+      },
+      {
+        "id": "sec9-3-int-06",
+        "objective": "Distinguish between a time-varying force and its equivalent constant time-averaged force.",
+        "difficulty": "moderate"
+      },
+      {
+        "id": "sec9-3-int-07",
+        "objective": "Contrast momentum transfer across a system boundary with energy transfer mechanisms.",
+        "difficulty": "challenging"
+      },
+      {
+        "id": "sec9-3-int-08",
+        "objective": "Compare the impulse delivered by identical forces acting over equal distance versus equal time intervals.",
+        "difficulty": "challenging"
+      },
+      {
+        "id": "sec9-3-int-09",
+        "objective": "Distinguish vector impulse components during glancing and oblique wall collisions.",
+        "difficulty": "challenging"
+      }
+    ],
+    "url": "learn/chapter-9/section-9-3/index.html",
+    "status": "draft"
+  },
+  {
+    "id": "chapter-9-section-9-4",
+    "chapter": "Chapter 9",
+    "subchapter": "9.4 Collisions in One Dimension",
+    "activities": 18,
+    "activityMetadata": [
+      {
+        "id": "act-mcq-01-easy",
+        "objective": "Distinguish between elastic, inelastic, and perfectly inelastic collisions based on kinetic energy conservation.",
+        "difficulty": "easy"
+      },
+      {
+        "id": "act-mcq-02-easy",
+        "objective": "Apply conservation of linear momentum to solve for final velocities in perfectly inelastic one-dimensional collisions.",
+        "difficulty": "easy"
+      },
+      {
+        "id": "act-mcq-03-easy",
+        "objective": "Predict post-collision motion in elastic collisions for equal masses, stationary targets, and extreme mass ratios.",
+        "difficulty": "easy"
+      },
+      {
+        "id": "act-mcq-04-mod",
+        "objective": "Apply relative velocity relationships to analyze one-dimensional elastic collisions between two isolated bodies.",
+        "difficulty": "moderate"
+      },
+      {
+        "id": "act-mcq-05-mod",
+        "objective": "Predict post-collision motion in elastic collisions for equal masses, stationary targets, and extreme mass ratios.",
+        "difficulty": "moderate"
+      },
+      {
+        "id": "act-mcq-06-mod",
+        "objective": "Distinguish between elastic, inelastic, and perfectly inelastic collisions based on kinetic energy conservation.",
+        "difficulty": "moderate"
+      },
+      {
+        "id": "act-mcq-07-diff",
+        "objective": "Analyze multi-stage systems like ballistic pendulums by separating collision and mechanical energy swing phases.",
+        "difficulty": "challenging"
+      },
+      {
+        "id": "act-mcq-08-diff",
+        "objective": "Predict post-collision motion in elastic collisions for equal masses, stationary targets, and extreme mass ratios.",
+        "difficulty": "challenging"
+      },
+      {
+        "id": "act-mcq-09-diff",
+        "objective": "Apply relative velocity relationships to analyze one-dimensional elastic collisions between two isolated bodies.",
+        "difficulty": "challenging"
+      },
+      {
+        "id": "act-int-01-easy",
+        "objective": "Distinguish between elastic, inelastic, and perfectly inelastic collisions based on kinetic energy conservation.",
+        "difficulty": "easy"
+      },
+      {
+        "id": "act-int-02-easy",
+        "objective": "Predict post-collision motion in elastic collisions for equal masses, stationary targets, and extreme mass ratios.",
+        "difficulty": "easy"
+      },
+      {
+        "id": "act-int-03-easy",
+        "objective": "Distinguish between elastic, inelastic, and perfectly inelastic collisions based on kinetic energy conservation.",
+        "difficulty": "easy"
+      },
+      {
+        "id": "act-int-04-mod",
+        "objective": "Apply conservation of linear momentum to solve for final velocities in perfectly inelastic one-dimensional collisions.",
+        "difficulty": "moderate"
+      },
+      {
+        "id": "act-int-05-mod",
+        "objective": "Apply relative velocity relationships to analyze one-dimensional elastic collisions between two isolated bodies.",
+        "difficulty": "moderate"
+      },
+      {
+        "id": "act-int-06-mod",
+        "objective": "Predict post-collision motion in elastic collisions for equal masses, stationary targets, and extreme mass ratios.",
+        "difficulty": "moderate"
+      },
+      {
+        "id": "act-int-07-diff",
+        "objective": "Analyze multi-stage systems like ballistic pendulums by separating collision and mechanical energy swing phases.",
+        "difficulty": "challenging"
+      },
+      {
+        "id": "act-int-08-diff",
+        "objective": "Predict post-collision motion in elastic collisions for equal masses, stationary targets, and extreme mass ratios.",
+        "difficulty": "challenging"
+      },
+      {
+        "id": "act-int-09-diff",
+        "objective": "Apply relative velocity relationships to analyze one-dimensional elastic collisions between two isolated bodies.",
+        "difficulty": "challenging"
+      }
+    ],
+    "url": "learn/chapter-9/section-9-4/index.html",
+    "status": "draft"
+  },
+  {
+    "id": "chapter-9-section-9-5",
+    "chapter": "Chapter 9",
+    "subchapter": "9.5 Collisions in Two Dimensions",
+    "activities": 18,
+    "activityMetadata": [
+      {
+        "id": "act-mcq-easy-1",
+        "objective": "Apply momentum conservation along independent perpendicular axes in two-dimensional collisions.",
+        "difficulty": "easy"
+      },
+      {
+        "id": "act-mcq-easy-2",
+        "objective": "Determine glancing angles and speeds for two-dimensional elastic collisions using momentum and energy equations.",
+        "difficulty": "easy"
+      },
+      {
+        "id": "act-mcq-easy-3",
+        "objective": "Distinguish between elastic and inelastic collisions in two dimensions using kinetic energy criteria.",
+        "difficulty": "easy"
+      },
+      {
+        "id": "act-mcq-mod-1",
+        "objective": "Analyze perfectly inelastic collisions in two dimensions where colliding bodies coalesce after impact.",
+        "difficulty": "moderate"
+      },
+      {
+        "id": "act-mcq-mod-2",
+        "objective": "Deduce that equal-mass elastic glancing collisions with a stationary target yield perpendicular final trajectories.",
+        "difficulty": "moderate"
+      },
+      {
+        "id": "act-mcq-mod-3",
+        "objective": "Distinguish between elastic and inelastic collisions in two dimensions using kinetic energy criteria.",
+        "difficulty": "moderate"
+      },
+      {
+        "id": "act-mcq-chal-1",
+        "objective": "Determine glancing angles and speeds for two-dimensional elastic collisions using momentum and energy equations.",
+        "difficulty": "challenging"
+      },
+      {
+        "id": "act-mcq-chal-2",
+        "objective": "Deduce that equal-mass elastic glancing collisions with a stationary target yield perpendicular final trajectories.",
+        "difficulty": "challenging"
+      },
+      {
+        "id": "act-mcq-chal-3",
+        "objective": "Distinguish between elastic and inelastic collisions in two dimensions using kinetic energy criteria.",
+        "difficulty": "challenging"
+      },
+      {
+        "id": "act-int-easy-1",
+        "objective": "Apply momentum conservation along independent perpendicular axes in two-dimensional collisions.",
+        "difficulty": "easy"
+      },
+      {
+        "id": "act-int-easy-2",
+        "objective": "Distinguish between elastic and inelastic collisions in two dimensions using kinetic energy criteria.",
+        "difficulty": "easy"
+      },
+      {
+        "id": "act-int-easy-3",
+        "objective": "Determine glancing angles and speeds for two-dimensional elastic collisions using momentum and energy equations.",
+        "difficulty": "easy"
+      },
+      {
+        "id": "act-int-mod-1",
+        "objective": "Apply momentum conservation along independent perpendicular axes in two-dimensional collisions.",
+        "difficulty": "moderate"
+      },
+      {
+        "id": "act-int-mod-2",
+        "objective": "Deduce that equal-mass elastic glancing collisions with a stationary target yield perpendicular final trajectories.",
+        "difficulty": "moderate"
+      },
+      {
+        "id": "act-int-mod-3",
+        "objective": "Analyze perfectly inelastic collisions in two dimensions where colliding bodies coalesce after impact.",
+        "difficulty": "moderate"
+      },
+      {
+        "id": "act-int-chal-1",
+        "objective": "Determine glancing angles and speeds for two-dimensional elastic collisions using momentum and energy equations.",
+        "difficulty": "challenging"
+      },
+      {
+        "id": "act-int-chal-2",
+        "objective": "Distinguish between elastic and inelastic collisions in two dimensions using kinetic energy criteria.",
+        "difficulty": "challenging"
+      },
+      {
+        "id": "act-int-chal-3",
+        "objective": "Deduce that equal-mass elastic glancing collisions with a stationary target yield perpendicular final trajectories.",
+        "difficulty": "challenging"
+      }
+    ],
+    "url": "learn/chapter-9/section-9-5/index.html",
+    "status": "draft"
+  },
+  {
+    "id": "chapter-9-section-9-6",
+    "chapter": "Chapter 9",
+    "subchapter": "9.6 The Center of Mass",
+    "activities": 18,
+    "activityMetadata": [
+      {
+        "id": "mcq-easy-cm-def-balance",
+        "objective": "Explain the center of mass as the mass-weighted average position of a system of particles or an extended body.",
+        "difficulty": "easy"
+      },
+      {
+        "id": "mcq-easy-two-unequal-particles",
+        "objective": "Predict how unequal mass distribution shifts the center of mass position toward the more massive component.",
+        "difficulty": "easy"
+      },
+      {
+        "id": "mcq-easy-force-through-cm",
+        "objective": "Distinguish rotational from pure translational motion when a force is applied at versus away from the center of mass.",
+        "difficulty": "easy"
+      },
+      {
+        "id": "mcq-mod-symmetry-center",
+        "objective": "Determine the center of mass location for symmetric objects of uniform density using symmetry principles.",
+        "difficulty": "moderate"
+      },
+      {
+        "id": "mcq-mod-cg-vs-cm-uniform-field",
+        "objective": "Relate the center of gravity to the center of mass in a uniform gravitational field.",
+        "difficulty": "moderate"
+      },
+      {
+        "id": "mcq-mod-bat-cut-mass-comparison",
+        "objective": "Analyze mass differences between segments when an inhomogeneous object is divided at its center of mass.",
+        "difficulty": "moderate"
+      },
+      {
+        "id": "mcq-chal-nonuniform-density-rod",
+        "objective": "Predict how unequal mass distribution shifts the center of mass position toward the more massive component.",
+        "difficulty": "challenging"
+      },
+      {
+        "id": "mcq-chal-hollow-geometry-cm",
+        "objective": "Determine the center of mass location for symmetric objects of uniform density using symmetry principles.",
+        "difficulty": "challenging"
+      },
+      {
+        "id": "mcq-chal-suspension-lines-cg",
+        "objective": "Relate the center of gravity to the center of mass in a uniform gravitational field.",
+        "difficulty": "challenging"
+      },
+      {
+        "id": "int-easy-line-of-action-motion",
+        "objective": "Distinguish rotational from pure translational motion when a force is applied at versus away from the center of mass.",
+        "difficulty": "easy"
+      },
+      {
+        "id": "int-easy-two-body-cm-shift",
+        "objective": "Predict how unequal mass distribution shifts the center of mass position toward the more massive component.",
+        "difficulty": "easy"
+      },
+      {
+        "id": "int-easy-symmetry-properties",
+        "objective": "Determine the center of mass location for symmetric objects of uniform density using symmetry principles.",
+        "difficulty": "easy"
+      },
+      {
+        "id": "int-mod-plumb-line-balance",
+        "objective": "Relate the center of gravity to the center of mass in a uniform gravitational field.",
+        "difficulty": "moderate"
+      },
+      {
+        "id": "int-mod-tapered-sections-mass",
+        "objective": "Analyze mass differences between segments when an inhomogeneous object is divided at its center of mass.",
+        "difficulty": "moderate"
+      },
+      {
+        "id": "int-mod-composite-particle-quadrants",
+        "objective": "Explain the center of mass as the mass-weighted average position of a system of particles or an extended body.",
+        "difficulty": "moderate"
+      },
+      {
+        "id": "int-chal-density-gradient-ranking",
+        "objective": "Predict how unequal mass distribution shifts the center of mass position toward the more massive component.",
+        "difficulty": "challenging"
+      },
+      {
+        "id": "int-chal-non-material-cm-features",
+        "objective": "Determine the center of mass location for symmetric objects of uniform density using symmetry principles.",
+        "difficulty": "challenging"
+      },
+      {
+        "id": "int-chal-multi-force-dynamic-response",
+        "objective": "Distinguish rotational from pure translational motion when a force is applied at versus away from the center of mass.",
+        "difficulty": "challenging"
+      }
+    ],
+    "url": "learn/chapter-9/section-9-6/index.html",
+    "status": "draft"
+  },
+  {
+    "id": "chapter-9-section-9-7",
+    "chapter": "Chapter 9",
+    "subchapter": "9.7 Systems of Many Particles",
+    "activities": 18,
+    "activityMetadata": [
+      {
+        "id": "act-mcq-easy-1",
+        "objective": "Relate the total linear momentum of a multi-particle system directly to the velocity of its center of mass.",
+        "difficulty": "easy"
+      },
+      {
+        "id": "act-mcq-easy-2",
+        "objective": "Identify why internal forces cancel in pairs and cannot accelerate the center of mass of a system.",
+        "difficulty": "easy"
+      },
+      {
+        "id": "act-mcq-easy-3",
+        "objective": "Predict the trajectory of a projectile's center of mass when it breaks apart in flight under gravity alone.",
+        "difficulty": "easy"
+      },
+      {
+        "id": "act-mcq-mod-1",
+        "objective": "Determine the effect of internal passenger displacement on the velocity of an isolated vessel.",
+        "difficulty": "moderate"
+      },
+      {
+        "id": "act-mcq-mod-2",
+        "objective": "Analyze how an external force applied to a single component accelerates the center of mass of the entire system.",
+        "difficulty": "moderate"
+      },
+      {
+        "id": "act-mcq-mod-3",
+        "objective": "Evaluate linear momentum conservation in an isolated system undergoing internal movement while already in motion.",
+        "difficulty": "moderate"
+      },
+      {
+        "id": "act-mcq-chal-1",
+        "objective": "Deduce the final landing coordinate of a fragment relative to the unperturbed system center of mass.",
+        "difficulty": "challenging"
+      },
+      {
+        "id": "act-mcq-chal-2",
+        "objective": "Contrast the acceleration of individual system members with the acceleration of the center of mass during internal push-offs.",
+        "difficulty": "challenging"
+      },
+      {
+        "id": "act-mcq-chal-3",
+        "objective": "Analyze component-wise momentum conservation when external forces act along only one coordinate axis.",
+        "difficulty": "challenging"
+      },
+      {
+        "id": "act-int-easy-1",
+        "objective": "Classify forces acting in a multi-body scenario as internal or external with respect to a defined system boundary.",
+        "difficulty": "easy"
+      },
+      {
+        "id": "act-int-easy-2",
+        "objective": "Match physical descriptions of multi-particle systems to the corresponding state of center-of-mass velocity.",
+        "difficulty": "easy"
+      },
+      {
+        "id": "act-int-easy-3",
+        "objective": "Select all statements that correctly characterize the center-of-mass motion of a mid-air exploding projectile.",
+        "difficulty": "easy"
+      },
+      {
+        "id": "act-int-mod-1",
+        "objective": "Order the logical sequence proving why internal forces vanish in Newton's second law for a system of particles.",
+        "difficulty": "moderate"
+      },
+      {
+        "id": "act-int-mod-2",
+        "objective": "Classify diverse physical systems by whether their center of mass accelerates, moves at constant non-zero velocity, or stays at rest.",
+        "difficulty": "moderate"
+      },
+      {
+        "id": "act-int-mod-3",
+        "objective": "Match directional fragment movements in an explosion to the required counter-movement maintaining center-of-mass velocity.",
+        "difficulty": "moderate"
+      },
+      {
+        "id": "act-int-chal-1",
+        "objective": "Order multi-particle configurations by the magnitude of their center-of-mass acceleration under differing external force distributions.",
+        "difficulty": "challenging"
+      },
+      {
+        "id": "act-int-chal-2",
+        "objective": "Select all valid physical deductions regarding momentum conservation and center-of-mass motion during internal separations.",
+        "difficulty": "challenging"
+      },
+      {
+        "id": "act-int-chal-3",
+        "objective": "Match specific multi-body interactions to their strictly conserved physical vectors and trajectory invariants.",
+        "difficulty": "challenging"
+      }
+    ],
+    "url": "learn/chapter-9/section-9-7/index.html",
+    "status": "draft"
+  },
+  {
+    "id": "chapter-9-section-9-8",
+    "chapter": "Chapter 9",
+    "subchapter": "9.8 Deformable Systems",
+    "activities": 18,
+    "activityMetadata": [
+      {
+        "id": "mcq-push-off-wall-work",
+        "objective": "Explain why the particle work-kinetic energy theorem does not generally apply to deformable systems.",
+        "difficulty": "easy"
+      },
+      {
+        "id": "mcq-deformable-energy-momentum-isolation",
+        "objective": "Apply energy conservation to track internal energy conversions into kinetic energy in deformable systems.",
+        "difficulty": "easy"
+      },
+      {
+        "id": "mcq-displacement-definition-work",
+        "objective": "Evaluate the work done on a deformable system using the displacement of the point of application.",
+        "difficulty": "easy"
+      },
+      {
+        "id": "mcq-jumper-energy-source",
+        "objective": "Apply energy conservation to track internal energy conversions into kinetic energy in deformable systems.",
+        "difficulty": "moderate"
+      },
+      {
+        "id": "mcq-two-blocks-work-evaluation",
+        "objective": "Distinguish the displacement of a force's application point from the center-of-mass displacement.",
+        "difficulty": "moderate"
+      },
+      {
+        "id": "mcq-impulse-center-of-mass",
+        "objective": "Apply the impulse-momentum theorem to determine the center-of-mass motion of deformable systems.",
+        "difficulty": "moderate"
+      },
+      {
+        "id": "mcq-vibrational-energy-accounting",
+        "objective": "Apply energy conservation to track internal energy conversions into kinetic energy in deformable systems.",
+        "difficulty": "challenging"
+      },
+      {
+        "id": "mcq-work-energy-theorem-breakdown",
+        "objective": "Explain why the particle work-kinetic energy theorem does not generally apply to deformable systems.",
+        "difficulty": "challenging"
+      },
+      {
+        "id": "mcq-nonrigid-impulse-vs-work",
+        "objective": "Apply the impulse-momentum theorem to determine the center-of-mass motion of deformable systems.",
+        "difficulty": "challenging"
+      },
+      {
+        "id": "ia-system-isolation-classification",
+        "objective": "Apply energy conservation to track internal energy conversions into kinetic energy in deformable systems.",
+        "difficulty": "easy"
+      },
+      {
+        "id": "ia-point-vs-cm-displacement-matching",
+        "objective": "Distinguish the displacement of a force's application point from the center-of-mass displacement.",
+        "difficulty": "easy"
+      },
+      {
+        "id": "ia-identify-deformable-features-selection",
+        "objective": "Explain why the particle work-kinetic energy theorem does not generally apply to deformable systems.",
+        "difficulty": "easy"
+      },
+      {
+        "id": "ia-push-off-energy-momentum-ordering",
+        "objective": "Apply energy conservation to track internal energy conversions into kinetic energy in deformable systems.",
+        "difficulty": "moderate"
+      },
+      {
+        "id": "ia-analysis-model-classification",
+        "objective": "Apply the impulse-momentum theorem to determine the center-of-mass motion of deformable systems.",
+        "difficulty": "moderate"
+      },
+      {
+        "id": "ia-external-force-criteria-selection",
+        "objective": "Evaluate the work done on a deformable system using the displacement of the point of application.",
+        "difficulty": "moderate"
+      },
+      {
+        "id": "ia-energy-components-matching",
+        "objective": "Evaluate the work done on a deformable system using the displacement of the point of application.",
+        "difficulty": "challenging"
+      },
+      {
+        "id": "ia-two-block-dynamics-ordering",
+        "objective": "Distinguish the displacement of a force's application point from the center-of-mass displacement.",
+        "difficulty": "challenging"
+      },
+      {
+        "id": "ia-flawed-reasoning-classification",
+        "objective": "Explain why the particle work-kinetic energy theorem does not generally apply to deformable systems.",
+        "difficulty": "challenging"
+      }
+    ],
+    "url": "learn/chapter-9/section-9-8/index.html",
+    "status": "draft"
+  },
+  {
+    "id": "chapter-9-section-9-9",
+    "chapter": "Chapter 9",
+    "subchapter": "9.9 Rocket Propulsion",
+    "activities": 18,
+    "activityMetadata": [
+      {
+        "id": "rp-mcq-easy-1",
+        "objective": "Explain rocket thrust as an internal reaction force without requiring external air to push against.",
+        "difficulty": "easy"
+      },
+      {
+        "id": "rp-mcq-easy-2",
+        "objective": "Model a rocket and its expelled exhaust as an isolated system conserving total linear momentum.",
+        "difficulty": "easy"
+      },
+      {
+        "id": "rp-mcq-easy-3",
+        "objective": "Describe the uniform motion of the system center of mass in free space during propulsion.",
+        "difficulty": "easy"
+      },
+      {
+        "id": "rp-mcq-mod-1",
+        "objective": "Relate thrust to exhaust speed and fuel burn rate using Newton's second and third laws.",
+        "difficulty": "moderate"
+      },
+      {
+        "id": "rp-mcq-mod-2",
+        "objective": "Model a rocket and its expelled exhaust as an isolated system conserving total linear momentum.",
+        "difficulty": "moderate"
+      },
+      {
+        "id": "rp-mcq-mod-3",
+        "objective": "Analyze how exhaust speed and mass ratio determine the final speed change of a rocket.",
+        "difficulty": "moderate"
+      },
+      {
+        "id": "rp-mcq-chal-1",
+        "objective": "Analyze how exhaust speed and mass ratio determine the final speed change of a rocket.",
+        "difficulty": "challenging"
+      },
+      {
+        "id": "rp-mcq-chal-2",
+        "objective": "Describe the uniform motion of the system center of mass in free space during propulsion.",
+        "difficulty": "challenging"
+      },
+      {
+        "id": "rp-mcq-chal-3",
+        "objective": "Relate thrust to exhaust speed and fuel burn rate using Newton's second and third laws.",
+        "difficulty": "challenging"
+      },
+      {
+        "id": "rp-int-easy-1",
+        "objective": "Explain rocket thrust as an internal reaction force without requiring external air to push against.",
+        "difficulty": "easy"
+      },
+      {
+        "id": "rp-int-easy-2",
+        "objective": "Relate thrust to exhaust speed and fuel burn rate using Newton's second and third laws.",
+        "difficulty": "easy"
+      },
+      {
+        "id": "rp-int-easy-3",
+        "objective": "Describe the uniform motion of the system center of mass in free space during propulsion.",
+        "difficulty": "easy"
+      },
+      {
+        "id": "rp-int-mod-1",
+        "objective": "Relate thrust to exhaust speed and fuel burn rate using Newton's second and third laws.",
+        "difficulty": "moderate"
+      },
+      {
+        "id": "rp-int-mod-2",
+        "objective": "Analyze how exhaust speed and mass ratio determine the final speed change of a rocket.",
+        "difficulty": "moderate"
+      },
+      {
+        "id": "rp-int-mod-3",
+        "objective": "Model a rocket and its expelled exhaust as an isolated system conserving total linear momentum.",
+        "difficulty": "moderate"
+      },
+      {
+        "id": "rp-int-chal-1",
+        "objective": "Analyze how exhaust speed and mass ratio determine the final speed change of a rocket.",
+        "difficulty": "challenging"
+      },
+      {
+        "id": "rp-int-chal-2",
+        "objective": "Relate thrust to exhaust speed and fuel burn rate using Newton's second and third laws.",
+        "difficulty": "challenging"
+      },
+      {
+        "id": "rp-int-chal-3",
+        "objective": "Model a rocket and its expelled exhaust as an isolated system conserving total linear momentum.",
+        "difficulty": "challenging"
+      }
+    ],
+    "url": "learn/chapter-9/section-9-9/index.html",
+    "status": "draft"
+  }
+]

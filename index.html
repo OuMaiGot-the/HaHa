@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#163d36" />
+    <title>HaHa · Choose your subject</title>
+    <link rel="stylesheet" href="hub.css" />
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <div class="app-shell">
+      <header class="app-header">
+        <a class="brand" href="#subjects"
+          ><span class="brand-mark" aria-hidden="true">h.</span
+          ><span>HaHa<span class="brand-caption">LEARNING STUDIO</span></span></a
+        >
+        <nav id="navigation" aria-label="Main navigation"></nav>
+        <label class="language-label" for="locale"
+          >Language<select id="locale">
+            <option value="en">English</option>
+            <option value="ms">Bahasa Melayu</option>
+            <option value="zh">简体中文</option>
+          </select></label
+        >
+      </header>
+      <main id="main" tabindex="-1">
+        <p id="status" role="status">Loading your study space…</p>
+        <div id="chapters"></div>
+      </main>
+      <footer>
+        HaHa Learning ·
+        <span id="footer-copy">Concepts first. Confidence follows.</span>
+      </footer>
+    </div>
+    <script src="learning.js"></script>
+    <script src="study.js"></script>
+    <script src="hub-copy.js"></script>
+    <script src="catalog.js"></script>
+  </body>
+</html>
