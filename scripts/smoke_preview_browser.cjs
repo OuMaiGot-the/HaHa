@@ -54,7 +54,9 @@ const assert = require('node:assert/strict');
         assert.equal(await page.locator('.feedback--incorrect').count(), 1);
         for (const selector of ['.feedback--incorrect', '.choice[aria-pressed="true"]', '#check']) {
           const rgb = await page.locator(selector).evaluate(el => getComputedStyle(el).borderLeftColor.match(/\d+/g).map(Number));
-          assert(rgb[0] > rgb[1], theme + ': wrong answer must be red');
+          assert(rgb[0] > rgb[1], theme + ': wrong answer border must be red');
+          const background = await page.locator(selector).evaluate(el => getComputedStyle(el).backgroundColor.match(/\d+/g).map(Number));
+          assert(background[0] > background[1], theme + ': wrong answer background must be red');
         }
         await page.locator('#check').click();
         assert.equal(await page.locator('[role="status"]').count(), 0, 'Retry did not reset feedback');
