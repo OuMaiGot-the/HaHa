@@ -72,12 +72,29 @@ A deployment entry records operational publication state. Content quality remain
 
 ## HaHa catalog release
 
-The HaHa catalog uses `.github/workflows/deploy-preview-pages.yml` to build and
-browser-test the complete catalog before deploying it to GitHub Pages. Pushes to
-`main` and manual dispatch both trigger this release. The `github-pages`
-environment and Pages permissions remain enforced. The expected public route is
-`https://oumaigot-the.github.io/HaHa/`; an Actions success alone is insufficient:
-verify the public catalog, M4 assets, lessons, and device-local learning flow.
-The `gh-pages` branch is a separately published static artifact, not proof of a
-live website. Vercel publication remains optional and requires its configured
-team authorization and CI credential; Pages does not require a Vercel token.
+The current HaHa M4 catalog is hosted publicly with Sites:
+https://haha-physics-learning-m4.hazygiant2048.chatgpt.site
+
+- Application source: `OuMaiGot-the/HaHa`, M4 merged in `4b9735e`.
+- Built application revision: `94a8bc4af14bb3b0ef68e8b8780386b94a367f89`.
+- Sites project: `appgprj_6ae2f8d4150481918a021bf9fc861205`.
+- Saved version: `appgprj_6ae2f8d4150481918a021bf9fc861205~appgver_7e4413a32e7c819187cadce27040dd2e`.
+- Site source commit: `3f7f4ee075d3f99d43e6239f349be5744f327fe6`.
+
+Sites contains a static build of the repository app, not a separate implementation.
+For updates, build with `python scripts/build_catalog_release.py preview`, reuse
+the same Sites project and its source repository, replace the deployment's `dist/`
+with the validated static build, and save/deploy that exact pushed source version.
+Use the Sites source workflow and retain `.openai/hosting.json` in its checkout.
+Do not create a second Site for later releases or copy credentials into this repo.
+GitHub source changes do not automatically publish to Sites.
+
+All progress remains device-local. A different host has a different browser
+storage origin, so earlier-host progress does not automatically migrate.
+
+The `gh-pages` branch remains a separately published static artifact, not proof
+of a live website. The GitHub Pages workflow remains manual because automatic
+site creation was denied by GitHub's integration permissions. Enable Pages at
+repository level before running that optional workflow. Vercel publication is
+also optional and still requires its configured team authorization and CI
+credential. Neither blocked host is required for the working Sites deployment.

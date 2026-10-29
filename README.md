@@ -154,3 +154,10 @@ config/configure_project.toml
 `sync-workstation.cmd` derives project slug/environment namespace, checkout path, state root, OAuth/token locations, Chrome profile, Drive coordination identity, and run-state paths per PC.
 
 Credentials, source PDFs, browser profiles, tokens, and run data remain outside Git.
+
+## HaHa learner app
+
+[Open the public HaHa M4 app](https://haha-physics-learning-m4.hazygiant2048.chatgpt.site).
+The catalog includes 15 lessons, three interface languages, device-local attempts,
+mastery evidence, and adaptive recommendations. See [deployment details](docs/DEPLOYMENTS.md)
+for hosting, update steps, and storage-origin limitations.

@@ -1,7 +1,5 @@
 name: Deploy HaHa learning catalog to Pages
 on:
-  push:
-    branches: [main]
   workflow_dispatch:
 permissions:
   contents: read
