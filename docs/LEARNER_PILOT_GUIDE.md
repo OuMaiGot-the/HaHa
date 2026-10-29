@@ -57,7 +57,7 @@ ability by speed. After about two minutes without progress, offer help or move o
 
 | ID | Read to learner | Observe without coaching | Evidence of completion |
 | --- | --- | --- | --- |
-| T1 | Find the lesson about measurement standards. Open its concept overview, then enter the lesson. | Meaning of the four home choices, search/chapter filters and overview action | Correct lesson and overview reached without facilitator navigation help |
+| T1 | Choose Physics, then find the lesson about measurement standards. Open its concept overview, then enter the lesson. | Meaning of the four home choices, search/chapter filters and overview action | Correct lesson and overview reached without facilitator navigation help |
 | T2 | Choose an answer. For this feedback check, please use the intentionally incorrect option I identify, check it, then use a hint and try again. | Whether red feedback, retry text and the selected response are understood; whether the hint can be found | Incorrect state visibly red; learner can retry; correct state visibly green; supported success remains distinguishable |
 | T3 | Return to the study space. Build an easy practice set for this lesson and work through it. You may skip an activity. | Back link, lesson/difficulty controls, five-activity boundary and end-of-set review | At most five valid easy activities; review appears; a skipped item does not become completed; prior lesson evidence survives |
 | T4 | Find something the app suggests reviewing. Tell me why you think it is there, then reopen it. | Recommendation meaning, Review route and independence/support distinction | Learner reaches the relevant activity and describes the recommendation without interpreting completion as mastery |

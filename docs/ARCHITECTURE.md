@@ -102,3 +102,9 @@ scoring thresholds, recommendation priorities, privacy boundaries, and test gate
 
 See [the comparison and integration contract](INTEGRATED_STUDY_HUB.md) for the
 physics study shell, focused practice, evidence-based review, preferences and tests.
+
+## Physics and Mathematics
+
+The [two-subject integration](TWO_SUBJECTS.md) adds the entrance chooser and imports the
+available AddMath material with separate local progress. It records exact content
+coverage, provenance and checks. Physics content and mastery stay unchanged.

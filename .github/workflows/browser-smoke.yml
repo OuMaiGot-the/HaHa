@@ -31,3 +31,4 @@ jobs:
           node scripts/smoke_catalog_browser.cjs
           node scripts/smoke_mastery_browser.cjs
           node scripts/smoke_study_hub_browser.cjs
+          node scripts/smoke_subjects_browser.cjs
