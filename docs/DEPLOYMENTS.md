@@ -69,3 +69,15 @@ For example, `.../section-9-5/?activity=act-int-mod-1` opens that exact interact
 When a public route is created, changed, or removed, update `config/deployments.json` in the same source-repository PR that records/authorizes that deployment. Keep only public, non-secret deployment metadata in the registry.
 
 A deployment entry records operational publication state. Content quality remains governed by the automated validation and provenance checks in the generation pipeline; optional manual review remains separate.
+
+## HaHa catalog release
+
+The HaHa catalog uses `.github/workflows/deploy-preview-pages.yml` to build and
+browser-test the complete catalog before deploying it to GitHub Pages. Pushes to
+`main` and manual dispatch both trigger this release. The `github-pages`
+environment and Pages permissions remain enforced. The expected public route is
+`https://oumaigot-the.github.io/HaHa/`; an Actions success alone is insufficient:
+verify the public catalog, M4 assets, lessons, and device-local learning flow.
+The `gh-pages` branch is a separately published static artifact, not proof of a
+live website. Vercel publication remains optional and requires its configured
+team authorization and CI credential; Pages does not require a Vercel token.
