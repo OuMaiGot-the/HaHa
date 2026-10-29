@@ -31,6 +31,7 @@ jobs:
       - name: Verify complete catalog before Pages deployment
         run: |
           python -m http.server 8765 --directory preview >/tmp/haha-pages-server.log 2>&1 &
+          python scripts/wait_preview.py
           node scripts/smoke_preview_browser.cjs
           node scripts/smoke_catalog_browser.cjs
           node scripts/smoke_mastery_browser.cjs

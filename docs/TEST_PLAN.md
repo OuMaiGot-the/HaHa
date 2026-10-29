@@ -29,3 +29,6 @@ Measure immediate understanding, delayed retention, participation/completion, tu
 
 See [device-local mastery](MILESTONE_4_MASTERY.md) for the attempt contract,
 scoring thresholds, recommendation priorities, privacy boundaries, and test gates.
+
+Browser workflows wait for a successful catalog response with `scripts/wait_preview.py`
+before opening Chromium, avoiding a race with the background preview server.
