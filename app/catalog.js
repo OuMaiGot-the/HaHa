@@ -454,7 +454,7 @@
         earned.push(["firstBadge", "firstBadgeDesc"]);
       if (evidence.filter((r) => r.independent).length >= 3)
         earned.push(["independentBadge", "independentBadgeDesc"]);
-      if (evidence.some((r) => r.first?.result === "incorrect" && r.completed))
+      if (evidence.some((r) => HahaStudy.comeback(r.rows)))
         earned.push(["comebackBadge", "comebackBadgeDesc"]);
       for (const [name, description] of earned) {
         const badge = node("div", undefined, "achievement");

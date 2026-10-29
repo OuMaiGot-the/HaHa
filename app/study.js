@@ -87,7 +87,10 @@
     const step = [1, 2, 5, 10].find((x) => x * power >= raw) * power;
     return Math.ceil(value / step) * step;
   }
-  const api = { KEY, preferences, save, practice, week, axis };
+  function comeback(rows) {
+    return rows.some((attempt, index) => attempt.result === "incorrect" && rows.slice(index + 1).some(later => later.result === "correct"));
+  }
+  const api = { KEY, preferences, save, practice, week, axis, comeback };
   root.HahaStudy = api;
   if (typeof module !== "undefined") module.exports = api;
 })(typeof globalThis !== "undefined" ? globalThis : this);

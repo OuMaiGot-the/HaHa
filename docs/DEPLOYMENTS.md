@@ -76,10 +76,10 @@ The current HaHa M4 catalog is hosted publicly with Sites:
 https://haha-physics-learning-m4.hazygiant2048.chatgpt.site
 
 - Application source: `OuMaiGot-the/HaHa`, M4 merged in `4b9735e`.
-- Built application revision: `94a8bc4af14bb3b0ef68e8b8780386b94a367f89`.
+- Initial M4 built application revision: `94a8bc4af14bb3b0ef68e8b8780386b94a367f89`.
 - Sites project: `appgprj_6ae2f8d4150481918a021bf9fc861205`.
-- Saved version: `appgprj_6ae2f8d4150481918a021bf9fc861205~appgver_7e4413a32e7c819187cadce27040dd2e`.
-- Site source commit: `3f7f4ee075d3f99d43e6239f349be5744f327fe6`.
+- Initial M4 saved version: `appgprj_6ae2f8d4150481918a021bf9fc861205~appgver_7e4413a32e7c819187cadce27040dd2e`.
+- Initial M4 Site source commit: `3f7f4ee075d3f99d43e6239f349be5744f327fe6`.
 
 Sites contains a static build of the repository app, not a separate implementation.
 For updates, build with `python scripts/build_catalog_release.py preview`, reuse
@@ -98,3 +98,14 @@ site creation was denied by GitHub's integration permissions. Enable Pages at
 repository level before running that optional workflow. Vercel publication is
 also optional and still requires its configured team authorization and CI
 credential. Neither blocked host is required for the working Sites deployment.
+
+### Initial integrated study hub release — 29 October 2026
+
+The same public Site now serves the physics study hub from
+[PR #2](https://github.com/OuMaiGot-the/HaHa/pull/2), merged at
+`41288ebe21040b71bef2791f9cc959a39cf30f99`.
+The Site source commit is `e358f2ee87362a3621e0f7190c780577ad28f96a`,
+saved as version 2 (`appgprj_6ae2f8d4150481918a021bf9fc861205~appgver_8c78028a9144819190cc9cc21e86f94b`).
+The unchanged origin and activity/progress IDs preserve existing device-local
+learning evidence. [The comparison](INTEGRATED_STUDY_HUB.md) records feature
+selection, provenance and verification. The original AddMath Site is untouched.

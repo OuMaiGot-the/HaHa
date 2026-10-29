@@ -93,3 +93,7 @@ for (const n of [2, 4, 10, 27, 110])
 console.log(
   "Study utilities passed: safe settings, deterministic focused practice, difficulty filtering, pure selection, local-week evidence, integer chart axes.",
 );
+
+assert.equal(S.comeback([{ result: "incorrect" }]), false);
+assert.equal(S.comeback([{ result: "correct" }, { result: "incorrect" }]), false);
+assert.equal(S.comeback([{ result: "incorrect" }, { result: "skip" }, { result: "correct" }]), true);

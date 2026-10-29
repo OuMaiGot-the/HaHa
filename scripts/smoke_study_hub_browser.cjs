@@ -65,6 +65,7 @@ const fs = require("node:fs");
       await page.locator("#setting-theme").selectOption("dark");
       await page.locator("#setting-size").selectOption("large");
       await page.reload();
+      await page.locator("#setting-theme").waitFor();
       assert.equal(
         await page.locator("body").getAttribute("data-theme"),
         "dark",
