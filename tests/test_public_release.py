@@ -25,6 +25,7 @@ class PublicReleaseTests(unittest.TestCase):
                 "index.html",
                 "app/app.js",
                 "app/learning.js",
+                "app/study.js",
                 "app/domain-renderers.js",
                 "app/visual-renderers.js",
                 "app/styles.css",

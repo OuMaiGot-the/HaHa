@@ -92,3 +92,8 @@ Accepted Section 8.4 public-review extension: Decision 0022 permits the generate
 
 See [device-local mastery](MILESTONE_4_MASTERY.md) for the attempt contract,
 scoring thresholds, recommendation priorities, privacy boundaries, and test gates.
+
+## Integrated study hub
+
+See [the comparison and integration contract](INTEGRATED_STUDY_HUB.md) for the
+physics study shell, focused practice, evidence-based review, preferences and tests.

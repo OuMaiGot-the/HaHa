@@ -32,3 +32,8 @@ scoring thresholds, recommendation priorities, privacy boundaries, and test gate
 
 Browser workflows wait for a successful catalog response with `scripts/wait_preview.py`
 before opening Chromium, avoiding a race with the background preview server.
+
+## Integrated study hub
+
+See [the comparison and integration contract](INTEGRATED_STUDY_HUB.md) for the
+physics study shell, focused practice, evidence-based review, preferences and tests.

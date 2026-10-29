@@ -21,6 +21,20 @@ function recordAttempt(activity, result) {
   }); } catch (_) { /* Device storage is optional. */ }
   if (result === "incorrect") visitFailed = true;
 }
+function studyActivities() {
+  const all = state.package?.activities || [];
+  try {
+    const ids = [...new Set((new URL(window.location.href).searchParams.get("practice") || "").split(","))].filter(Boolean).slice(0, 5);
+    const selected = ids.map(id => all.find(activity => activity.id === id)).filter(Boolean);
+    return selected.length ? selected : all;
+  } catch (_) { return all; }
+}
+function addStudyLink(card) {
+  const destination = document.querySelector("#app").dataset.catalogUrl;
+  if (!destination) return;
+  const text = { en: "Back to study space", ms: "Kembali ke ruang belajar", zh: "返回学习空间" };
+  card.append(element("a", { className: "study-back", text: text[state.locale], attributes: { href: destination } }));
+}
 const ACTIVITY_QUERY_KEY = "activity";
 
 function activityIdFromLocation() {
@@ -215,17 +229,31 @@ function renderComplete(root) {
   const card = element("section", { className: "card" });
   card.append(
     element("p", { className: "eyebrow", text: localized(state.package.subchapter) }),
-    element("h1", { text: copy[state.locale].complete }),
+    element("h1", { text: studyActivities().length < state.package.activities.length ? { en: "Practice set complete", ms: "Set latihan selesai", zh: "本组练习完成" }[state.locale] : copy[state.locale].complete }),
   );
   const restart = element("button", { className: "action", text: copy[state.locale].restart, attributes: { id: "restart" } });
   restart.addEventListener("click", () => { visitFailed = false; state.activityIndex = 0; resetActivity(); render(); });
   card.append(restart);
+  if (typeof HahaLearning !== "undefined") {
+    let saved = {};
+    try { saved = HahaLearning.read(localStorage, state.package.packageId); } catch (_) { /* optional */ }
+    const rows = HahaLearning.evidence(saved, studyActivities());
+    const labels = { en: ["Saved evidence for these activities", "Completed independently", "Completed with support", "Not yet completed"], ms: ["Bukti tersimpan untuk aktiviti ini", "Selesai secara kendiri", "Selesai dengan bantuan", "Belum selesai"], zh: ["这些活动的已保存学习记录", "独立完成", "获得帮助后完成", "尚未完成"] }[state.locale];
+    const review = element("section", { className: "session-review" });
+    review.append(element("h2", { text: labels[0] }));
+    for (const row of rows) {
+      const item = element("p", { text: row.activity.objective + " · " + labels[row.independent ? 1 : row.completed ? 2 : 3] });
+      review.append(item);
+    }
+    card.append(review);
+  }
+  addStudyLink(card);
   root.replaceChildren(card);
 }
 
 function render() {
   const root = document.querySelector("#app");
-  const activities = state.package.activities;
+  const activities = studyActivities();
   if (state.activityIndex >= activities.length) {
     renderComplete(root);
     return;
@@ -260,6 +288,12 @@ function render() {
     }));
   }
 
+  if (state.checked && activity.explanation) {
+    const details = element("details", { className: "reasoning-review" });
+    details.append(element("summary", { text: { en: "Explore the reasoning", ms: "Terokai penaakulan", zh: "探索推理过程" }[state.locale] }), element("p", { text: localized(activity.explanation) }));
+    if (activity.answerLogic) details.append(element("p", { text: localized(activity.answerLogic) }));
+    card.append(details);
+  }
   const actions = element("div", { className: "action-row" });
   const checkLabel = state.checked
     ? (responseCorrect(activity) ? labels.next : labels.tryAgain)
@@ -284,10 +318,18 @@ function render() {
     render();
   });
   card.append(actions, skip);
+  addStudyLink(card);
   root.replaceChildren(card);
 }
 
 const localeSelector = document.querySelector("#locale");
+if (typeof HahaStudy !== "undefined") {
+  let preferences;
+  try { preferences = HahaStudy.preferences(localStorage); } catch (_) { preferences = HahaStudy.preferences({ getItem: () => null }); }
+  state.locale = preferences.locale;
+  localeSelector.value = state.locale;
+  if (typeof document.body !== "undefined") { document.body.dataset.theme = preferences.theme; document.body.dataset.size = preferences.size; }
+}
 
 async function loadPackage(packageUrl = DEFAULT_PACKAGE) {
   const generation = ++loadGeneration;
@@ -307,7 +349,7 @@ async function loadPackage(packageUrl = DEFAULT_PACKAGE) {
     const loadedPackage = await response.json();
     if (generation !== loadGeneration) return;
     state.package = loadedPackage;
-    applyActivityDeepLink(loadedPackage.activities ?? []);
+    applyActivityDeepLink(studyActivities());
     state.loading = false;
     localeSelector.disabled = false;
     render();
@@ -324,13 +366,16 @@ async function loadPackage(packageUrl = DEFAULT_PACKAGE) {
 if (typeof window !== "undefined" && window.addEventListener) {
   window.addEventListener("popstate", () => {
     if (!state.package) return;
-    applyActivityDeepLink(state.package.activities);
+    applyActivityDeepLink(studyActivities());
     render();
   });
 }
 
 localeSelector.addEventListener("change", (event) => {
   state.locale = event.target.value;
+  if (typeof HahaStudy !== "undefined") {
+    try { const p = HahaStudy.preferences(localStorage); p.locale = state.locale; HahaStudy.save(localStorage, p); } catch (_) { /* optional */ }
+  }
   if (!state.loading && state.package) render();
 });
 loadPackage();

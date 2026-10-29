@@ -30,6 +30,8 @@ def main():
             relative = source.parent.relative_to(ROOT / "content")
             target = output / "learn" / relative
             build(target, source)
+            index = target / "index.html"
+            index.write_text(index.read_text(encoding="utf-8").replace('data-package-url="', 'data-catalog-url="../../../index.html" data-package-url="'), encoding="utf-8")
             packages.append({
                 "id": data.get("packageId", str(relative)),
                 "chapter": data.get("chapter", relative.parts[0]),
@@ -50,6 +52,8 @@ def main():
     shutil.copyfile(ROOT / "app" / "catalog.html", output / "index.html")
     shutil.copyfile(ROOT / "app" / "catalog.js", output / "catalog.js")
     shutil.copyfile(ROOT / "app" / "learning.js", output / "learning.js")
+    for asset in ("study.js", "hub-copy.js", "hub.css", "hub-orbit.svg"):
+        shutil.copyfile(ROOT / "app" / asset, output / asset)
     print(f"Published {len(packages)} packages in {len(set(p['chapter'] for p in packages))} chapters" + (" (approved only)" if approved_only else " (preview mode)"))
 
 if __name__ == "__main__":

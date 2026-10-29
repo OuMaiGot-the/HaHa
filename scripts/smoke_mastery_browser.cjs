@@ -31,7 +31,7 @@ const fs = require('node:fs');
       await page.locator('#check').click();
       saved=await page.evaluate(id=>JSON.parse(localStorage.getItem('haha:progress:v1:'+id)),lesson.id);
       assert.equal(saved.attempts[0].result,'incorrect'); assert.equal(saved.independent.length,1);
-      await page.goto(base); await page.locator('.mastery-dashboard').waitFor();
+      await page.goto(base + "#learn"); await page.locator('.mastery-dashboard').waitFor();
       for (const locale of ['en','ms','zh']) {
         await page.locator('#locale').selectOption(locale);
         assert.equal(await page.locator('html').getAttribute('lang'),locale);
