@@ -42,19 +42,29 @@ const assert = require('node:assert/strict');
       const activity = pkg.activities[firstMcqIndex];
       const correctId = activity.answerKey.correct;
       const wrong = activity.answerKey.options.find(option => option.id !== correctId);
+      for (const theme of ['light', 'dark']) {
       const page = await browser.newPage();
+      await page.addInitScript(theme => localStorage.setItem('haha:study:v1', JSON.stringify({ theme })), theme);
       await page.goto(base + '/?activity=' + encodeURIComponent(activity.id));
       await page.locator('.question').waitFor();
       if (wrong) {
         await page.locator('.choice[data-value="' + wrong.id + '"]').click();
         await page.locator('#check').click();
         assert.match(await page.locator('[role="status"]').innerText(), /Reconsider/);
+        assert.equal(await page.locator('.feedback--incorrect').count(), 1);
+        for (const selector of ['.feedback--incorrect', '.choice[aria-pressed="true"]', '#check']) {
+          const rgb = await page.locator(selector).evaluate(el => getComputedStyle(el).borderLeftColor.match(/\d+/g).map(Number));
+          assert(rgb[0] > rgb[1], theme + ': wrong answer must be red');
+        }
         await page.locator('#check').click();
         assert.equal(await page.locator('[role="status"]').count(), 0, 'Retry did not reset feedback');
       }
       await page.locator('.choice[data-value="' + correctId + '"]').click();
       await page.locator('#check').click();
       assert.match(await page.locator('[role="status"]').innerText(), /That reasoning fits/);
+      assert.equal(await page.locator('.feedback--incorrect').count(), 0);
+      const green = await page.locator('.feedback--correct').evaluate(el => getComputedStyle(el).borderLeftColor.match(/\d+/g).map(Number));
+      assert(green[1] > green[0], theme + ': correct answer remains green');
       await page.locator('#check').click();
       if (firstMcqIndex < pkg.activities.length - 1) {
         assert.equal(await page.locator('.question').innerText(), pkg.activities[firstMcqIndex + 1].prompt.en);
@@ -62,6 +72,7 @@ const assert = require('node:assert/strict');
         await page.locator('#restart').waitFor();
       }
       await page.close();
+      }
     }
     // Deep links should open the requested activity rather than activity one.
     if (pkg.activities.length > 1) {

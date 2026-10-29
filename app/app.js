@@ -263,7 +263,7 @@ function render() {
   syncActivityUrl(activity);
   ensureResponse(activity);
   const labels = copy[state.locale];
-  const card = element("section", { className: "card" });
+  const card = element("section", { className: state.checked ? `card answer-${responseCorrect(activity) ? "correct" : "incorrect"}` : "card" });
   card.append(element("p", {
     className: "eyebrow",
     text: `${labels.activity} ${state.activityIndex + 1} ${labels.of} ${activities.length} · ${activity.difficulty}`,
@@ -282,7 +282,7 @@ function render() {
   if (state.checked) {
     const result = responseCorrect(activity) ? labels.correct : labels.retry;
     card.append(element("div", {
-      className: "feedback",
+      className: `feedback feedback--${responseCorrect(activity) ? "correct" : "incorrect"}`,
       text: `${result} ${localized(activity.feedback)}`,
       attributes: { role: "status" },
     }));

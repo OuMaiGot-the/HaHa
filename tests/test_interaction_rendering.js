@@ -78,7 +78,7 @@ function checkAndAdvance(app) {
   const check = find(app, (node) => node.id === "check");
   assert.equal(check.disabled, false);
   check.click();
-  assert.match(findAll(app, (node) => node.className === "feedback").at(-1).textContent, /That reasoning fits/);
+  assert.match(findAll(app, (node) => node.className.split(" ").includes("feedback")).at(-1).textContent, /That reasoning fits/);
   find(app, (node) => node.id === "check").click();
 }
 function choosePlacements(app, targetLabels) {

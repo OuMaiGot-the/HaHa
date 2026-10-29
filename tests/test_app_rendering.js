@@ -107,11 +107,11 @@ setImmediate(() => {
   assert.equal(descendants(app).some((node) => ["SCRIPT", "IMG"].includes(node.tagName)), false);
 
   find(app, (node) => node.id === "hint").click();
-  assert.equal(find(app, (node) => node.className === "feedback").textContent, malicious.hint);
+  assert.equal(find(app, (node) => node.className.split(" ").includes("feedback")).textContent, malicious.hint);
 
   find(app, (node) => node.className === "choice").click();
   find(app, (node) => node.id === "check").click();
-  const feedback = descendants(app).filter((node) => node.className === "feedback").at(-1);
+  const feedback = descendants(app).filter((node) => node.className.split(" ").includes("feedback")).at(-1);
   assert.equal(feedback.textContent, `That reasoning fits. ${malicious.feedback}`);
 
   find(app, (node) => node.id === "check").click();
