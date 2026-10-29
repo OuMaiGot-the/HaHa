@@ -35,6 +35,7 @@ jobs:
           node scripts/smoke_preview_browser.cjs
           node scripts/smoke_catalog_browser.cjs
           node scripts/smoke_mastery_browser.cjs
+          node scripts/smoke_study_hub_browser.cjs
       - name: Configure Pages
         uses: actions/configure-pages@v5
         with:

@@ -97,3 +97,8 @@ The detailed provider/capability policy is `docs/VISUAL_TOOL_ORCHESTRATION.md`.
 
 See [device-local mastery](MILESTONE_4_MASTERY.md) for the attempt contract,
 scoring thresholds, recommendation priorities, privacy boundaries, and test gates.
+
+## Integrated study hub
+
+See [the comparison and integration contract](INTEGRATED_STUDY_HUB.md) for the
+physics study shell, focused practice, evidence-based review, preferences and tests.

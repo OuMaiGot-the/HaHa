@@ -15,7 +15,7 @@ const fs = require('node:fs');
       const badResponses = [];
       page.on('pageerror', e => errors.push(e.message));
       page.on('response', r => { if (r.status() >= 400) badResponses.push(r.url() + ': ' + r.status()); });
-      await page.goto(base, { waitUntil: 'networkidle' });
+      await page.goto(base + "#learn", { waitUntil: 'networkidle' });
       await page.locator('#chapters .grid a').first().waitFor();
       assert.equal(await page.locator('#chapters .grid a').count(), catalog.length, 'Catalog link count');
       await page.evaluate(() => localStorage.clear());

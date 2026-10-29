@@ -58,3 +58,6 @@ h1 { margin: .5rem 0; font-size: clamp(1.8rem, 6vw, 3rem); line-height: 1.05; }
 @media (prefers-reduced-motion: reduce) {
   * { scroll-behavior: auto !important; transition: none !important; }
 }
+.study-back{display:block;margin:1.5rem 0 0;color:var(--accent);min-height:44px}.session-review{border-top:1px solid var(--line);margin-top:1.5rem}.reasoning-review{line-height:1.6;margin:1rem 0}.reasoning-review summary{cursor:pointer;padding:.5rem 0}body[data-size=large]{font-size:1.18rem}body[data-theme=dark]{background:#13231f;color:#edf5eb;--accent:#9dd4b2;--accent-soft:#294535;--line:#46614f}body[data-theme=dark] .card,body[data-theme=dark] .choice,body[data-theme=dark] .target-choice,body[data-theme=dark] select{background:#1d322b;color:#edf5eb}body[data-theme=dark] .eyebrow{color:#b7d0bf}body[data-theme=dark] .feedback{background:#294535;color:#edf5eb}body[data-theme=dark] .progress{background:#3d5446}
+
+body[data-theme=dark] .action{background:#a9d8b9;color:#13231f}body[data-theme=dark] .action.secondary{background:#1d322b;color:#edf5eb}body[data-theme=dark] .choice[aria-pressed="true"]{background:#294535}body[data-size=large] .question,body[data-size=large] .choice{font-size:1.3rem}

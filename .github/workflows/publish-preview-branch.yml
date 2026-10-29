@@ -33,6 +33,7 @@ jobs:
           node scripts/smoke_preview_browser.cjs
           node scripts/smoke_catalog_browser.cjs
           node scripts/smoke_mastery_browser.cjs
+          node scripts/smoke_study_hub_browser.cjs
       - name: Publish static files to gh-pages branch
         run: |
           set -euo pipefail

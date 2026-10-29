@@ -161,3 +161,6 @@ Credentials, source PDFs, browser profiles, tokens, and run data remain outside 
 The catalog includes 15 lessons, three interface languages, device-local attempts,
 mastery evidence, and adaptive recommendations. See [deployment details](docs/DEPLOYMENTS.md)
 for hosting, update steps, and storage-origin limitations.
+
+The [integrated study hub](docs/INTEGRATED_STUDY_HUB.md) combines AddMath-inspired
+navigation and study tools with HaHa's validated physics content and mastery engine.

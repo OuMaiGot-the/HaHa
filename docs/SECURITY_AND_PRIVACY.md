@@ -27,3 +27,8 @@ Suspected privacy or security incidents must be handled outside ordinary public 
 
 See [device-local mastery](MILESTONE_4_MASTERY.md) for the attempt contract,
 scoring thresholds, recommendation priorities, privacy boundaries, and test gates.
+
+## Integrated study hub
+
+See [the comparison and integration contract](INTEGRATED_STUDY_HUB.md) for the
+physics study shell, focused practice, evidence-based review, preferences and tests.
