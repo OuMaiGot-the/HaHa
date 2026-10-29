@@ -24,3 +24,8 @@
 
 Measure immediate understanding, delayed retention, participation/completion, tutor accuracy/usefulness, and teacher-management workload. Do not optimise solely for time in app, streak length, or activity volume.
 
+
+## Milestone 4 implementation
+
+See [device-local mastery](MILESTONE_4_MASTERY.md) for the attempt contract,
+scoring thresholds, recommendation priorities, privacy boundaries, and test gates.

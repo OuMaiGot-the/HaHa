@@ -22,3 +22,8 @@ Raw voice audio is deleted immediately after transcription. Tutor transcripts ar
 - Pin dependencies, review additions, and enable secret scanning. Publication must still satisfy repository validation, branch protection, secret-handling, and configured deployment controls; no separate human-review gate is required.
 
 Suspected privacy or security incidents must be handled outside ordinary public issue text.
+
+## Milestone 4 implementation
+
+See [device-local mastery](MILESTONE_4_MASTERY.md) for the attempt contract,
+scoring thresholds, recommendation priorities, privacy boundaries, and test gates.

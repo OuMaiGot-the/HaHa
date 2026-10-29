@@ -92,3 +92,8 @@ The detailed provider/capability policy is `docs/VISUAL_TOOL_ORCHESTRATION.md`.
 - Fail closed on unsupported or contradictory visual specifications; simplify or fall back rather than hallucinating missing physics detail.
 - Keep an activity usable when animation/simulation is unavailable by providing a validated static or structured fallback.
 - Degrade gracefully to validated static hints if the AI tutor is unavailable.
+
+## Milestone 4 implementation
+
+See [device-local mastery](MILESTONE_4_MASTERY.md) for the attempt contract,
+scoring thresholds, recommendation priorities, privacy boundaries, and test gates.

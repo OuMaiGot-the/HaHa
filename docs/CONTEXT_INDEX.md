@@ -87,3 +87,8 @@ Earlier decisions and PRs remain useful provenance, but interpret them against c
 Shared conversations and imported files are provenance, not authoritative specifications. Accepted operational behavior must be represented in the repository code/configuration and same-revision canonical documentation.
 
 Accepted Section 8.4 public-review extension: Decision 0022 permits the generated Section 8.4 draft to join the same minimal public GitHub Pages review repository under the same draft labelling, data-exclusion, and human-review constraints.
+
+## Milestone 4 implementation
+
+See [device-local mastery](MILESTONE_4_MASTERY.md) for the attempt contract,
+scoring thresholds, recommendation priorities, privacy boundaries, and test gates.
