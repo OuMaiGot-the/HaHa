@@ -23,3 +23,10 @@ Do not begin broad visual regeneration until the visual-interactive foundation a
 
 See [device-local mastery](MILESTONE_4_MASTERY.md) for the attempt contract,
 scoring thresholds, recommendation priorities, privacy boundaries, and test gates.
+
+## Learner usability pilot
+
+The [pilot guide](LEARNER_PILOT_GUIDE.md) defines the 3–5 learner session,
+acceptance gates and triage. Use only the [blank observation template](PILOT_OBSERVATION_TEMPLATE.md)
+in GitHub; completed session records stay outside the repository. No learner
+sessions have been completed merely by preparing this pack.

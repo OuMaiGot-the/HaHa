@@ -37,3 +37,10 @@ before opening Chromium, avoiding a race with the background preview server.
 
 See [the comparison and integration contract](INTEGRATED_STUDY_HUB.md) for the
 physics study shell, focused practice, evidence-based review, preferences and tests.
+
+## Learner usability pilot
+
+The [pilot guide](LEARNER_PILOT_GUIDE.md) defines the 3–5 learner session,
+acceptance gates and triage. Use only the [blank observation template](PILOT_OBSERVATION_TEMPLATE.md)
+in GitHub; completed session records stay outside the repository. No learner
+sessions have been completed merely by preparing this pack.
