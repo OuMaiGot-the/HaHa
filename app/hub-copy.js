@@ -1,4 +1,13 @@
 window.HahaHubCopy = {
+  subjects: ["Subjects", "Subjek", "科目"],
+  chooseSubject: ["What would you like to learn?", "Apakah yang ingin anda pelajari?", "你想学习什么？"],
+  subjectIntro: ["Choose a subject to open its lessons and practice. Each subject keeps its own progress.", "Pilih subjek untuk membuka pelajaran dan latihan. Setiap subjek menyimpan kemajuan sendiri.", "选择科目，开始课程与练习。每个科目的进度独立保存。"],
+  physics: ["Physics", "Fizik", "物理"],
+  maths: ["Additional Mathematics", "Matematik Tambahan", "附加数学"],
+  physicsScope: ["15 conceptual lessons with interactive visuals, mastery evidence and focused practice.", "15 pelajaran konsep dengan visual interaktif, bukti penguasaan dan latihan terfokus.", "15 节概念课程，包含互动图示、掌握记录及专项练习。"],
+  mathsScope: ["Functions, composite functions and inverse functions: notes, interactive function machine, evaluation and practice. English material.", "Fungsi, fungsi gubahan dan fungsi songsang: nota, mesin fungsi interaktif, penilaian dan latihan. Bahan bahasa Inggeris.", "函数、复合函数与反函数：笔记、互动函数机器、测评及练习。材料为英语。"],
+  openSubject: ["Open subject", "Buka subjek", "进入科目"],
+  subjectsAvailable: ["2 subjects available", "2 subjek tersedia", "2 个可选科目"],
   home: ["Home", "Utama", "首页"],
   learn: ["Learn", "Belajar", "学习"],
   practice: ["Practice", "Latihan", "练习"],

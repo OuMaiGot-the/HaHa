@@ -164,3 +164,9 @@ for hosting, update steps, and storage-origin limitations.
 
 The [integrated study hub](docs/INTEGRATED_STUDY_HUB.md) combines AddMath-inspired
 navigation and study tools with HaHa's validated physics content and mastery engine.
+
+## Physics and Mathematics
+
+The [two-subject integration](docs/TWO_SUBJECTS.md) adds the entrance chooser and imports the
+available AddMath material with separate local progress. It records exact content
+coverage, provenance and checks. Physics content and mastery stay unchanged.

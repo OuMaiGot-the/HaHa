@@ -109,3 +109,9 @@ saved as version 2 (`appgprj_6ae2f8d4150481918a021bf9fc861205~appgver_8c78028a91
 The unchanged origin and activity/progress IDs preserve existing device-local
 learning evidence. [The comparison](INTEGRATED_STUDY_HUB.md) records feature
 selection, provenance and verification. The original AddMath Site is untouched.
+
+## Physics and Mathematics
+
+The [two-subject integration](TWO_SUBJECTS.md) adds the entrance chooser and imports the
+available AddMath material with separate local progress. It records exact content
+coverage, provenance and checks. Physics content and mastery stay unchanged.

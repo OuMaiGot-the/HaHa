@@ -17,7 +17,7 @@ const fs = require("node:fs");
       const page = await browser.newPage({ viewport: { width, height: 900 } }),
         errors = [];
       page.on("pageerror", (e) => errors.push(e.message));
-      await page.goto(base);
+      await page.goto(base + "#home");
       await page.locator(".home-actions").waitFor();
       assert.equal(await page.locator(".home-action").count(), 4);
       assert.equal(

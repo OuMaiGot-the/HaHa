@@ -44,3 +44,9 @@ The [pilot guide](LEARNER_PILOT_GUIDE.md) defines the 3–5 learner session,
 acceptance gates and triage. Use only the [blank observation template](PILOT_OBSERVATION_TEMPLATE.md)
 in GitHub; completed session records stay outside the repository. No learner
 sessions have been completed merely by preparing this pack.
+
+## Physics and Mathematics
+
+The [two-subject integration](TWO_SUBJECTS.md) adds the entrance chooser and imports the
+available AddMath material with separate local progress. It records exact content
+coverage, provenance and checks. Physics content and mastery stay unchanged.

@@ -57,7 +57,7 @@ const fs = require('node:fs');
     await blocked.goto(lessonUrl); await blocked.locator('.choice').first().waitFor();
     await blocked.locator('.choice[data-value="'+activity.answerKey.correct+'"]').click();
     await blocked.locator('#check').click(); assert(await blocked.locator('[role="status"]').count());
-    await blocked.goto(base); await blocked.locator('.mastery-dashboard').waitFor();
+    await blocked.goto(base + "#home"); await blocked.locator('.mastery-dashboard').waitFor();
     await blocked.close();
     console.log('Mastery browser tests passed: desktop/mobile, first failure, assisted retry, independent revisit, reload, locales, export, reset, malformed/blocked storage.');
   } finally {await browser.close();}

@@ -66,7 +66,7 @@
     function nav(route) {
       const n = document.getElementById("navigation");
       n.replaceChildren();
-      for (const key of ["home", "learn", "progress", "tools"]) {
+      for (const key of (route === "subjects" ? ["subjects"] : ["subjects", "home", "learn", "progress", "tools"])) {
         const a = link(t(key), "#" + key);
         if (
           key === route ||
@@ -146,6 +146,20 @@
       );
       panel.append(actions);
       root.append(panel);
+    }
+    function subjects() {
+      root.append(node("p", "HaHa Learning", "eyebrow"), node("h1", t("chooseSubject")), node("p", t("subjectIntro"), "muted"));
+      const choices = node("section", undefined, "subject-grid");
+      choices.setAttribute("aria-label", t("subjects"));
+      for (const [key, href, symbol] of [["physics", "#home", "↗"], ["maths", "mathematics/index.html", "∑"]]) {
+        const card = node("article", undefined, "subject-card");
+        card.append(node("span", symbol, "card-symbol"), node("h2", t(key)), node("p", t(key === "physics" ? "physicsScope" : "mathsScope")));
+        const entrance = link(t("openSubject") + " →", href, "primary");
+        entrance.id = key + "-entrance";
+        entrance.setAttribute("aria-label", t("openSubject") + ": " + t(key));
+        card.append(entrance); choices.append(card);
+      }
+      root.append(choices);
     }
     function home(saved) {
       const hero = node("section", undefined, "hero"),
@@ -590,7 +604,7 @@
       const current = generation;
       apply();
       root.replaceChildren();
-      const hash = location.hash.slice(1) || "home",
+      const hash = location.hash.slice(1) || "subjects",
         route = hash.split("/")[0],
         saved = data();
       nav(route);
@@ -602,8 +616,11 @@
         new Set(catalog.map((l) => l.chapter)).size +
         " " +
         t("chapters");
+      if (route === "subjects") status.textContent = t("subjectsAvailable");
+      document.title = "HaHa · " + (route === "subjects" ? t("subjects") : t("physics"));
       if (storageWarning) status.textContent = t("saveFailed");
-      if (route === "learn") lessons(saved);
+      if (route === "subjects") subjects();
+      else if (route === "learn") lessons(saved);
       else if (route === "practice") practice(saved);
       else if (route === "review") review(saved);
       else if (route === "progress") progress(saved);
