@@ -42,6 +42,7 @@ const fs = require('node:fs');
       await page.locator('article summary').first().focus();
       await page.keyboard.press('Enter');
       assert.equal(await page.locator('article details').first().getAttribute('open'),'');
+      await page.locator('.progress-data-settings summary').click();
       const downloadPromise=page.waitForEvent('download');
       await page.getByRole('button',{name:'Export device progress'}).click();
       assert.equal((await downloadPromise).suggestedFilename(),'haha-device-progress.json');

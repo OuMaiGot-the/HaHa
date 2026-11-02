@@ -65,3 +65,7 @@ and blocked browser storage. Physics retains its four existing browser suites.
 The mathematics import unit test checks the entire imported content digest,
 question counts, expected evaluation keys, JavaScript syntax and namespace/network
 boundaries. These checks do not replace mathematical/educational review.
+
+## Learner usability pass
+
+See [learner usability improvements](LEARNER_USABILITY.md) for navigation, progress copy, topic steps, accessibility behavior and release boundaries.

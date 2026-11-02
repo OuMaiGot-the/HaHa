@@ -110,3 +110,7 @@ sessions have been completed merely by preparing this pack.
 The [two-subject integration](TWO_SUBJECTS.md) adds the entrance chooser and imports the
 available AddMath material with separate local progress. It records exact content
 coverage, provenance and checks. Physics content and mastery stay unchanged.
+
+## Learner usability pass
+
+See [learner usability improvements](LEARNER_USABILITY.md) for navigation, progress copy, topic steps, accessibility behavior and release boundaries.

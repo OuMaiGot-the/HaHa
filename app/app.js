@@ -3,7 +3,7 @@ const state = { package: null, activityIndex: 0, locale: "en", response: null, c
 let loadGeneration = 0;
 
 const copy = {
-  en: { activity: "Activity", of: "of", check: "Check answer", next: "Next activity", tryAgain: "Try again", restart: "Start again", hint: "Show a hint", complete: "Journey complete", correct: "That reasoning fits.", retry: "Reconsider the relationship and try again.", moveUp: "Move up", moveDown: "Move down", position: "Position", skip: "Skip" },
+  en: { activity: "Activity", of: "of", check: "Check answer", next: "Next activity", tryAgain: "Try again", restart: "Start again", hint: "Show a hint", complete: "Journey complete", correct: "That reasoning fits.", retry: "Answer not correct yet. Change your answer, then check again.", moveUp: "Move up", moveDown: "Move down", position: "Position", skip: "Skip" },
   ms: { activity: "Aktiviti", of: "daripada", check: "Semak jawapan", next: "Aktiviti seterusnya", tryAgain: "Cuba lagi", restart: "Mula semula", hint: "Tunjukkan petunjuk", complete: "Perjalanan selesai", correct: "Penaakulan itu sesuai.", retry: "Pertimbangkan semula hubungan itu dan cuba lagi.", moveUp: "Alih ke atas", moveDown: "Alih ke bawah", position: "Kedudukan", skip: "Langkau" },
   zh: { activity: "活动", of: "/", check: "检查答案", next: "下一个活动", tryAgain: "再试一次", restart: "重新开始", hint: "显示提示", complete: "学习旅程完成", correct: "这个推理是恰当的。", retry: "重新思考其中的关系，然后再试一次。", moveUp: "上移", moveDown: "下移", position: "位置", skip: "跳过" },
 };
@@ -111,15 +111,16 @@ function responseCorrect(activity) {
 }
 
 function renderMcq(card, activity) {
-  const choices = element("div", { className: "choices" });
+  const choices = element("div", { className: "choices", attributes: { role: "radiogroup", "aria-label": localized(activity.prompt) } });
   for (const option of activity.answerKey.options) {
     const button = element("button", {
       className: "choice",
       text: localized(option.label),
-      attributes: { "aria-pressed": String(state.response === option.id) },
+      attributes: { role: "radio", "aria-checked": String(state.response === option.id), tabindex: state.response === option.id || (!state.response && option === activity.answerKey.options[0]) ? "0" : "-1" },
     });
     button.dataset.value = option.id;
-    button.addEventListener("click", () => { state.response = option.id; state.checked = false; render(); });
+    button.addEventListener("click", () => { state.response = option.id; state.checked = false; render(); document.querySelector('.choices [aria-checked="true"]')?.focus?.({preventScroll:true}); });
+    button.addEventListener("keydown", event => { const keys=["ArrowDown","ArrowRight","ArrowUp","ArrowLeft"]; if(!keys.includes(event.key))return; event.preventDefault(); const options=activity.answerKey.options,index=options.indexOf(option),step=keys.indexOf(event.key)<2?1:-1; state.response=options[(index+step+options.length)%options.length].id;state.checked=false;render();document.querySelector('.choices [aria-checked="true"]')?.focus?.({preventScroll:true}); });
     choices.append(button);
   }
   card.append(choices);
