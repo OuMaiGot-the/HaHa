@@ -50,7 +50,7 @@ const assert = require('node:assert/strict');
       if (wrong) {
         await page.locator('.choice[data-value="' + wrong.id + '"]').click();
         await page.locator('#check').click();
-        assert.match(await page.locator('[role="status"]').innerText(), /Answer not correct yet/);
+        assert.match(await page.locator('.feedback[role="status"]').innerText(), /Answer not correct yet/);
         assert.equal(await page.locator('.feedback--incorrect').count(), 1);
         for (const selector of ['.feedback--incorrect', '.choice[aria-checked="true"]', '#check']) {
           const rgb = await page.locator(selector).evaluate(el => getComputedStyle(el).borderLeftColor.match(/\d+/g).map(Number));
@@ -59,11 +59,11 @@ const assert = require('node:assert/strict');
           assert(background[0] > background[1], theme + ': wrong answer background must be red');
         }
         await page.locator('#check').click();
-        assert.equal(await page.locator('[role="status"]').count(), 0, 'Retry did not reset feedback');
+        assert.equal(await page.locator('.feedback[role="status"]').count(), 0, 'Retry did not reset feedback');
       }
       await page.locator('.choice[data-value="' + correctId + '"]').click();
       await page.locator('#check').click();
-      assert.match(await page.locator('[role="status"]').innerText(), /That reasoning fits/);
+      assert.match(await page.locator('.feedback[role="status"]').innerText(), /That reasoning fits/);
       assert.equal(await page.locator('.feedback--incorrect').count(), 0);
       const green = await page.locator('.feedback--correct').evaluate(el => getComputedStyle(el).borderLeftColor.match(/\d+/g).map(Number));
       assert(green[1] > green[0], theme + ': correct answer remains green');

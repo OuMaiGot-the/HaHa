@@ -64,6 +64,10 @@ def build(output: Path, package_path: Path, *, source_root: Path = ROOT) -> None
 
     for source, relative_target in (
         (source_root / "app" / "favicon.svg", Path("favicon.svg")),
+        (source_root / "app" / "mana.js", Path("mana.js")),
+        (source_root / "app" / "mana-ui.js", Path("mana-ui.js")),
+        (source_root / "app" / "mana.css", Path("mana.css")),
+
         (source_root / "app" / "app.js", Path("app/app.js")),
         (source_root / "app" / "learning.js", Path("app/learning.js")),
         (source_root / "app" / "study.js", Path("app/study.js")),
