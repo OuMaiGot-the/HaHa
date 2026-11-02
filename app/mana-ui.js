@@ -51,7 +51,7 @@
   if(!visible.length)list.append(el('li',t('none')));dialog.append(list);if(visible.length>limit)dialog.append(action(t('more'),()=>{limit+=20;render();}));
  }
  function open(){returnFocus=document.activeElement;selected='';limit=20;if(!dialog){dialog=el('dialog',undefined,'mana-dialog');dialog.setAttribute('aria-labelledby','mana-title');dialog.addEventListener('close',()=>returnFocus?.focus?.());document.body.append(dialog);}render();if(!dialog.open)dialog.showModal();}
- function mount(){if(launcher?.isConnected){refresh();return;}launcher=action('Mana …',open);launcher.className='mana-trigger';launcher.setAttribute('aria-haspopup','dialog');(document.querySelector('.app-header,.topbar')||document.body).append(launcher);refresh();}
+ function mount(){if(launcher?.isConnected){refresh();return;}launcher=action('Mana …',open);launcher.className='mana-trigger';launcher.setAttribute('aria-haspopup','dialog');(document.querySelector('.subject-header-actions')||document.querySelector('.app-header,.topbar')||document.body).append(launcher);refresh();}
  window.HahaMana={ready,answer,completeSet,purchase,get,open,mount};
  window.addEventListener('storage',event=>{if(event.key===M.KEY){refresh();if(dialog?.open)render();}});
  window.addEventListener('haha:mana',()=>{refresh();if(dialog?.open&&!pending)render();});

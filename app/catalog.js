@@ -70,10 +70,11 @@
     function nav(route) {
       const n = document.getElementById("navigation");
       n.replaceChildren();
+      const subjectSwitch=document.querySelector(".subject-switch");if(subjectSwitch)subjectSwitch.hidden=route==="subjects";
       const shortcut=document.getElementById("study-tools-shortcut");
       if(shortcut){shortcut.textContent=t("tools");shortcut.hidden=route==="subjects";}
       document.querySelector(".brand-caption").textContent=route==="subjects"?"LEARNING STUDIO":t("physics").toUpperCase();
-      for (const key of (route === "subjects" ? ["subjects"] : ["home", "learn", "practice", "progress", "subjects"])) {
+      for (const key of (route === "subjects" ? ["subjects"] : ["home", "learn", "practice", "progress"])) {
         const a = link(t(key), "#" + key);
         if (
           key === route ||
