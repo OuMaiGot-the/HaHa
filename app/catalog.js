@@ -64,6 +64,7 @@
         catalog.map((l) => [l.id, HahaLearning.read(storage(), l.id)]),
       );
     const chapterLabel = c => ({
+      "Physics and Measurement": {en:"Physics and Measurement",ms:"Fizik dan Pengukuran",zh:"物理与测量"},
       "Chapter 8": {en:"Energy and energy transfer",ms:"Tenaga dan pemindahan tenaga",zh:"能量与能量传递"},
       "Chapter 9": {en:"Momentum and collisions",ms:"Momentum dan perlanggaran",zh:"动量与碰撞"}
     }[c]?.[locale] || c);
@@ -264,7 +265,7 @@
       const s = HahaLearning.score(saved[lesson.id], lesson.activityMetadata);
       card.append(
         top,
-        link(lesson.subchapter, lesson.url),
+        link(displayLesson(lesson), lesson.url),
         node("h3", t(s.level)),
         node(
           "p",
@@ -284,13 +285,12 @@
           node("p", objective + ": " + t(x.level) + " · " + x.percent + "%"),
         );
       }
-      card.append(
-        detail,
-        button(t("notes"), () => {
-          location.hash = "lesson/" + encodeURIComponent(lesson.id);
-        }),
-      );
+      card.append(detail);
       return card;
+    }
+    function displayLesson(lesson) {
+      const authored=HahaPhysicsNotesContent.lessons.find(item=>item.id===lesson.id);
+      return locale==='en'||!authored?lesson.subchapter:authored.section+' · '+localized(authored.title);
     }
     function lessons(saved) {
       heading("learn", "learnDesc");
@@ -337,7 +337,7 @@
             (
               l.chapter +
               " " +
-              l.subchapter +
+              displayLesson(l) + " " + l.subchapter +
               " " +
               l.activityMetadata.map((a) => a.objective).join(" ")
             )
@@ -359,15 +359,17 @@
             const stop=node("details",undefined,"physics-stop"+(complete?" is-complete":"")+(current?" is-current":""));
             stop.style.setProperty("--step-offset",["-65px","0px","65px","0px"][index%4]);
             const summary=node("summary",undefined,"path-node-summary");
-            summary.setAttribute("aria-label",lesson.subchapter+" · "+(complete?t("completed"):current?t("learn"):t("open")));
+            summary.setAttribute("aria-label",displayLesson(lesson)+" · "+(complete?t("completed"):current?t("learn"):t("open")));
             const circle=node("span",complete?"✓":current?"★":String(catalog.indexOf(lesson)+1),"path-node-circle");
             circle.setAttribute("aria-hidden","true");
-            summary.classList.add("phyphy-trigger");circle.classList.add("phyphy-node");circle.replaceChildren(phyphyChess(catalog.indexOf(lesson)%4,complete));summary.append(circle,node("strong",lesson.subchapter,"path-node-title"),node("small",score.completed+" / "+score.total+" "+t("completed"),"path-node-progress"));
+            summary.classList.add("phyphy-trigger");circle.classList.add("phyphy-node");circle.replaceChildren(phyphyChess(catalog.indexOf(lesson)%4,complete));summary.append(circle,node("strong",displayLesson(lesson),"path-node-title"),node("small",score.completed+" / "+score.total+" "+t("completed"),"path-node-progress"));
             if(current){summary.setAttribute("aria-current","step");stop.id="physics-next-step";}
             stop.append(summary);
             const panel=node("div",undefined,"path-node-panel");panel.append(lessonCard(lesson,saved));stop.append(panel);
             stop.addEventListener("toggle",()=>{if(!stop.open)summary.classList.remove("phyphy-reacting");if(stop.open)trail.querySelectorAll(".physics-stop").forEach(other=>{if(other!==stop)other.open=false;});});
-            trail.append(stop);
+            const actions=node("nav",undefined,"lesson-entry-actions");actions.setAttribute("aria-label",displayLesson(lesson));actions.style.setProperty("--step-offset",["-65px","0px","65px","0px"][index%4]);
+            actions.append(link(t("notes"),'#lesson/'+encodeURIComponent(lesson.id),'primary'),link({en:'Practise lesson',ms:'Latih tubi pelajaran',zh:'课程练习'}[locale],lesson.url,'secondary'));
+            trail.append(stop,actions);
           });
           section.append(trail);lists.append(section);
         }
@@ -601,6 +603,11 @@
       if (!lesson) {
         heading("learn");
         root.append(node("p", t("failed")));
+        return;
+      }
+      if(HahaPhysicsNotesContent.lessons.some(item=>item.id===id)){
+        root.append(link('← '+t('back'),'#learn','back-link'));
+        HahaPhysicsNotes.render(root,id,locale,catalog);
         return;
       }
       root.append(

@@ -55,15 +55,15 @@ const fs = require("node:fs");
       );
       await page.locator(".physics-stop summary").first().click();
       await page
-        .getByRole("button", { name: "Concept overview", exact: true })
+        .getByRole("link", { name: "Read notes", exact: true })
         .first()
         .click();
       await page
-        .getByRole("heading", { name: "What you will explore", exact: true })
+        .locator("[data-physics-notes] h1")
         .waitFor();
       assert(
         await page
-          .getByRole("link", { name: "Open lesson", exact: true })
+          .getByRole("link", { name: "Practise lesson", exact: true })
           .isVisible(),
       );
       await page

@@ -28,7 +28,7 @@ jobs:
           python -m http.server 8765 --directory preview >/tmp/haha-preview-server.log 2>&1 &
           python scripts/wait_preview.py
           result=0
-          for suite in preview catalog mastery study_hub subjects usability mana upstream_integration math_mastery physics_notes; do
+          for suite in preview catalog mastery study_hub subjects usability mana upstream_integration math_mastery physics_notes friction_guide; do
             node "scripts/smoke_${suite}_browser.cjs" || result=1
           done
           exit "$result"

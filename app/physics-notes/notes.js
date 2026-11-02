@@ -55,25 +55,34 @@ const assumptions={
 assumptions.stretch=assumptions.work;
 function element(tag,text,cls){const el=document.createElement(tag);if(text!==undefined)el.textContent=text;if(cls)el.className=cls;return el;}
 function translate(value,locale){return typeof value==='string'?value:value?.[locale]||value?.en||'';}
-function renderVisual(spec,locale){
+function renderVisual(spec,locale,options={}){
  const t=k=>translate(copy[k]||k,locale),local=v=>translate(v,locale),figure=element('figure');figure.dataset.physicsVisual=spec.id;
  figure.append(element('figcaption',spec.id+' · '+local(spec.title)),element('p',local(assumptions[spec.kind])));
- let q=.5,mode=0,revealed=false;
+ const guided=Boolean(options.guided),saved=options.state||{};
+ let q=saved.q??.5,mode=saved.mode??0,revealed=saved.revealed??false;
  const control=controls[spec.kind];let slider;
- if(control){const label=element('label',local(control),'visual-control');slider=element('input');slider.type='range';slider.min='0';slider.max='100';slider.step='1';slider.value='50';label.append(slider);figure.append(label);slider.oninput=()=>{q=Number(slider.value)/100;update();};}
+ let angleOutput;
+ if(control){const label=element('label',local(control),'visual-control');slider=element('input');slider.type='range';slider.min='0';slider.max=guided&&spec.kind==='angle'?'60':'100';slider.step='1';slider.value=String(q*Number(slider.max));label.append(slider);if(guided&&spec.kind==='angle'){angleOutput=element('output');label.append(angleOutput);}figure.append(label);slider.oninput=()=>{q=Number(slider.value)/Number(slider.max);update();};}
+ if(guided&&spec.kind==='angle'){const presets=element('div',undefined,'angle-presets');for(const angle of[0,30,60]){const b=element('button',angle+'°');b.type='button';b.onclick=()=>{q=angle/60;slider.value=String(angle);update();};presets.append(b);}figure.append(presets);}
  let select;
  if(['boundary','momentumBoundary','density','collision','frame'].includes(spec.kind)){
   const label=element('label',t(spec.kind==='collision'?'collisionType':spec.kind==='frame'?'frame':spec.kind==='density'?'volumeB':'boundary'),'visual-control');select=element('select');
   const keys=spec.kind==='collision'?['sticking','elastic']:spec.kind==='frame'?['labFrame','rocketFrame']:spec.kind==='density'?['1','2']:['object','combined'];
   keys.forEach((key,i)=>{const o=element('option',t(key));o.value=String(i);select.append(o);});label.append(select);figure.append(label);select.onchange=()=>{mode=Number(select.value);update();};
  }
- figure.append(element('p',t('predict')));
+ if(guided&&spec.kind==='angle'){
+  const field=element('fieldset',undefined,'visual-prediction');field.append(element('legend',local(L('Predict: when the same-strength pull tilts upward, what happens to the normal force?','Ramal: apabila tarikan sama kuat dicondongkan ke atas, apakah berlaku kepada daya normal?','预测：同样大小的拉力向上倾斜时，支持力如何变化？'))));
+  [L('Increases','Bertambah','增大'),L('Decreases','Berkurang','减小'),L('Stays the same','Kekal sama','不变')].forEach((value,i)=>{const label=element('label'),radio=element('input');radio.type='radio';radio.name='angle-prediction';radio.value=String(i);radio.checked=saved.prediction===i;radio.onchange=()=>{saved.prediction=i;};label.append(radio,element('span',local(value)));field.append(label);});figure.append(field);
+ }else figure.append(element('p',t('predict')));
  const reveal=element('button',t('explore'),'reveal primary'),reset=element('button',t('reset'));reveal.type=reset.type='button';
- const view=element('div');view.hidden=true;const status=element('p');status.setAttribute('role','status');
- reveal.onclick=()=>{revealed=true;view.hidden=false;update();status.textContent=local(spec.title)+' · '+t('explore');};
- reset.onclick=()=>{q=.5;mode=0;revealed=false;if(slider)slider.value='50';if(select)select.value='0';view.hidden=true;status.textContent=t('reset');};
+ reset.className='visual-reset';const view=element('div');view.hidden=!revealed;const status=element('p');status.setAttribute('role','status');
+ reveal.onclick=()=>{revealed=true;view.hidden=false;update();status.textContent=local(spec.title);};
+ reset.onclick=()=>{q=.5;mode=0;revealed=false;delete saved.prediction;figure.querySelectorAll('.visual-prediction input').forEach(input=>input.checked=false);if(slider)slider.value=String(Number(slider.max)/2);if(select)select.value='0';view.hidden=true;status.textContent=t('reset');update();};
  figure.append(reveal,reset,status,view,element('p',t('compare'),'muted'));
  function update(){
+  saved.q=q;saved.mode=mode;saved.revealed=revealed;
+  if(angleOutput){angleOutput.textContent=Math.round(q*60)+'°';slider.setAttribute('aria-valuetext',Math.round(q*60)+'°');}
+  if(guided)reveal.textContent=local(revealed?L('Explore the model','Teroka model','探索模型'):L('Reveal and explore','Tunjukkan dan teroka','显示并探索'));
   if(!revealed)return;const state=root.HahaPhysicsNotesModels.model(spec.kind,q,mode);view.replaceChildren();
   const ns='http://www.w3.org/2000/svg';
   function svgNode(tag,attrs,text){const n=document.createElementNS(ns,tag);for(const[k,v]of Object.entries(attrs))n.setAttribute(k,String(v));if(text!==undefined)n.textContent=text;return n;}
@@ -102,21 +111,41 @@ function renderVisual(spec,locale){
     const legend=element('p');legend.textContent=state.vectors.map(v=>(symbols[v.label]||v.label)+' = '+t(v.label)).join(' · ');view.append(legend);
    }
    view.append(svg);
+   if(guided&&spec.kind==='angle'){
+    const forces={normal:L('N: the table pushes perpendicular to its surface.','N: meja menolak serenjang dengan permukaannya.','N：桌面沿垂直接触面的方向施力。'),pull:L('F: the cord pulls upward and forward; its magnitude stays fixed.','F: tali menarik ke atas dan ke hadapan; magnitudnya kekal.','F：绳子向前、向上拉，拉力大小固定。'),friction:L('fₖ: kinetic friction opposes the block’s rightward sliding relative to the table.','fₖ: geseran kinetik menentang gelinciran blok ke kanan relatif kepada meja.','fₖ：滑动摩擦力阻碍滑块相对桌面向右滑动。'),weight:L('mg: Earth pulls the block downward.','mg: Bumi menarik blok ke bawah.','mg：地球向下吸引滑块。')};
+    const forceControls=element('div',undefined,'force-inspector'),explanation=element('p');explanation.setAttribute('role','status');const buttons=[];
+    function highlight(key){saved.highlight=key;for(const node of svg.querySelectorAll('[data-vector]')){node.setAttribute('stroke',node.getAttribute('data-vector')===key?'#9c4b0d':'#365f4c');node.setAttribute('stroke-width',node.getAttribute('data-vector')===key?'6':'3');}buttons.forEach(([name,b])=>b.setAttribute('aria-pressed',String(name===key)));explanation.textContent=local(forces[key]);}
+    for(const key of['normal','pull','friction','weight']){const b=element('button',t(key));b.type='button';b.onclick=()=>highlight(key);buttons.push([key,b]);forceControls.append(b);}view.append(forceControls,explanation);if(saved.highlight)highlight(saved.highlight);
+   }
   }
   const values=element('dl',undefined,'visual-values');
-  state.rows.forEach(row=>{const cell=element('div');cell.append(element('dt',t(row.key)),element('dd',typeof row.value==='number'?new Intl.NumberFormat(locale,{maximumFractionDigits:3}).format(row.value):t(row.value)));values.append(cell);});view.append(values);
+  state.rows.forEach(row=>{const cell=element('div');cell.append(element('dt',t(row.key)),element('dd',typeof row.value==='number'?new Intl.NumberFormat(locale,{maximumFractionDigits:guided?2:3}).format(row.value):t(row.value)));values.append(cell);});
+  if(guided){
+   const observation=element('p',undefined,'model-observation');observation.setAttribute('aria-live','polite');
+   observation.textContent=local(spec.kind==='angle'?(q===0?L('At a horizontal pull, the table supports the full weight. Raise the angle to compare.','Pada tarikan mendatar, meja menyokong seluruh berat. Naikkan sudut untuk membandingkan.','水平拉时，桌面承担全部重量。增大角度来比较。'):L('Compared with the horizontal pull, normal force and friction are smaller. The forward pull component is also smaller, so friction alone cannot decide the final speed.','Berbanding tarikan mendatar, daya normal dan geseran lebih kecil. Komponen tarikan ke hadapan turut lebih kecil, jadi geseran sahaja tidak menentukan laju akhir.','与水平拉相比，支持力和摩擦更小，水平拉力分量也更小，因此不能只凭摩擦判断末速。')):L('Kinetic energy decreases and combined internal energy increases while sliding continues. At the stopping point, further requested progress produces no further actual sliding.','Tenaga kinetik berkurang dan tenaga dalaman gabungan bertambah selagi gelinciran berterusan. Pada titik berhenti, kemajuan lanjut yang diminta tidak menghasilkan gelinciran sebenar lanjut.','实际滑动继续时，动能减少、组合内能增加。停止后，即使请求更远进度，实际滑动也不会继续。'));
+   view.append(observation);if(spec.kind==='friction'){for(const key of['kinetic','internalEnergy']){const label=element('label',t(key),'energy-meter');const meter=element('meter');meter.min=0;meter.max=1;meter.value=state.rows.find(r=>r.key===key).value;label.append(meter);view.append(label);}}
+   const details=element('details',undefined,'model-details');details.append(element('summary',local(L('Show model values','Tunjukkan nilai model','显示模型数值'))),values);view.append(details);
+  }else view.append(values);
  }
+ update();
  return figure;
+}
+function equation(value,locale){const p=element('p',undefined,'equation');for(const part of value.split(/([A-Za-z]+_[A-Za-z,]+)/g)){const match=part.match(/^([A-Za-z]+)_([A-Za-z,]+)$/);if(match){const span=element('span',match[1]);span.append(element('sub',match[2]));p.append(span);}else p.append(element('span',part));}if(value==='f_k = μ_k N')p.setAttribute('aria-label',translate(L('Kinetic friction equals the kinetic-friction coefficient times normal force','Geseran kinetik sama dengan pekali geseran kinetik darab daya normal','滑动摩擦力等于滑动摩擦系数乘支持力'),locale));return p;}
+function appendSources(article,lesson,locale){
+ const t=k=>translate(copy[k],locale),sources=element('details',undefined,'notes-sources');sources.append(element('summary',t('source')),element('p',t('scope')));
+ const source=element('a',t('sourceLink'));source.href=`https://github.com/tlyoon/brilliant.org-style-learning-apps/blob/${upstream}/content/source-manifests/${lesson.id}.json`;sources.append(source);
+ const reference=element('a',t('reference'));reference.href=lesson.section==='1.1'?'https://www.bipm.org/en/measurement-units/si-base-units':lesson.section==='9.9'?'https://www1.grc.nasa.gov/beginners-guide-to-aeronautics/ideal-rocket-equation/':lesson.section.startsWith('8.')?'https://openstax.org/books/university-physics-volume-1/pages/8-3-conservation-of-energy':'https://openstax.org/books/university-physics-volume-1/pages/9-introduction';sources.append(element('p'),reference);article.append(sources);
 }
 function render(container,id,locale='en',catalog=[]){
  const lesson=lessons.find(l=>l.id===id);if(!lesson){container.append(element('p',translate(copy.unknown,locale)));return false;}
+ if(lesson.section==='8.3'&&root.HahaFrictionGuide)return root.HahaFrictionGuide.render(container,locale,catalog);
  const local=v=>translate(v,locale),t=k=>local(copy[k]),article=element('article',undefined,'physics-notes');article.dataset.physicsNotes=id;article.lang=locale;
- const intro=element('header',undefined,'notes-intro');intro.append(element('p',t('draft'),'draft-label'),element('h2',lesson.section+' · '+local(lesson.title)),element('p',t('intro')),element('h3',t('goal')),element('p',local(lesson.goal)));article.append(intro);
+ const intro=element('header',undefined,'notes-intro');intro.append(element('p',t('draft'),'draft-label'),element('h1',lesson.section+' · '+local(lesson.title)),element('p',local(lesson.goal)));article.append(intro);
  const toc=element('nav',undefined,'notes-toc');toc.setAttribute('aria-label',t('title'));
  const jump=(text,target)=>{const a=element('a',text);a.href='#lesson/'+encodeURIComponent(id);a.onclick=e=>{e.preventDefault();const dest=article.querySelector('#'+target);dest?.scrollIntoView({block:'start',behavior:'instant'});dest?.focus({preventScroll:true});};return a;};
- for(const [i,s]of lesson.sections.entries())toc.append(jump((i+1)+'. '+local(s.title),'physics-part-'+i));toc.append(jump(t('example'),'physics-example'),jump(t('checks'),'physics-checks'),jump(t('review'),'physics-review'));article.append(toc);
+ for(const [i,s]of lesson.sections.entries())toc.append(jump((i+1)+'. '+local(s.title),'physics-part-'+i));toc.append(jump(t('example'),'physics-example'),jump(t('checks'),'physics-checks'),jump(t('review'),'physics-review'));const contents=element('details',undefined,'notes-contents');contents.append(element('summary',local(L('Contents','Kandungan','目录'))),toc);article.append(contents);
  for(const[i,s]of lesson.sections.entries()){
-  const section=element('section',undefined,'teaching-section');section.id='physics-part-'+i;section.tabIndex=-1;section.append(element('h3',(i+1)+'. '+local(s.title)),element('p',local(s.text)));if(s.equation)section.append(element('p',s.equation,'equation'));
+  const section=element('section',undefined,'teaching-section');section.id='physics-part-'+i;section.tabIndex=-1;section.append(element('h2',(i+1)+'. '+local(s.title)),element('p',local(s.text)));if(s.equation)section.append(equation(s.equation,locale));
   for(const spec of lesson.visuals.filter(v=>v.sectionIndex===i))section.append(renderVisual(spec,locale));article.append(section);
  }
  const example=element('section',undefined,'teaching-section');example.id='physics-example';example.tabIndex=-1;example.append(element('h2',t('example')),element('p',local(lesson.example.situation)));const steps=element('ol');lesson.example.steps.forEach(s=>steps.append(element('li',local(s))));example.append(steps);article.append(example);
@@ -125,7 +154,7 @@ function render(container,id,locale='en',catalog=[]){
  const sources=element('details',undefined,'notes-sources');sources.append(element('summary',t('source')),element('p',t('scope')));
  const source=element('a',t('sourceLink'));source.href=`https://github.com/tlyoon/brilliant.org-style-learning-apps/blob/${upstream}/content/source-manifests/${id}.json`;sources.append(source);
  const reference=element('a',t('reference'));reference.href=lesson.section==='1.1'?'https://www.bipm.org/en/measurement-units/si-base-units':lesson.section==='9.9'?'https://www1.grc.nasa.gov/beginners-guide-to-aeronautics/ideal-rocket-equation/':lesson.section.startsWith('8.')?'https://openstax.org/books/university-physics-volume-1/pages/8-3-conservation-of-energy':'https://openstax.org/books/university-physics-volume-1/pages/9-introduction';sources.append(element('p'),reference);article.append(sources);
- const navigation=element('nav',undefined,'notes-toc');navigation.setAttribute('aria-label',t('title'));const index=lessons.indexOf(lesson);for(const[offset,key]of[[-1,'previous'],[1,'next']]){const other=lessons[index+offset];if(other&&catalog.some(l=>l.id===other.id)){const a=element('a',t(key)+' · '+other.section);a.href='#lesson/'+encodeURIComponent(other.id);navigation.append(a);}}article.append(navigation);container.append(article);return true;
+ const navigation=element('nav',undefined,'notes-toc');navigation.setAttribute('aria-label',t('title'));const index=lessons.indexOf(lesson);for(const[offset,key]of[[-1,'previous'],[1,'next']]){const other=lessons[index+offset];if(other&&catalog.some(l=>l.id===other.id)){const a=element('a',t(key)+' · '+other.section);a.href='#lesson/'+encodeURIComponent(other.id);navigation.append(a);}}article.append(navigation);const practice=element('a',local(L('Practise lesson','Latih tubi pelajaran','课程练习')),'primary');practice.href=catalog.find(l=>l.id===id)?.url||'#learn';article.append(practice);container.append(article);return true;
 }
-root.HahaPhysicsNotes={render};
+root.HahaPhysicsNotes={render,renderVisual,element,equation,appendSources};
 })(typeof globalThis==='object'?globalThis:this);
