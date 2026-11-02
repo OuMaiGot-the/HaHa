@@ -26,6 +26,8 @@ class PublicReleaseTests(unittest.TestCase):
                 "mana.js",
                 "mana-ui.js",
                 "mana.css",
+                "tactile-buttons.css",
+                "tactile-buttons.js",
                 "index.html",
                 "app/app.js",
                 "app/learning.js",

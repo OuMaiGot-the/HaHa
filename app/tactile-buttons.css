@@ -1,0 +1,45 @@
+/* Shared button geometry. Colours continue to come from each screen. */
+body .tactile-button{
+  --tactile-depth:4px;
+  box-sizing:border-box;min-height:44px;max-width:100%;
+  border-radius:15px!important;border-width:2px!important;border-style:solid!important;
+  font-weight:800!important;line-height:1.35;
+  box-shadow:0 var(--tactile-depth) 0 var(--tactile-lip,#b7c3c8),inset 0 1px 0 #ffffff26!important;
+  translate:0 0;transform:none!important;
+  transition:translate 90ms ease,box-shadow 90ms ease,filter 120ms ease!important;
+  touch-action:manipulation;-webkit-tap-highlight-color:transparent;
+}
+@media(hover:hover){body .tactile-button:not(:disabled):not([aria-disabled=true]):hover{filter:brightness(1.045)}}
+body .tactile-button:not(:disabled):not([aria-disabled=true]):active,
+body .tactile-button.is-key-pressed{
+  translate:0 4px;box-shadow:0 0 0 var(--tactile-lip,#b7c3c8),inset 0 1px 0 #0000000a!important;
+  filter:brightness(.98);
+}
+body .tactile-button:focus-visible{outline:3px solid #168bbd!important;outline-offset:6px}
+body .tactile-button:disabled,body .tactile-button[aria-disabled=true],body .tactile-button.btn-disabled{
+  --tactile-depth:2px;cursor:not-allowed;filter:saturate(.55);translate:0 0;
+}
+/* Artwork remains its own silhouette, with no rectangular button frame. */
+body .tactile-sculpture{touch-action:manipulation;transition:translate 90ms ease!important}
+body .tactile-sculpture:active{translate:0 3px}
+body .tactile-sculpture:focus-visible{outline:3px solid #168bbd;outline-offset:5px}
+@media(prefers-reduced-motion:reduce){
+  body .tactile-button,body .tactile-sculpture{transition:none!important}
+}
+
+body summary.tactile-button{padding:10px 14px;cursor:pointer}
+body .tactile-button:not(:disabled):not([aria-disabled=true]){cursor:pointer}
+
+/* Subject hues: restore Physics purple; Mathematics stays vivid green. */
+body[data-button-subject=physics]{--button-brand:#a459ef;--button-brand-edge:#7938b8;--button-soft:#f3e9ff;--button-ink:#7836b6}
+body[data-button-subject=maths]{--button-brand:#58cc02;--button-brand-edge:#439d00;--button-soft:#edffdf;--button-ink:#397e0a}
+html body[data-button-subject] .tactile-button:is(.primary,.btn-primary,.action:not(.secondary)),
+html body[data-button-subject=physics] .lesson-card>a.tactile-button{
+ background:var(--button-brand)!important;border-color:var(--button-brand-edge)!important;color:white!important;
+}
+html body[data-button-subject] .tactile-button:is(.btn-secondary,.secondary-home,.action.secondary){color:var(--button-ink)!important;border-color:color-mix(in srgb,var(--button-brand) 45%,white)!important}
+html body[data-button-subject] :is(nav,#navigation,.topnav) .tactile-button:is([aria-current=page],.active){background:var(--button-soft)!important;border-color:color-mix(in srgb,var(--button-brand) 50%,white)!important;color:var(--button-ink)!important}
+html body .subject-card:first-child .primary.tactile-button{background:#a459ef!important;border-color:#7938b8!important;color:white!important}
+html body .subject-card:last-child .primary.tactile-button{background:#58cc02!important;border-color:#439d00!important;color:white!important}
+html body .card.answer-incorrect #check.tactile-button{background:#f45b50!important;border-color:#c33f36!important}
+html body .card.answer-correct #check.tactile-button{background:#58cc02!important;border-color:#439d00!important}

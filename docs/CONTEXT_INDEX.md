@@ -126,3 +126,7 @@ See [the canonical source and selective upstream integration](UPSTREAM_INTEGRATI
 ## Maths mastery and personalised revision
 
 See [the Maths mastery contract](MATHS_MASTERY.md) for the approved evidence model, legacy preservation, hint tracking, focused revision and validation.
+
+## Physics lecture notes
+
+See [Physics notes](PHYSICS_NOTES.md) for multilingual supplementary teaching material, source limits, deterministic visuals and checks. Notes do not modify assessed packages or learning evidence.
