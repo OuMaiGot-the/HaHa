@@ -108,3 +108,7 @@ physics study shell, focused practice, evidence-based review, preferences and te
 The [two-subject integration](TWO_SUBJECTS.md) adds the entrance chooser and imports the
 available AddMath material with separate local progress. It records exact content
 coverage, provenance and checks. Physics content and mastery stay unchanged.
+
+## Reviewed upstream integration
+
+See [the canonical source and selective upstream integration](UPSTREAM_INTEGRATION.md) for the approved modules, compatibility rules, release workflow and remaining evidence limits.

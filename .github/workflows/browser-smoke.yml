@@ -34,3 +34,4 @@ jobs:
           node scripts/smoke_subjects_browser.cjs
           node scripts/smoke_usability_browser.cjs
           node scripts/smoke_mana_browser.cjs
+          node scripts/smoke_upstream_integration_browser.cjs

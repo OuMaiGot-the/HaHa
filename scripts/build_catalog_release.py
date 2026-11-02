@@ -29,9 +29,9 @@ def main():
                 continue
             relative = source.parent.relative_to(ROOT / "content")
             target = output / "learn" / relative
-            build(target, source)
+            build(target, source, shared_assets_prefix="../../../")
             index = target / "index.html"
-            index.write_text(index.read_text(encoding="utf-8").replace('data-package-url="', 'data-catalog-url="../../../index.html#home" data-package-url="'), encoding="utf-8")
+            index.write_text(index.read_text(encoding="utf-8").replace('href="index.html#home"', 'href="../../../index.html#home"').replace('data-package-url="', 'data-catalog-url="../../../index.html#home" data-package-url="'), encoding="utf-8")
             packages.append({
                 "id": data.get("packageId", str(relative)),
                 "chapter": data.get("chapter", relative.parts[0]),
@@ -52,8 +52,9 @@ def main():
     shutil.copyfile(ROOT / "app" / "catalog.html", output / "index.html")
     shutil.copyfile(ROOT / "app" / "catalog.js", output / "catalog.js")
     shutil.copyfile(ROOT / "app" / "learning.js", output / "learning.js")
-    for asset in ("study.js", "hub-copy.js", "hub.css", "hub-orbit.svg", "audit-improvements.css", "favicon.svg", "mana.js", "mana-ui.js", "mana.css"):
+    for asset in ("study.js", "hub-copy.js", "hub.css", "hub-orbit.svg", "audit-improvements.css", "favicon.svg", "mana.js", "mana-ui.js", "mana.css", "hub-journey.css", "mascots.css", "phyphy-motion.js", "physics-practice.css"):
         shutil.copyfile(ROOT / "app" / asset, output / asset)
+    shutil.copytree(ROOT / "app" / "assets", output / "assets")
     shutil.copytree(ROOT / "app" / "mathematics", output / "mathematics")
     maths_index = output / "mathematics" / "index.html"
     maths_index.write_text(maths_index.read_text(encoding="utf-8").replace("</head>", '<link rel="icon" type="image/svg+xml" href="../favicon.svg?v=haha-1">\n</head>', 1), encoding="utf-8")

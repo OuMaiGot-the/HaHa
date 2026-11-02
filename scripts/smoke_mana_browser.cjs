@@ -32,12 +32,12 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict'),fs=r
    for(const q of two){await page.locator('.choice[data-value="'+q.answerKey.correct+'"]').click();await page.locator('#check').click();await page.locator('#check').click();}
    await page.locator('.session-review').waitFor();await waitValue(page,before+13);assert.equal(await value(page),before+13,'one new answer plus the once-daily set bonus');
    const afterPhysics=await value(page);
-   await page.goto(base+'mathematics/index.html');await page.locator('#next-lesson button').click();await page.locator('.checkpoint-card [data-correct="true"]').click();
+   await page.goto(base+'mathematics/index.html');await page.locator('#next-lesson button').click();await page.locator('.checkpoint-card [data-correct="true"]').first().click();
    await waitValue(page,afterPhysics+5);assert.equal(await value(page),afterPhysics+5);assert.equal(await page.evaluate(()=>localStorage.getItem('haha:math:v1:amMana')),'130','legacy balance remains untouched');
    await page.getByRole('button',{name:'Practice',exact:true}).click();
    await page.locator('[data-action="practiceSubject"][data-form="4"]').click();
    await page.locator('[data-action="practiceRandom"]').first().click();
-   for(let i=0;i<5;i++){const jump=page.locator('[data-practice-jump="'+i+'"]');if(await jump.count())await jump.click();const inputs=page.locator('[data-practice-answer^="'+i+',"]');for(const input of await inputs.all())await input.fill('not-a-valid-answer');}
+   for(let i=0;i<5;i++){const jump=page.locator('[data-practice-jump="'+i+'"]');if(await jump.count())await jump.click();const inputs=page.locator('[data-practice-answer^="'+i+',"]');for(const input of await inputs.all())await input.fill('999999');}
    const beforeSet=await value(page);await page.locator('[data-action="submitPracticeAnswers"]').click();await page.locator('.practice-result-item').first().waitFor();await waitValue(page,beforeSet+5);assert.equal(await value(page),beforeSet+5,'attempting all questions earns the daily bonus, even with mistakes');
    await page.locator('.mana-trigger').click();assert(await page.locator('.mana-history').innerText());assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
    await page.getByRole('button',{name:'Close wallet',exact:true}).click();

@@ -30,7 +30,7 @@ def _resolve_package(package_path: Path, source_root: Path = ROOT) -> Path:
     return source
 
 
-def build(output: Path, package_path: Path, *, source_root: Path = ROOT) -> None:
+def build(output: Path, package_path: Path, *, source_root: Path = ROOT, shared_assets_prefix: str = "") -> None:
     """Create an empty-directory release bundle from one explicitly selected package."""
     if output.exists() and any(output.iterdir()):
         raise ValueError(f"Output directory must be empty: {output}")
@@ -59,14 +59,17 @@ def build(output: Path, package_path: Path, *, source_root: Path = ROOT) -> None
         'data-package-url=""',
         'data-package-url="./content/package.json"',
     )
+    common = ("favicon.svg", "mana.js", "mana-ui.js", "mana.css", "physics-practice.css", "mascots.css", "audit-improvements.css")
+    for name in common:
+        public_index = public_index.replace('"' + name, '"' + shared_assets_prefix + name)
+    if not shared_assets_prefix:
+        for name in common:
+            shutil.copyfile(source_root / "app" / name, output / name)
+        shutil.copytree(source_root / "app" / "assets", output / "assets")
     (output / "index.html").write_text(public_index, encoding="utf-8")
     (output / ".nojekyll").touch()
 
     for source, relative_target in (
-        (source_root / "app" / "favicon.svg", Path("favicon.svg")),
-        (source_root / "app" / "mana.js", Path("mana.js")),
-        (source_root / "app" / "mana-ui.js", Path("mana-ui.js")),
-        (source_root / "app" / "mana.css", Path("mana.css")),
 
         (source_root / "app" / "app.js", Path("app/app.js")),
         (source_root / "app" / "learning.js", Path("app/learning.js")),

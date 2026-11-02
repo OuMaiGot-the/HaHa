@@ -28,6 +28,8 @@ class FakeElement {
     return this._text + this.children.map((child) => child.textContent).join("");
   }
 
+  prepend(...children) { this.children.unshift(...children); }
+
   append(...children) {
     this.children.push(...children);
   }

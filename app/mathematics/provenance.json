@@ -4,5 +4,17 @@
   "sourceBlob": "f893fb14b627905d45eda2238acdb9d38aed8744",
   "contentSha256": "96f52462d3ff0e1a5fdedeedbefe470fa7fb19275204784f3d1f8ab2011ec232",
   "scope": "Existing mathematics content preserved; integration changes only shell, storage adapter and unavailable routes.",
-  "sourceCommit": "4296ada59af904666da8489c4aae92b0993c2dcc"
+  "sourceCommit": "4296ada59af904666da8489c4aae92b0993c2dcc",
+  "integrationCommit": "68db17f5a15807012325ec20a461c18b74668969",
+  "importedModules": {
+    "core\\marking.js": "a2724217e5f4f0441b6e236cbe0df7aa4db9a4c51b96410b2b5edf60f9dc2c78",
+    "core\\notes-visuals.js": "e221f2b64b12cf3f447df177d89cdc345b2bead4969a3dde5a8bca27d3abcc38",
+    "core\\progress.js": "e9a7b701ee940784b2cf3d20079cc950303b8c3ace081e895154a7991cf6c04d",
+    "core\\ui.js": "7ccf88d819403187d1d540efa0777b1bd8d16cf56708502a0ac489ef57701eac",
+    "data\\functions.js": "d2b66a455b129528e8be42302ebb9d0a4e7ede3ace640edef1250bf3217d1e0a",
+    "data\\notes.js": "50cf24de1fdf6dc9736939c52e00d20cc94e683a651cfeef60fe967d8f72d6f5"
+  },
+  "note": "Expanded authored Functions notes and nine-question evaluation imported by user approval; HaHa completion and Mana rules retained.",
+  "practiceSha256": "a6155bb12d5f7610a012a5f52f05c483b392089154b376fd25550e188a613d23",
+  "normalization": "UTF-8/LF and trailing whitespace normalization only"
 }

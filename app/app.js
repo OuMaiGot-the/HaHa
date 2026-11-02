@@ -230,6 +230,7 @@ function renderVisual(card, activity) {
   card.append(fallback);
 }
 
+function physicsMascot(pose="welcome",extra=""){return element("span",{className:"mascot mascot-phyphy mascot-"+pose+" "+extra,attributes:{"aria-hidden":"true"}});}
 function renderComplete(root) {
   try { if(typeof HahaMana!=="undefined" && new URL(window.location.href).searchParams.has("practice"))HahaMana.completeSet("physics",studyActivities().length>0&&studyActivities().every(a=>manaSessionChecked.has(a.id))); }catch(_){}
 
@@ -239,6 +240,7 @@ function renderComplete(root) {
     element("p", { className: "eyebrow", text: localized(state.package.subchapter) }),
     element("h1", { text: studyActivities().length < state.package.activities.length ? { en: "Practice set complete", ms: "Set latihan selesai", zh: "本组练习完成" }[state.locale] : copy[state.locale].complete }),
   );
+  card.prepend(physicsMascot("celebrate","mascot-completion"));
   const restart = element("button", { className: "action", text: copy[state.locale].restart, attributes: { id: "restart" } });
   restart.addEventListener("click", () => { visitFailed = false; state.activityIndex = 0; manaSessionChecked.clear(); resetActivity(); render(); });
   card.append(restart);
@@ -277,10 +279,11 @@ function render() {
     text: `${labels.activity} ${state.activityIndex + 1} ${labels.of} ${activities.length} · ${activity.difficulty}`,
   }));
 
-  const progress = element("div", { className: "progress", attributes: { "aria-label": "Progress" } });
+  const progress = element("div", { className: "progress", attributes: { role: "progressbar", "aria-label": "Activity progress", "aria-valuemin": "0", "aria-valuemax": String(activities.length), "aria-valuenow": String(state.activityIndex) } });
   const progressBar = element("span");
-  progressBar.style.width = `${((state.activityIndex + 1) / activities.length) * 100}%`;
+  progressBar.style.width = `${(state.activityIndex / activities.length) * 100}%`;
   progress.append(progressBar);
+  card.append(physicsMascot(state.checked?(responseCorrect(activity)?"celebrate":"retry"):state.hint?"thinking":"welcome","mascot-feedback"));
   card.append(progress, element("h1", { className: "question", text: localized(activity.prompt) }));
 
   renderVisual(card, activity);
