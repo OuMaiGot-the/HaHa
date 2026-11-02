@@ -13,6 +13,8 @@
 <link rel="stylesheet" href="mana.css">
 <script src="mana.js"></script>
 <script src="mana-ui.js"></script>
+<link rel="stylesheet" href="subject-switch.css">
+<script defer src="subject-switch.js"></script>
 </head>
   <body>
     <a class="skip-link" href="#main">Skip to content</a>
@@ -23,7 +25,9 @@
           ><span>HaHa<span class="brand-caption">LEARNING STUDIO</span></span></a
         >
         <nav id="navigation" aria-label="Main navigation"></nav>
-        <a id="study-tools-shortcut" href="#tools" class="settings-shortcut">Study tools</a>
+<div class="subject-header-actions"><details class="subject-switch"><summary>Switch subject</summary><div class="subject-switch-options"><a href="mathematics/index.html#home">Mathematics</a><a href="#home" aria-current="page">Physics</a></div></details></div>
+      </header>
+      <div class="physics-preferences">        <a id="study-tools-shortcut" href="#tools" class="settings-shortcut">Study tools</a>
         <label class="language-label" for="locale"
           >Language<select id="locale">
             <option value="en">English</option>
@@ -31,7 +35,7 @@
             <option value="zh">简体中文</option>
           </select></label
         >
-      </header>
+</div>
       <main id="main" tabindex="-1">
         <p id="status" role="status">Loading your study space…</p>
         <div id="chapters"></div>
