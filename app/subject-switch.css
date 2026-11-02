@@ -15,3 +15,4 @@ body[data-theme=dark] .subject-switch{color:#c1d0d9}body[data-theme=dark] .subje
 @media(max-width:1000px){.app-shell{padding-left:22px;padding-right:22px}}
 @media(max-width:760px){.app-shell{padding-left:16px;padding-right:16px}.app-header,.topbar{min-height:72px;padding:10px 0}.subject-switch{font-size:11px}.subject-header-actions{gap:8px}.subject-header-actions .mana-trigger{margin:0}.app-header>.brand{margin-right:0}.physics-preferences{justify-content:flex-start}.app-header .brand-caption{display:none}}
 @media(max-width:380px){.topbar .brand-name{font-size:18px}.app-header .brand{font-size:18px;gap:6px}}
+@media(max-width:760px){.app-header>.brand,.topbar>.brand{flex:1;min-width:0;overflow:hidden}.topbar>.brand>span:last-child{min-width:0}.topbar .brand-name{display:block;font-size:18px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}}
