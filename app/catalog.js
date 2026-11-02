@@ -53,6 +53,9 @@
     document.body.dataset.size = prefs.size;
     document.documentElement.lang = locale;
     document.getElementById("footer-copy").textContent = t("footer");
+    const switchLabel=document.querySelector('.subject-switch>summary');if(switchLabel)switchLabel.textContent={en:'Switch subject',ms:'Tukar subjek',zh:'切换科目'}[locale];
+    const subjects=document.querySelectorAll('.subject-switch-options a');if(subjects[0])subjects[0].textContent={en:'Mathematics',ms:'Matematik',zh:'数学'}[locale];if(subjects[1])subjects[1].textContent={en:'Physics',ms:'Fizik',zh:'物理'}[locale];
+    const languageLabel=document.querySelector('.language-label');if(languageLabel?.firstChild?.nodeType===3)languageLabel.firstChild.textContent={en:'Language',ms:'Bahasa',zh:'语言'}[locale];
   }
   try {
     const response = await fetch("./catalog.json", { cache: "no-cache" });
