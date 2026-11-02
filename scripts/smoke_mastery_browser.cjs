@@ -39,7 +39,7 @@ const fs = require('node:fs');
         assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true,'no mobile overflow');
       }
       await page.locator('#locale').selectOption('en');
-      await page.locator('.physics-stop summary').first().click();await page.locator('article summary').first().focus();
+      await page.locator('.physics-stop summary').first().click();await page.locator('.lesson-card').first().waitFor();await page.locator('article summary').first().focus();
       await page.keyboard.press('Enter');
       assert.equal(await page.locator('article details').first().getAttribute('open'),'');
       await page.locator('.progress-data-settings summary').click();
