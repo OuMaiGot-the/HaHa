@@ -293,7 +293,6 @@
     }
     function lessons(saved) {
       heading("learn", "learnDesc");
-      recommend(saved);dashboard(saved);
       const buddy=node("div",undefined,"mascot-note");buddy.append(mascot("phyphy","aha","mascot-small"),node("p",{en:"PhyPhy is ready to explore Physics with you.",ms:"PhyPhy sedia menerokai Fizik bersama anda.",zh:"PhyPhy准备好和你一起探索物理。"}[locale]));root.append(buddy);
       const filters = node("div", undefined, "filters"),
         sl = node("label", t("search")),

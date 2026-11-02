@@ -26,7 +26,7 @@ const fs = require("node:fs");
         ),
         true,
       );
-      await page.getByRole("link", { name: "Learn →", exact: true }).click();
+      await page.getByRole("link", { name: "Learn", exact: true }).click();
       await page.locator(".physics-stop summary").first().click();
       await page.locator(".lesson-card").first().waitFor();
       assert.equal(await page.locator(".lesson-card").count(), catalog.length);
