@@ -3,6 +3,6 @@ const prefix='app/mathematics/',p=JSON.parse(fs.readFileSync(prefix+'provenance.
 const data=['data/functions.js','data/notes.js'].map(p=>fs.readFileSync(prefix+p,'utf8')).join('\n');new vm.Script(data+'\n'+app);const ctx={};vm.runInNewContext(data+';result={practiceQuestionBanks,practiceFinalQuestions,notes,evaluationQuestions};',ctx);
 const d=ctx.result,sha=s=>crypto.createHash('sha256').update(s).digest('hex');assert.equal(sha(JSON.stringify({practiceQuestionBanks:d.practiceQuestionBanks,practiceFinalQuestions:d.practiceFinalQuestions})),p.practiceSha256);
 assert.deepEqual(Array.from(d.practiceQuestionBanks,b=>b.length),[8,8,8]);assert.equal(d.practiceFinalQuestions.length,5);assert.equal(d.notes.length,3);assert.equal(d.evaluationQuestions.length,9);
-for(const [path,hash]of Object.entries(p.importedModules))assert.equal(sha(fs.readFileSync(prefix+path)),hash,path);
+for(const [path,hash]of Object.entries(p.importedModules))assert.equal(sha(fs.readFileSync(prefix+path,'utf8').replace(/\r\n/g,'\n')),hash,path);
 assert.equal((app.match(/window\.localStorage/g)||[]).length,3);assert(app.includes('"haha:math:v1:" + key'));assert(!/\b(?:fetch\(|XMLHttpRequest|WebSocket)/.test(app));assert(!/appgprj_|sk-proj-|sk_live_/.test(app+html));assert(html.includes('href="../index.html#subjects"'));assert(app.includes('state.chapterEvalComplete=true;'));assert(!app.includes('evaluationPercent()>=60'));
 console.log('Mathematics import passed: pinned modules, unchanged practice bank, nine-question evaluation, namespace and completion policy.');
