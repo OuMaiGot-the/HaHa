@@ -33,7 +33,10 @@
     if(b.includes(',')){const set=x=>[...new Set(x.replace(/^[ab]=/,'').replace(/^\{|\}$/g,'').split(',').map(v=>{const p=parse(v);if(p.n.length!==1||p.d.length!==1)throw Error('Set values must be numbers');return p.n[0]/p.d[0]}))].sort((a,b)=>a-b);const aa=set(a),bb=set(b);return aa.length===bb.length&&aa.every((v,i)=>Math.abs(v-bb[i])<EPS)}
     return expressionMatch(stripAssignment(input),stripAssignment(expected));
   }
-  function grade(input,answers){if(!String(input??'').trim())return{status:'blank',correct:false};let readable=false;for(const expected of answers){try{if(compare(input,expected))return{status:'correct',correct:true};readable=true}catch{}}
+  function grade(input,answers){if(!String(input??'').trim())return{status:'blank',correct:false};
+    // Validate expression syntax before text/root alternatives can return a mismatch.
+    try{const expression=stripAssignment(input);if(/[()+*/^]/.test(clean(expression))&&!relation(expression)){const values=clean(expression).includes(',')?clean(expression).replace(/^[ab]=/,'').replace(/^\{|\}$/g,'').split(','):[expression];for(const value of values)parse(value,/sqrt\(?[xt]\)?/.test(clean(value)));}}catch{return{status:'unreadable',correct:false};}
+    let readable=false;for(const expected of answers){try{if(compare(input,expected))return{status:'correct',correct:true};readable=true}catch{}}
     return{status:readable?'incorrect':'unreadable',correct:false};
   }
   const api={grade,compare,parse};root.AppMarking=api;if(typeof module!=='undefined')module.exports=api;

@@ -6,3 +6,6 @@ assert.equal(M.grade('2+(',['3']).status,'unreadable');assert.equal(M.grade('',[
 const ctx={};vm.runInNewContext(fs.readFileSync('app/mathematics/data/functions.js','utf8')+';questions=[...practiceQuestionBanks.flat(),...practiceFinalQuestions];',ctx);
 for(const q of ctx.questions)for(const p of q.parts||[q])for(const a of p.answers)assert(M.grade(a,p.answers).correct,q.id);
 console.log('Math marking passed: supported equivalence, domain restrictions, unsafe/unsupported input and all authored alternatives.');
+
+for(const answer of ['sqrt(x)','{1,2,3,4}','A','yes'])assert.equal(M.grade('2+(',[answer]).status,'unreadable',answer);
+for(const q of ctx.questions)for(const p of q.parts||[q])assert.equal(M.grade('2+(',p.answers).status,'unreadable',q.id);

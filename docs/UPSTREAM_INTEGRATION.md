@@ -8,7 +8,7 @@ the product and source of learning/reward policy. No upstream branch is merged w
 - AddMath Lab: `jjyeo95/addmath-lab`, `68db17f5a15807012325ec20a461c18b74668969`.
   Restricted marking, notes graphs, progress/UI helpers, existing Functions data and
   expanded authored notes/evaluation are imported. `app/mathematics/provenance.json`
-  records normalized file digests. Original 24 practice questions and five multipart
+  records normalized file digests and the local expression-preflight patch. Original 24 practice questions and five multipart
   capstones retain their content digest and question IDs.
 - Tlyoon main: `aad23b3d27cfabde94950221159a413e6c8cf9cf`. Only the validated visual
   generation protocol/prompt/helper and its synthetic tests are adopted, together
