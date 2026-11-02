@@ -52,8 +52,9 @@ function render(container,locale,catalog){
   const s=lesson.sections[index],panel=el('section',undefined,'teaching-section');panel.id='physics-part-'+index;panel.tabIndex=-1;panel.append(el('h2',local(s.title)),el('p',local(bridges[i]),'concept-bridge'));
   if(i===0)panel.prepend(el('p',t('situation'),'teaching-situation'));
   if(i===4){const image=el('img');image.src='assets/physics-notes/block-table.png';image.alt=t('imageAlt');image.width=1536;image.height=1024;image.className='friction-context';panel.append(image,el('p',t('imageCaption'),'image-caption'));}
-  const detail=i===6?el('details'):panel;if(i===6){detail.append(el('summary',t('deeper')));panel.append(detail);}detail.append(el('p',local(s.text)));if(s.equation)detail.append(base.equation(s.equation,locale));
+  const detail=i===6||i===4?el('details'):panel;if(i===6)detail.append(el('summary',t('deeper')));if(i===4)detail.append(el('summary',local(L('Explain the observation','Jelaskan pemerhatian','解释观察结果'))));if(i===6)panel.append(detail);detail.append(el('p',local(s.text)));if(s.equation)detail.append(base.equation(s.equation,locale));
   for(const spec of lesson.visuals.filter(v=>v.sectionIndex===index)){state.visuals[spec.id]||={};panel.append(base.renderVisual(spec,locale,{guided:true,state:state.visuals[spec.id]}));}
+  if(i===4)panel.append(detail);
   panels.push(panel);
  }
  const example=el('section',undefined,'teaching-section');example.id='physics-example';example.tabIndex=-1;example.append(el('h2',t('example')),el('p',t('exampleSituation')));const steps=el('ol');worked.forEach(s=>steps.append(el('li',local(s))));example.append(steps);panels.push(example);

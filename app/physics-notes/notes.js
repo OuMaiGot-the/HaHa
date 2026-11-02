@@ -72,7 +72,7 @@ function renderVisual(spec,locale,options={}){
  }
  if(guided&&spec.kind==='angle'){
   const field=element('fieldset',undefined,'visual-prediction');field.append(element('legend',local(L('Predict: when the same-strength pull tilts upward, what happens to the normal force?','Ramal: apabila tarikan sama kuat dicondongkan ke atas, apakah berlaku kepada daya normal?','预测：同样大小的拉力向上倾斜时，支持力如何变化？'))));
-  [L('Increases','Bertambah','增大'),L('Decreases','Berkurang','减小'),L('Stays the same','Kekal sama','不变')].forEach((value,i)=>{const label=element('label'),radio=element('input');radio.type='radio';radio.name='angle-prediction';radio.value=String(i);radio.checked=saved.prediction===i;radio.onchange=()=>{saved.prediction=i;};label.append(radio,element('span',local(value)));field.append(label);});figure.append(field);
+  [L('Increases','Bertambah','增大'),L('Decreases','Berkurang','减小'),L('Stays the same','Kekal sama','不变')].forEach((value,i)=>{const label=element('label'),radio=element('input');radio.type='radio';radio.name='angle-prediction';radio.value=String(i);radio.checked=saved.prediction===i;radio.onchange=()=>{saved.prediction=i;};label.append(radio,element('span',local(value)));field.append(label);});figure.insertBefore(field,figure.querySelector('.visual-control'));
  }else figure.append(element('p',t('predict')));
  const reveal=element('button',t('explore'),'reveal primary'),reset=element('button',t('reset'));reveal.type=reset.type='button';
  reset.className='visual-reset';const view=element('div');view.hidden=!revealed;const status=element('p');status.setAttribute('role','status');
