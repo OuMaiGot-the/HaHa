@@ -35,7 +35,7 @@ const fs = require('node:fs');
       for (const locale of ['en','ms','zh']) {
         await page.locator('#locale').selectOption(locale);
         assert.equal(await page.locator('html').getAttribute('lang'),locale);
-        assert(await page.locator('article h3').first().innerText());
+        assert(await page.locator('article h3').first().textContent());
         assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true,'no mobile overflow');
       }
       await page.locator('#locale').selectOption('en');
