@@ -2,6 +2,7 @@
 'use strict';
 const {lessons,reviews,L,upstream}=root.HahaPhysicsNotesContent;
 const copy={
+ horizontalAxis:L('Horizontal axis','Paksi mendatar','横轴'),verticalAxis:L('Vertical axis','Paksi menegak','纵轴'),
  metreRuler:L('metre (m) · ruler','meter (m) · pembaris','米（m）· 尺子'),kilogramApparatus:L('kilogram (kg) · mass-measurement apparatus','kilogram (kg) · alat pengukuran jisim','千克（kg）· 质量测量仪器'),secondClock:L('second (s) · clock','saat (s) · jam','秒（s）· 时钟'),unreachable:L('Requested position is beyond the stopping point','Kedudukan diminta melepasi titik berhenti','请求位置超出停止点'),
  title:L('Lecture notes','Nota kuliah','讲义'),draft:L('Original teaching draft · not instructor-reviewed','Draf pengajaran asli · belum disemak pengajar','原创教学草稿 · 尚未经教师审核'),
  intro:L('Read, predict, explore, then explain. These optional checks do not change mastery, Mana or lesson completion.','Baca, ramal, teroka, kemudian jelaskan. Semakan pilihan ini tidak mengubah penguasaan, Mana atau penyiapan pelajaran.','阅读、预测、探索，再解释。这些自选检查不影响掌握度、Mana或课程完成状态。'),
@@ -77,24 +78,26 @@ function renderVisual(spec,locale){
   const ns='http://www.w3.org/2000/svg';
   function svgNode(tag,attrs,text){const n=document.createElementNS(ns,tag);for(const[k,v]of Object.entries(attrs))n.setAttribute(k,String(v));if(text!==undefined)n.textContent=text;return n;}
   if(state.plot||state.bodies.length||state.vectors.length){
-   const svg=svgNode('svg',{viewBox:'0 0 600 320',role:'img'});const title=svgNode('title',{},local(spec.title));const desc=svgNode('desc',{},local(assumptions[spec.kind]));svg.append(title,desc);
-   const line=(x1,y1,x2,y2,color='#365f4c',dash='')=>svg.append(svgNode('line',{x1,y1,x2,y2,stroke:color,'stroke-width':3,'stroke-dasharray':dash}));
-   const text=(x,y,s,anchor='middle')=>svg.append(svgNode('text',{x,y,fill:'#163d36','font-size':18,'text-anchor':anchor},s));
+   const svg=svgNode('svg',{viewBox:'0 0 400 320',role:'img'});const title=svgNode('title',{},local(spec.title));const desc=svgNode('desc',{},local(assumptions[spec.kind]));svg.append(title,desc);
+   const line=(x1,y1,x2,y2,color='#365f4c',dash='')=>{const n=svgNode('line',{x1,y1,x2,y2,stroke:color,'stroke-width':3,'stroke-dasharray':dash});svg.append(n);return n;};
+   const text=(x,y,s,anchor='middle')=>svg.append(svgNode('text',{x,y,fill:'#163d36','font-size':20,'text-anchor':anchor},s));
    if(state.plot){
-    const xs=state.points.map(p=>p[0]),ys=state.points.map(p=>p[1]),xmin=Math.min(0,...xs),xmax=Math.max(1,...xs),ymin=Math.min(0,...ys),ymax=Math.max(1,...ys),sx=x=>70+(x-xmin)/(xmax-xmin)*460,sy=y=>215-(y-ymin)/(ymax-ymin)*150;
-    line(70,sy(0),530,sy(0));line(sx(0),55,sx(0),215);text(300,260,t(state.plot.xkey));text(75,30,t(state.plot.ykey),'start');text(50,sy(0)+5,'0');
+    const xs=state.points.map(p=>p[0]),ys=state.points.map(p=>p[1]),xmin=Math.min(0,...xs),xmax=Math.max(1,...xs),ymin=Math.min(0,...ys),ymax=Math.max(1,...ys),sx=x=>60+(x-xmin)/(xmax-xmin)*280,sy=y=>230-(y-ymin)/(ymax-ymin)*160;
+    const axisSymbols={time:'t',position:'x',energy:'E',kinetic:'K',force:'F',momentum:'p',massRatio:'m_i / m_f',deltaVelocity:'Δv / u'};
+    line(60,sy(0),340,sy(0));line(sx(0),55,sx(0),230);text(200,275,axisSymbols[state.plot.xkey]);text(65,35,axisSymbols[state.plot.ykey],'start');text(40,sy(0)+5,'0');
+    view.append(element('p',t('horizontalAxis')+': '+t(state.plot.xkey)+' · '+t('verticalAxis')+': '+t(state.plot.ykey)));
     const drawCurve=(points,dashed=false)=>svg.append(svgNode('polyline',{points:points.map(([x,y])=>sx(x)+','+sy(y)).join(' '),fill:'none',stroke:'#24734d','stroke-width':5,'stroke-dasharray':dashed?'6 6':''}));
     if(state.plot.dashedFrom!==undefined){drawCurve(state.points.filter(([x])=>x<=state.plot.dashedFrom));drawCurve(state.points.filter(([x])=>x>=state.plot.dashedFrom),true);}else drawCurve(state.points);
     if(state.marker)svg.append(svgNode('circle',{cx:sx(state.marker[0]),cy:sy(state.marker[1]),r:7,fill:'#9c5b16'}));
    }else{
     const allX=[-.5,.5,...state.bodies.map(b=>b.x),...state.vectors.flatMap(v=>[v.x,v.x+v.dx])],allY=[-.5,.5,...state.bodies.map(b=>b.y),...state.vectors.flatMap(v=>[v.y,v.y+v.dy])];
-    const xmin=Math.min(...allX),xmax=Math.max(...allX),ymin=Math.min(...allY),ymax=Math.max(...allY),scale=Math.min(420/(xmax-xmin),210/(ymax-ymin)),sx=x=>300+(x-(xmin+xmax)/2)*scale,sy=y=>155-(y-(ymin+ymax)/2)*scale;
-    line(65,sy(0),535,sy(0),'#aebfb4','5 5');
+    const xmin=Math.min(...allX),xmax=Math.max(...allX),ymin=Math.min(...allY),ymax=Math.max(...allY),scale=Math.min(260/(xmax-xmin),210/(ymax-ymin)),sx=x=>200+(x-(xmin+xmax)/2)*scale,sy=y=>155-(y-(ymin+ymax)/2)*scale;
+    line(40,sy(0),360,sy(0),'#aebfb4','5 5');
     if(['boundary','momentumBoundary'].includes(spec.kind)){const a=state.bodies[0],b=state.bodies[1],left=sx(a.x)-40,right=mode?sx(b.x)+40:sx(a.x)+40;svg.append(svgNode('rect',{x:left,y:sy(0)-45,width:right-left,height:90,rx:12,fill:'none',stroke:'#9c5b16','stroke-width':3,'stroke-dasharray':'7 5'}));}
     if(['energy','work','stretch'].includes(spec.kind)){const left=sx(state.bodies[0].x)+22,right=spec.kind==='energy'?sx(1):sx(state.bodies[1].x)-22,y=sy(0);let points=`${left},${y}`;for(let i=1;i<=12;i++)points+=` ${left+(right-left)*i/13},${y+(i%2?10:-10)}`;points+=` ${right},${y}`;svg.append(svgNode('polyline',{points,fill:'none',stroke:'#527c65','stroke-width':3}));}
     for(const body of state.bodies){const radius=body.label==='CM'?7:14+Math.sqrt(Math.max(0,body.m))*8;svg.append(svgNode('circle',{cx:sx(body.x),cy:sy(body.y),r:radius,fill:body.label==='CM'?'#a25f16':'#d6e8d2',stroke:'#28593f','stroke-width':2}));text(sx(body.x),sy(body.y)+radius+23,body.label);}
     const symbols={pull:'F',normal:'N',friction:'fₖ',weight:'mg',liftForce:'F',momentum:'p',pA:'pA',pB:'pB',totalMomentum:'P',forceA:'FA',forceB:'FB',velocityA:'vA',velocityB:'vB',rocketMomentum:'pR',exhaustMomentum:'pX',exhaustVelocity:'vX',vertical:'g',energy:'E'};
-    for(const v of state.vectors){const x1=sx(v.x),y1=sy(v.y),x2=sx(v.x+v.dx),y2=sy(v.y+v.dy),a=Math.atan2(y2-y1,x2-x1);line(x1,y1,x2,y2);if(Math.abs(v.dx)+Math.abs(v.dy)>.001){line(x2,y2,x2-11*Math.cos(a-.4),y2-11*Math.sin(a-.4));line(x2,y2,x2-11*Math.cos(a+.4),y2-11*Math.sin(a+.4));}const offset=v.label==='totalMomentum'?25:-15;if(['pull','normal','friction','weight','liftForce'].includes(v.label))text(x2+(v.dx<0?-20:20),y2+5,symbols[v.label]);else text((x1+x2)/2+offset*Math.sin(a),(y1+y2)/2+offset*Math.cos(a),symbols[v.label]||v.label);}
+    for(const v of state.vectors){const x1=sx(v.x),y1=sy(v.y),x2=sx(v.x+v.dx),y2=sy(v.y+v.dy),a=Math.atan2(y2-y1,x2-x1);line(x1,y1,x2,y2).setAttribute('data-vector',v.label);if(Math.abs(v.dx)+Math.abs(v.dy)>.001){line(x2,y2,x2-11*Math.cos(a-.4),y2-11*Math.sin(a-.4));line(x2,y2,x2-11*Math.cos(a+.4),y2-11*Math.sin(a+.4));}const offset=v.label==='totalMomentum'?25:-15;if(['pull','normal','friction','weight','liftForce'].includes(v.label))text(x2+(v.dx<0?-20:20),y2+5,symbols[v.label]);else text((x1+x2)/2+offset*Math.sin(a),(y1+y2)/2+offset*Math.cos(a),symbols[v.label]||v.label);}
     const legend=element('p');legend.textContent=state.vectors.map(v=>(symbols[v.label]||v.label)+' = '+t(v.label)).join(' · ');view.append(legend);
    }
    view.append(svg);

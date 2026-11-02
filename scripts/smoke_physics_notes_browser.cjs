@@ -8,6 +8,7 @@ for(const locale of ['en','ms','zh']){
   for(const figure of await notes.locator('[data-physics-visual]').all()){
    await figure.locator('button.reveal').click();await figure.locator('dl').waitFor();const slider=figure.locator('input[type=range]');if(await slider.count()){await slider.fill('100');await slider.focus();await page.keyboard.press('ArrowLeft');}
    const select=figure.locator('select');if(await select.count())await select.selectOption('1');assert(await figure.locator('dd').count()>0);
+   if(['P9','P10'].includes(await figure.getAttribute('data-physics-visual'))){const vectors=await figure.locator('[data-vector]').evaluateAll(nodes=>nodes.slice(0,2).map(n=>[Number(n.getAttribute('x2'))-Number(n.getAttribute('x1')),Number(n.getAttribute('y2'))-Number(n.getAttribute('y1'))]));assert(Math.abs(vectors[0][0]*vectors[1][0]+vectors[0][1]*vectors[1][1])<1e-7,'Rendered outgoing vectors preserve their perpendicular geometry');}
    const reset=figure.locator('button').last();await reset.click();assert.equal(await figure.locator('dl').isVisible(),false);
   }
   const check=notes.locator('[data-note-answer]').first();await check.locator('summary').focus();await page.keyboard.press('Enter');assert.equal(await check.getAttribute('open'),'');

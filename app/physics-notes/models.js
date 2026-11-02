@@ -34,7 +34,7 @@ function model(kind,input=0.5,mode=0){
  case 'work':case 'stretch':{const x=1+q;body(-x,0,1,'A');body(x,0,1,'B');body(0,.5,.2,'CM');vector(-x,0,-q,0,'forceA');vector(x,0,q,0,'forceB');row('centerDisplacement',0);row('totalForce',0);row('actualWork',q*q);row('elasticEnergy',q*q);row('pseudoWork',0);break;}
  case 'rocket':{const m=4-3*q,v=Math.log(4/m),p=m*v;body(q,0,m,'R');body(-q,0,4-m||.05,'X');vector(q,0,p/2,0,'rocketMomentum');vector(-q,0,-p/2,0,'exhaustMomentum');row('rocketMass',m);row('exhaustMass',4-m);row('rocketVelocity',v);row('rocketMomentum',p);row('exhaustMomentum',-p);row('totalMomentum',0);row('totalMass',4);break;}
  case 'frame':{const v=2*q,exhaust=v-1;body(0,0,1,'R');body(-1,0,.3,'X');vector(-1,0,b?-1:exhaust,0,'exhaustVelocity');row('frame',b?'rocketFrame':'labFrame');row('rocketVelocity',b?0:v);row('exhaustVelocity',b?-1:exhaust);row('relativeExhaust',-1);break;}
- case 'rocketGraph':curve('massRatio','deltaVelocity',r=>Math.log(1+r));row('massRatio',1+3*q);row('deltaVelocity',Math.log(1+3*q));result.points=result.points.map(([x])=>[1+x*1.5,Math.log(1+x*1.5)]);break;
+ case 'rocketGraph':curve('massRatio','deltaVelocity',r=>Math.log(1+r));row('massRatio',1+3*q);row('deltaVelocity',Math.log(1+3*q));result.points=result.points.map(([x])=>[1+x*1.5,Math.log(1+x*1.5)]);result.marker=[1+3*q,Math.log(1+3*q)];break;
  default:throw Error('Unknown physics notes model: '+kind);
  }
  return result;
