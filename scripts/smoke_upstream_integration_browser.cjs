@@ -3,10 +3,14 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict');
  const base=process.env.SITE_URL||'http://127.0.0.1:8765/',browser=await chromium.launch();
  try{for(const width of [390,1280]){
   const context=await browser.newContext({viewport:{width,height:900}}),page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));
-  await page.goto(base+'mathematics/index.html');await page.locator('#next-lesson button').click();
+  await page.addInitScript(()=>{if(!localStorage.getItem('integration-seeded')){localStorage.setItem('integration-seeded','yes');localStorage.setItem('haha:math:v1:amFunctionsEvalAnswers','[0,1,2]');localStorage.setItem('haha:math:v1:amFunctionsEvalComplete','true');}});
+  await page.goto(base+'mathematics/index.html');await page.locator('#next-lesson button').waitFor();
+  assert.equal(await page.evaluate(()=>state.chapterEvalComplete),true,'previous completion is retained');assert.equal(await page.evaluate(()=>state.chapterEvalAnswers.length),9);assert.deepEqual(await page.evaluate(()=>JSON.parse(localStorage.getItem('haha:math:v1:amLegacyEvaluationV1')).answers),[0,1,2]);
+  await page.locator('#next-lesson button').click();
   await page.locator('[data-note-plot="absolute"]').waitFor();assert.equal(await page.locator('.note-content-block table').count(),1,'authored mapping table renders semantically');
   await page.locator('[data-note-plot="absolute"] input').fill('-3');assert.match(await page.locator('[data-note-plot="absolute"] output').innerText(),/3/);
   await page.getByRole('button',{name:'3. Inverse functions',exact:true}).click();await page.locator('[data-note-plot="inverse"]').waitFor();
+  await page.locator('[data-action="evaluation"]').click();await page.locator('[data-eval-question="0"][data-eval-choice="0"]').click();await page.getByRole('button',{name:'Home',exact:true}).click();await page.goBack();await page.locator('.evaluation-question').first().waitFor();assert.equal(await page.evaluate(()=>state.chapterEvalAnswers[0]),0,'Back preserves evaluation draft');await page.reload();await page.locator('.evaluation-question').first().waitFor();assert.equal(await page.evaluate(()=>state.chapterEvalAnswers[0]),0,'refresh preserves evaluation draft');
   await page.getByRole('button',{name:'Practice',exact:true}).click();await page.locator('[data-action="practiceRandom"]').first().click();
   const current=await page.evaluate(()=>({id:state.practiceSet[4].id,parts:practiceParts(state.practiceSet[4]).map(p=>p.answers[0])}));
   await page.locator('[data-practice-jump="4"]').click();const field=page.locator('[data-practice-answer="4,0"]');await field.fill('2+(');

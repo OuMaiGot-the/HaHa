@@ -33,7 +33,7 @@ const mathStorage = {
     const learningPages=new Set(["forms","chapters","chapter","notes","evaluation","evaluationResults"]);
     let pageTimeStartedAt=null;
     const flushLearningTime=()=>{if(!pageTimeStartedAt)return;const elapsed=(Date.now()-pageTimeStartedAt)/1000;pageTimeStartedAt=Date.now();if(elapsed<=0)return;const day=todayKey(),entry=state.activityLog[day]||{};state.activityLog[day]={...entry,learningSeconds:Number(entry.learningSeconds||0)+elapsed};mathStorage.setItem("amActivityLog",JSON.stringify(state.activityLog));};
-    const trackPageChange=nextPage=>{if(learningPages.has(state.page))flushLearningTime();if(nextPage==="evaluation"){state.chapterEvalAnswers=Array(evaluationQuestions.length).fill(null);mathStorage.setItem("amFunctionsEvalAnswers",JSON.stringify(state.chapterEvalAnswers));}state.page=nextPage;pageTimeStartedAt=learningPages.has(nextPage)?Date.now():null;};
+    const trackPageChange=nextPage=>{if(learningPages.has(state.page))flushLearningTime();state.page=nextPage;pageTimeStartedAt=learningPages.has(nextPage)?Date.now():null;};
     document.addEventListener("visibilitychange",()=>{if(document.hidden){if(learningPages.has(state.page))flushLearningTime();pageTimeStartedAt=null}else if(learningPages.has(state.page))pageTimeStartedAt=Date.now()});
     window.addEventListener("pagehide",()=>{if(learningPages.has(state.page))flushLearningTime()});
     const weekDays=()=>state.studyDays[weekKey()]||[];
@@ -454,7 +454,7 @@ const mathStorage = {
     }
     let lastStudyHash='';
     function syncStudyURL(replace=false){const url=AppSession.url(state);if(location.hash!==url)history[replace?'replaceState':'pushState']({},'',url);lastStudyHash=location.hash;}
-    function navigateStudy(page){if(!AppSession.pages.includes(page))page='home';if(page!==state.page)state.history.push({page:state.page,noteIndex:AppSession.parse(location.hash,state.practiceSessionId).noteIndex,setId:state.practiceSessionId});if(page==='evaluation'&&state.page!=='evaluation')state.chapterEvalAnswers=Array(evaluationQuestions.length).fill(null);trackPageChange(page);syncStudyURL();render();window.scrollTo({top:0,behavior:'auto'});}
+    function navigateStudy(page){if(!AppSession.pages.includes(page))page='home';if(page!==state.page)state.history.push({page:state.page,noteIndex:AppSession.parse(location.hash,state.practiceSessionId).noteIndex,setId:state.practiceSessionId});if(page==='evaluation'&&state.page!=='evaluation'){state.chapterEvalAnswers=Array(evaluationQuestions.length).fill(null);mathStorage.setItem('amFunctionsEvalAnswers',JSON.stringify(state.chapterEvalAnswers));}trackPageChange(page);syncStudyURL();render();window.scrollTo({top:0,behavior:'auto'});}
     function backStudy(){const prior=state.history.pop();if(!prior){navigateStudy('home');return;}const p=typeof prior==='string'?{page:prior}:prior;if(['practice','practiceResults'].includes(p.page)&&p.setId!==state.practiceSessionId)p.page='practiceChapters';if(p.noteIndex!==undefined)state.noteIndex=p.noteIndex;trackPageChange(p.page);syncStudyURL();render();window.scrollTo({top:0,behavior:'auto'});}
     const storedStudy=load('amSessionV3',null);AppSession.restore(state,storedStudy,[...practiceQuestionBanks.flat(),...practiceFinalQuestions],evaluationQuestions.length);
     const navigationType=performance.getEntriesByType('navigation')[0]?.type;
