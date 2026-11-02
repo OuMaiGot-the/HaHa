@@ -636,6 +636,7 @@
         list.append(node("li", localized(objective)));
       goals.append(list, link(t("open"), lesson.url, "primary"));
       root.append(goals);
+      HahaPhysicsNotes.render(root, id, locale, catalog);
       const prereqs = node("section", undefined, "panel");
       prereqs.append(node("h2", t("prerequisites")));
       for (const p of pkg.prerequisites || [])
