@@ -77,7 +77,7 @@ function renderVisual(spec,locale){
   const ns='http://www.w3.org/2000/svg';
   function svgNode(tag,attrs,text){const n=document.createElementNS(ns,tag);for(const[k,v]of Object.entries(attrs))n.setAttribute(k,String(v));if(text!==undefined)n.textContent=text;return n;}
   if(state.plot||state.bodies.length||state.vectors.length){
-   const svg=svgNode('svg',{viewBox:'0 0 600 280',role:'img'});const title=svgNode('title',{},local(spec.title));const desc=svgNode('desc',{},local(assumptions[spec.kind]));svg.append(title,desc);
+   const svg=svgNode('svg',{viewBox:'0 0 600 320',role:'img'});const title=svgNode('title',{},local(spec.title));const desc=svgNode('desc',{},local(assumptions[spec.kind]));svg.append(title,desc);
    const line=(x1,y1,x2,y2,color='#365f4c',dash='')=>svg.append(svgNode('line',{x1,y1,x2,y2,stroke:color,'stroke-width':3,'stroke-dasharray':dash}));
    const text=(x,y,s,anchor='middle')=>svg.append(svgNode('text',{x,y,fill:'#163d36','font-size':18,'text-anchor':anchor},s));
    if(state.plot){
@@ -87,14 +87,14 @@ function renderVisual(spec,locale){
     if(state.plot.dashedFrom!==undefined){drawCurve(state.points.filter(([x])=>x<=state.plot.dashedFrom));drawCurve(state.points.filter(([x])=>x>=state.plot.dashedFrom),true);}else drawCurve(state.points);
     if(state.marker)svg.append(svgNode('circle',{cx:sx(state.marker[0]),cy:sy(state.marker[1]),r:7,fill:'#9c5b16'}));
    }else{
-    const allX=[-2,2,...state.bodies.map(b=>b.x),...state.vectors.flatMap(v=>[v.x,v.x+v.dx])],allY=[-1,1,...state.bodies.map(b=>b.y),...state.vectors.flatMap(v=>[v.y,v.y+v.dy])];
-    const xmin=Math.min(...allX),xmax=Math.max(...allX),ymin=Math.min(...allY),ymax=Math.max(...allY),sx=x=>65+(x-xmin)/(xmax-xmin)*470,sy=y=>215-(y-ymin)/(ymax-ymin)*155;
+    const allX=[-.5,.5,...state.bodies.map(b=>b.x),...state.vectors.flatMap(v=>[v.x,v.x+v.dx])],allY=[-.5,.5,...state.bodies.map(b=>b.y),...state.vectors.flatMap(v=>[v.y,v.y+v.dy])];
+    const xmin=Math.min(...allX),xmax=Math.max(...allX),ymin=Math.min(...allY),ymax=Math.max(...allY),scale=Math.min(420/(xmax-xmin),210/(ymax-ymin)),sx=x=>300+(x-(xmin+xmax)/2)*scale,sy=y=>155-(y-(ymin+ymax)/2)*scale;
     line(65,sy(0),535,sy(0),'#aebfb4','5 5');
     if(['boundary','momentumBoundary'].includes(spec.kind)){const a=state.bodies[0],b=state.bodies[1],left=sx(a.x)-40,right=mode?sx(b.x)+40:sx(a.x)+40;svg.append(svgNode('rect',{x:left,y:sy(0)-45,width:right-left,height:90,rx:12,fill:'none',stroke:'#9c5b16','stroke-width':3,'stroke-dasharray':'7 5'}));}
     if(['energy','work','stretch'].includes(spec.kind)){const left=sx(state.bodies[0].x)+22,right=spec.kind==='energy'?sx(1):sx(state.bodies[1].x)-22,y=sy(0);let points=`${left},${y}`;for(let i=1;i<=12;i++)points+=` ${left+(right-left)*i/13},${y+(i%2?10:-10)}`;points+=` ${right},${y}`;svg.append(svgNode('polyline',{points,fill:'none',stroke:'#527c65','stroke-width':3}));}
     for(const body of state.bodies){const radius=body.label==='CM'?7:14+Math.sqrt(Math.max(0,body.m))*8;svg.append(svgNode('circle',{cx:sx(body.x),cy:sy(body.y),r:radius,fill:body.label==='CM'?'#a25f16':'#d6e8d2',stroke:'#28593f','stroke-width':2}));text(sx(body.x),sy(body.y)+radius+23,body.label);}
     const symbols={pull:'F',normal:'N',friction:'fₖ',weight:'mg',liftForce:'F',momentum:'p',pA:'pA',pB:'pB',totalMomentum:'P',forceA:'FA',forceB:'FB',velocityA:'vA',velocityB:'vB',rocketMomentum:'pR',exhaustMomentum:'pX',exhaustVelocity:'vX',vertical:'g',energy:'E'};
-    for(const v of state.vectors){const x1=sx(v.x),y1=sy(v.y),x2=sx(v.x+v.dx),y2=sy(v.y+v.dy),a=Math.atan2(y2-y1,x2-x1);line(x1,y1,x2,y2);if(Math.abs(v.dx)+Math.abs(v.dy)>.001){line(x2,y2,x2-11*Math.cos(a-.4),y2-11*Math.sin(a-.4));line(x2,y2,x2-11*Math.cos(a+.4),y2-11*Math.sin(a+.4));}const offset=v.label==='totalMomentum'?25:-15;text((x1+x2)/2+offset*Math.sin(a),(y1+y2)/2+offset*Math.cos(a),symbols[v.label]||v.label);}
+    for(const v of state.vectors){const x1=sx(v.x),y1=sy(v.y),x2=sx(v.x+v.dx),y2=sy(v.y+v.dy),a=Math.atan2(y2-y1,x2-x1);line(x1,y1,x2,y2);if(Math.abs(v.dx)+Math.abs(v.dy)>.001){line(x2,y2,x2-11*Math.cos(a-.4),y2-11*Math.sin(a-.4));line(x2,y2,x2-11*Math.cos(a+.4),y2-11*Math.sin(a+.4));}const offset=v.label==='totalMomentum'?25:-15;if(['pull','normal','friction','weight','liftForce'].includes(v.label))text(x2+(v.dx<0?-20:20),y2+5,symbols[v.label]);else text((x1+x2)/2+offset*Math.sin(a),(y1+y2)/2+offset*Math.cos(a),symbols[v.label]||v.label);}
     const legend=element('p');legend.textContent=state.vectors.map(v=>(symbols[v.label]||v.label)+' = '+t(v.label)).join(' · ');view.append(legend);
    }
    view.append(svg);
