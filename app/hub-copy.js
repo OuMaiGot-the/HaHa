@@ -114,7 +114,7 @@ window.HahaHubCopy = {
     "Tiada pelajaran sepadan dengan pilihan ini.",
     "没有符合条件的课程。",
   ],
-  notes: ["Concept overview", "Gambaran konsep", "概念概览"],
+  notes: ["Read notes", "Baca nota", "阅读讲义"],
   open: ["Open lesson", "Buka pelajaran", "打开课程"],
   back: ["Back to lessons", "Kembali ke pelajaran", "返回课程"],
   difficulty: ["Difficulty", "Kesukaran", "难度"],
