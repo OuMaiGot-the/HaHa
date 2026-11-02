@@ -52,7 +52,7 @@ def main():
     shutil.copyfile(ROOT / "app" / "catalog.html", output / "index.html")
     shutil.copyfile(ROOT / "app" / "catalog.js", output / "catalog.js")
     shutil.copyfile(ROOT / "app" / "learning.js", output / "learning.js")
-    for asset in ("study.js", "hub-copy.js", "hub.css", "hub-orbit.svg"):
+    for asset in ("study.js", "hub-copy.js", "hub.css", "hub-orbit.svg", "audit-improvements.css"):
         shutil.copyfile(ROOT / "app" / asset, output / asset)
     shutil.copytree(ROOT / "app" / "mathematics", output / "mathematics")
     print(f"Published {len(packages)} packages in {len(set(p['chapter'] for p in packages))} chapters" + (" (approved only)" if approved_only else " (preview mode)"))

@@ -50,9 +50,9 @@ const assert = require('node:assert/strict');
       if (wrong) {
         await page.locator('.choice[data-value="' + wrong.id + '"]').click();
         await page.locator('#check').click();
-        assert.match(await page.locator('[role="status"]').innerText(), /Reconsider/);
+        assert.match(await page.locator('[role="status"]').innerText(), /Answer not correct yet/);
         assert.equal(await page.locator('.feedback--incorrect').count(), 1);
-        for (const selector of ['.feedback--incorrect', '.choice[aria-pressed="true"]', '#check']) {
+        for (const selector of ['.feedback--incorrect', '.choice[aria-checked="true"]', '#check']) {
           const rgb = await page.locator(selector).evaluate(el => getComputedStyle(el).borderLeftColor.match(/\d+/g).map(Number));
           assert(rgb[0] > rgb[1], theme + ': wrong answer border must be red');
           const background = await page.locator(selector).evaluate(el => getComputedStyle(el).backgroundColor.match(/\d+/g).map(Number));

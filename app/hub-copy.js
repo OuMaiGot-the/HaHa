@@ -1,4 +1,12 @@
 window.HahaHubCopy = {
+  independentSuccess: ["correct without hints", "betul tanpa petunjuk", "无提示答对"],
+  nextStep: ["Your next lesson", "Pelajaran seterusnya", "下一节课"],
+  smallGoal: ["One activity at a time. Hints and explanations are available.", "Satu aktiviti pada satu masa. Petunjuk dan penjelasan tersedia.", "每次完成一项活动，可查看提示与解释。"],
+  attempted: ["answers checked, including retries", "jawapan disemak, termasuk cubaan semula", "次已检查作答（含重试）"],
+  dataSettings: ["Progress data settings", "Tetapan data kemajuan", "进度数据设置"],
+  clearNote: ["Clearing removes Physics progress from this browser. Mathematics progress is kept.", "Memadam membuang kemajuan Fizik daripada pelayar ini. Kemajuan Matematik dikekalkan.", "清除将移除此浏览器中的物理进度，数学进度仍保留。"],
+  progressHelp: ["Completed means finished. Correct without hints means solved independently; it is not a guarantee of lasting understanding.", "Selesai bermaksud telah ditamatkan. Betul tanpa petunjuk bermaksud diselesaikan sendiri; ini bukan jaminan pemahaman berkekalan.", "已完成表示活动已结束。无提示答对表示独立解答，并不保证长期掌握。"],
+
   subjects: ["Subjects", "Subjek", "科目"],
   chooseSubject: ["What would you like to learn?", "Apakah yang ingin anda pelajari?", "你想学习什么？"],
   subjectIntro: ["Choose a subject to open its lessons and practice. Each subject keeps its own progress.", "Pilih subjek untuk membuka pelajaran dan latihan. Setiap subjek menyimpan kemajuan sendiri.", "选择科目，开始课程与练习。每个科目的进度独立保存。"],
@@ -68,12 +76,12 @@ window.HahaHubCopy = {
     "此设备上的学习掌握情况",
   ],
   local: [
-    "Saved on this device. Legacy completions stay visible; fresh attempts provide mastery evidence.",
-    "Disimpan pada peranti ini. Rekod lama kekal dipaparkan; cubaan baharu memberi bukti penguasaan.",
-    "保存在此设备。旧完成记录仍可查看，新作答提供掌握证据。",
+    "Saved on this device. Your earlier progress is kept. New answers help show which concepts to practise next.",
+    "Disimpan pada peranti ini. Kemajuan terdahulu dikekalkan. Jawapan baharu membantu memilih konsep untuk dilatih seterusnya.",
+    "保存在此设备。保留以往进度。新作答帮助你找到接下来需要练习的概念。",
   ],
   completed: ["completed", "selesai", "已完成"],
-  independent: ["independent", "kendiri", "独立完成"],
+  independent: ["without hints", "tanpa petunjuk", "无提示"],
   first: [
     "first-attempt successes",
     "kejayaan percubaan pertama",

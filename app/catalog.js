@@ -66,6 +66,8 @@
     function nav(route) {
       const n = document.getElementById("navigation");
       n.replaceChildren();
+      const shortcut=document.getElementById("study-tools-shortcut");
+      if(shortcut){shortcut.textContent=t("tools");shortcut.hidden=route==="subjects";}
       for (const key of (route === "subjects" ? ["subjects"] : ["subjects", "home", "learn", "progress", "tools"])) {
         const a = link(t(key), "#" + key);
         if (
@@ -102,6 +104,10 @@
         );
       root.append(panel);
     }
+    const chapterLabel = c => ({
+      "Chapter 8": {en:"Energy and energy transfer",ms:"Tenaga dan pemindahan tenaga",zh:"能量与能量传递"},
+      "Chapter 9": {en:"Momentum and collisions",ms:"Momentum dan perlanggaran",zh:"动量与碰撞"}
+    }[c]?.[locale] || c);
     function dashboard(saved) {
       const panel = node("section", undefined, "mastery-dashboard");
       panel.setAttribute("aria-label", t("title"));
@@ -112,14 +118,16 @@
         stats = node("div", undefined, "stats");
       for (const [value, label] of [
         [sums.reduce((n, s) => n + s.completed, 0), "completed"],
-        [sums.reduce((n, s) => n + s.independent, 0), "independent"],
+        [sums.reduce((n, s) => n + s.independent, 0), "independentSuccess"],
         [sums.reduce((n, s) => n + s.firstCorrect, 0), "first"],
       ]) {
         const e = node("div", undefined, "stat");
         e.append(node("strong", value), node("span", t(label)));
         stats.append(e);
       }
-      panel.append(stats);
+      const checks=catalog.reduce((n,l)=>n+HahaLearning.attempts(saved[l.id],l.activityMetadata).filter(a=>a.result!=="skip").length,0);
+      panel.append(node("p",t("attempted")+": "+checks,"attempt-summary"),stats,node("p",t("progressHelp"),"muted"));
+      if(checks) panel.append(link(t("review")+" →","#review","review-next"));
       const actions = node("div", undefined, "button-row");
       actions.append(
         button(t("export"), () => {
@@ -144,7 +152,10 @@
           render();
         }),
       );
-      panel.append(actions);
+      const settings=node("details",undefined,"progress-data-settings");
+      settings.append(node("summary",t("dataSettings")),node("p",t("clearNote")),actions);
+      actions.lastChild.classList.add("danger-action");
+      panel.append(settings);
       root.append(panel);
     }
     function subjects() {
@@ -177,6 +188,13 @@
       art.append(img);
       hero.append(text, art);
       root.append(hero);
+      const r=HahaLearning.recommend(catalog,saved);
+      if(r){
+        const quick=node("section",undefined,"next-lesson-card");quick.id="next-lesson";
+        const started=catalog.some(l=>HahaLearning.attempts(saved[l.id],l.activityMetadata).length);
+        quick.append(node("p",t("nextStep"),"eyebrow"),node("h2",r.lesson.subchapter),node("p",t("smallGoal")),link(t(started?"continue":"start")+" →",r.lesson.url+"?activity="+encodeURIComponent(r.activity.id),"primary"));
+        root.append(quick);
+      }
       const cards = node("section", undefined, "home-actions");
       cards.setAttribute("aria-label", t("space"));
       for (const [key, symbol, desc] of [
@@ -283,7 +301,7 @@
       all.value = "";
       choose.append(all);
       for (const c of [...new Set(catalog.map((l) => l.chapter))]) {
-        const o = node("option", c);
+        const o = node("option", chapterLabel(c));
         o.value = c;
         choose.append(o);
       }
@@ -318,7 +336,7 @@
         if (!matches.length) lists.append(node("p", t("empty"), "empty"));
         for (const c of [...new Set(matches.map((l) => l.chapter))]) {
           const s = node("section", undefined, "chapter-group");
-          s.append(node("h2", c));
+          s.append(node("h2", chapterLabel(c)));
           const grid = node("div", undefined, "grid");
           for (const lesson of matches.filter((l) => l.chapter === c))
             grid.append(lessonCard(lesson, saved));
