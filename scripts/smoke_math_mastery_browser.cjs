@@ -1,0 +1,38 @@
+const {chromium}=require('playwright'),assert=require('node:assert/strict');
+(async()=>{
+ const browser=await chromium.launch(),base=process.env.SITE_URL||'http://127.0.0.1:8765/';
+ const settle=p=>p.evaluate(async()=>{await masteryStore.ready();await HahaMana.answer('maths','test:math-mastery-barrier',false);});
+ const progress=async p=>{await p.getByRole('button',{name:'Progress',exact:true}).click();await p.locator('.math-mastery-grid').waitFor();};
+ try{
+  for(const width of [390,1280]){
+   const context=await browser.newContext({viewport:{width,height:900}}),page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));
+   await page.addInitScript(()=>{if(!localStorage.getItem('mastery-test-seeded')){localStorage.setItem('mastery-test-seeded','yes');localStorage.setItem('haha:math:v1:addmathLabV2Complete','[true,true,true]');localStorage.setItem('haha:math:v1:amFunctionsEvalComplete','true');localStorage.setItem('haha:math:v1:amMana','42');localStorage.setItem('haha:progress:v1:test-sentinel','unchanged');}});
+   await page.goto(base+'mathematics/index.html');await progress(page);assert.equal(await page.locator('.mastery-level').filter({hasText:'Not assessed yet'}).count(),3,'legacy completion is not invented mastery');assert.match(await page.locator('.mastery-legacy').innerText(),/3 of 3/);
+   await page.locator('.math-recommendation [data-mastery-practice]').click();await page.locator('.focused-revision').waitFor();
+   const questions=await page.evaluate(()=>state.practiceSet.map(q=>({id:q.id,topic:q.subtopic,answer:q.answers[0]})));assert.equal(questions.length,5);assert(questions.every(q=>q.topic===0));
+   await page.locator('.practice-question-card:visible .save-question').click();
+   for(let i=0;i<5;i++){
+    await page.locator('[data-practice-jump="'+i+'"]').click();if(i===1)await page.locator('.practice-question-card:visible .practice-hint-button').click();
+    if(i!==3)await page.locator('[data-practice-answer="'+i+',0"]').fill(i===0?'999999':questions[i].answer);
+   }
+   await page.locator('[data-action="submitPracticeAnswers"]').click();await page.locator('.practice-result-item').first().waitFor();await settle(page);
+   const record=await page.evaluate(()=>JSON.parse(localStorage.getItem('haha:math:v1:amMasteryV1')));assert.equal(record.attempts.length,5);assert.equal(record.attempts[0].result,'incorrect');assert.equal(record.attempts[1].assisted,true);assert.equal(record.attempts[2].assisted,false);assert.equal(record.attempts[3].result,'skip');assert(record.attempts.every(a=>!('input' in a)&&!('answer' in a)));
+   assert.equal(await page.evaluate(()=>HahaManaModel.balance(HahaMana.get())),55,'same established Mana rules: hinted answer +3, two independent answers +10, no incomplete-set bonus');
+   await progress(page);assert.match(await page.locator('.math-recommendation').innerText(),/mistake/);assert.equal(await page.locator('[data-mastery-topic="0"] .mastery-level').innerText(),'Starting');
+   await page.locator('.math-recommendation [data-mastery-practice]').click();await page.locator('.focused-revision').waitFor();assert.equal(await page.evaluate(()=>state.practiceSet[0].id),questions[0].id,'revision prioritises the mistake');
+   await page.locator('[data-practice-answer="0,0"]').fill('999999');await page.locator('.practice-question-card:visible .practice-hint-button').click();await page.reload();await page.locator('.focused-revision').waitFor();assert.equal(await page.locator('[data-practice-answer="0,0"]').inputValue(),'999999');assert.equal(await page.locator('.practice-question-card:visible .practice-hint-button').isDisabled(),true,'hint status survives refresh');
+   const set=await page.evaluate(()=>state.practiceSessionId);await progress(page);await page.locator('[data-mastery-topic="2"] [data-mastery-practice]').click();assert.equal(await page.evaluate(()=>state.practiceSessionId),set,'a revision choice does not destroy unfinished work');
+   await progress(page);await page.locator('[data-mastery-topic="2"] [data-mastery-note]').click();await page.locator('[data-action="evaluation"]').click();
+   const answers=await page.evaluate(()=>evaluationQuestions.map(q=>q.correct));for(let i=0;i<answers.length;i++)await page.locator('[data-eval-question="'+i+'"][data-eval-choice="'+answers[i]+'"]').click();await page.locator('[data-action="submitEvaluation"]').click();await page.locator('.evaluation-results').waitFor();await settle(page);
+   assert.equal(await page.evaluate(()=>masteryStore.get().attempts.filter(a=>a.activityId.startsWith('evaluation:v2:')).length),9);
+   await page.getByRole('button',{name:'Saved questions',exact:true}).click();await page.locator('[data-saved-input="0,0"]').fill(questions[0].answer);await page.getByRole('button',{name:'Check saved answer',exact:true}).click();await settle(page);
+   const before=await page.evaluate(()=>MathMastery.score(masteryStore.get(),masteryActivities));assert.equal(await page.evaluate(()=>masteryStore.get().attempts.at(-1).assisted),true,'saved review of an exposed solution is assisted');
+   await page.getByRole('button',{name:'Try again',exact:true}).click();await page.locator('[data-saved-input="0,0"]').fill(questions[0].answer);await page.getByRole('button',{name:'Check saved answer',exact:true}).click();await settle(page);assert.equal(await page.evaluate(()=>MathMastery.score(masteryStore.get(),masteryActivities).percent),before.percent,'repeat answer does not inflate mastery');
+   await page.reload();await progress(page);assert.equal(await page.evaluate(()=>MathMastery.score(masteryStore.get(),masteryActivities).percent),before.percent);assert.equal(await page.evaluate(()=>localStorage.getItem('haha:progress:v1:test-sentinel')),'unchanged');
+   await page.locator('#mathTheme').selectOption('dark');await page.locator('#mathReadingSize').selectOption('large');assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);assert.deepEqual(errors,[]);await context.close();
+  }
+  const corrupt=await browser.newPage();await corrupt.addInitScript(()=>localStorage.setItem('haha:math:v1:amMasteryV1','{bad'));await corrupt.goto(base+'mathematics/index.html');await progress(corrupt);assert.match(await corrupt.locator('#mathMasteryWarning').innerText(),/preserved/);assert.equal(await corrupt.evaluate(()=>localStorage.getItem('haha:math:v1:amMasteryV1')),'{bad');await corrupt.close();
+  const blocked=await browser.newPage();await blocked.addInitScript(()=>Object.defineProperty(window,'localStorage',{get(){throw Error('blocked');}}));await blocked.goto(base+'mathematics/index.html');await progress(blocked);await blocked.locator('.math-recommendation [data-mastery-practice]').click();const answer=await blocked.evaluate(()=>state.practiceSet[0].answers[0]);await blocked.locator('[data-practice-answer="0,0"]').fill(answer);await blocked.locator('[data-practice-jump="4"]').click();await blocked.locator('[data-action="submitPracticeAnswers"]').click();await blocked.locator('.practice-result-item').first().waitFor();await blocked.evaluate(()=>masteryStore.ready());await progress(blocked);assert.equal(await blocked.evaluate(()=>MathMastery.score(masteryStore.get(),masteryActivities).checked),1);assert(await blocked.locator('#mathMasteryWarning').isVisible());await blocked.close();
+  console.log('Math mastery browser passed: truthful legacy migration, focused revision, actual mistakes/hints/skips/evaluation/saved retries, non-inflating scores, reload, unfinished work, Mana/Physics isolation, dark/large phone and desktop, corrupt/blocked storage.');
+ }finally{await browser.close();}
+})().catch(e=>{console.error(e);process.exitCode=1;});

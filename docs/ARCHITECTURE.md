@@ -112,3 +112,7 @@ coverage, provenance and checks. Physics content and mastery stay unchanged.
 ## Reviewed upstream integration
 
 See [the canonical source and selective upstream integration](UPSTREAM_INTEGRATION.md) for the approved modules, compatibility rules, release workflow and remaining evidence limits.
+
+## Maths mastery and personalised revision
+
+See [the Maths mastery contract](MATHS_MASTERY.md) for the approved evidence model, legacy preservation, hint tracking, focused revision and validation.

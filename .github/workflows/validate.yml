@@ -39,6 +39,8 @@ jobs:
           node tests/test_mathematics_import.js
           node tests/test_math_marking.js
           node tests/test_math_session.js
+          node tests/test_math_mastery.js
+          node tests/test_math_mastery_storage.js
           node tests/test_mana.js
           node tests/test_mana_storage.js
           node tests/test_app_rendering.js
