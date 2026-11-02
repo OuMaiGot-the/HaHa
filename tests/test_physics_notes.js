@@ -22,7 +22,7 @@ for(let i=0;i<=100;i++){
  for(const mode of [0,1]){const c=model('collision',q,mode);close(get(c,'initialMomentum'),get(c,'totalMomentum'));if(mode)close(get(c,'initialKinetic'),get(c,'kinetic'));else{close(get(c,'velocityA'),get(c,'velocityB'));assert(get(c,'kinetic')<get(c,'initialKinetic'));}}
  const v=model('vectors',q),pxa=get(v,'pxA'),pya=get(v,'pyA'),pxb=get(v,'pxB'),pyb=get(v,'pyB');close(pxa+pxb,1);close(pya+pyb,0);close(pxa*pxb+pya*pyb,0);close(.5*(pxa**2+pya**2+pxb**2+pyb**2),.5);
  const impulse=model('impulseGraph',q);close(.5*get(impulse,'duration')*get(impulse,'peakForce'),get(impulse,'impulse'));
- const rocket=model('rocket',q);close(get(rocket,'rocketMass')+get(rocket,'exhaustMass'),4);close(get(rocket,'rocketMomentum')+get(rocket,'exhaustMomentum'),0);close(get(rocket,'rocketVelocity'),Math.log(4/get(rocket,'rocketMass')));
+ const rocket=model('rocket',q);close(get(rocket,'rocketMass')+get(rocket,'exhaustMass'),4);close(get(rocket,'rocketMomentum')+get(rocket,'exhaustMomentum'),0);close(get(rocket,'rocketVelocity'),Math.log(4/get(rocket,'rocketMass')));close(rocket.bodies.reduce((sum,b)=>sum+b.m*b.x,0),0);if(q===0)assert.equal(rocket.bodies.length,1,'No exhaust is depicted before any mass is expelled');
  const lab=model('frame',q,0),frame=model('frame',q,1);close(get(lab,'exhaustVelocity')-get(lab,'rocketVelocity'),get(frame,'exhaustVelocity'));
  const fragment=model('fragments',q),a=fragment.bodies[0],b=fragment.bodies[1],cm=fragment.bodies[2];close((a.x+b.x)/2,cm.x);close((a.y+b.y)/2,cm.y);close(get(fragment,'accelerationY'),-1);
  const com=model('com',q);close(get(com,'centerPosition'),(-get(com,'massA')+get(com,'massB'))/(get(com,'massA')+get(com,'massB')));
