@@ -32,3 +32,7 @@ scoring thresholds, recommendation priorities, privacy boundaries, and test gate
 
 See [the comparison and integration contract](INTEGRATED_STUDY_HUB.md) for the
 physics study shell, focused practice, evidence-based review, preferences and tests.
+
+## Shared Mana
+
+See [the shared Mana contract](MANA_SYSTEM.md) for approved rewards, cosmetic purchases, browser-local storage and validation.

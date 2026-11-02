@@ -23,6 +23,9 @@ class PublicReleaseTests(unittest.TestCase):
             self.assertEqual({
                 ".nojekyll",
                 "favicon.svg",
+                "mana.js",
+                "mana-ui.js",
+                "mana.css",
                 "index.html",
                 "app/app.js",
                 "app/learning.js",

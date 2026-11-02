@@ -12,6 +12,7 @@ const localized = (value) => typeof value === "string" ? value : value?.[state.l
 
 let attemptStarted = Date.now();
 let visitFailed = false;
+const manaSessionChecked = new Set();
 function recordAttempt(activity, result) {
   if (typeof HahaLearning === "undefined") return;
   try { HahaLearning.record(localStorage, state.package, activity, {
@@ -19,6 +20,10 @@ function recordAttempt(activity, result) {
     result, hint: state.hint, retry: visitFailed, timestamp: new Date().toISOString(),
     durationMs: Date.now() - attemptStarted, locale: state.locale,
   }); } catch (_) { /* Device storage is optional. */ }
+  if (result !== "skip") {
+    manaSessionChecked.add(activity.id);
+    if(typeof HahaMana!=="undefined")HahaMana.answer("physics",state.package.packageId+"/"+activity.id,result==="correct",state.hint||visitFailed);
+  }
   if (result === "incorrect") visitFailed = true;
 }
 function studyActivities() {
@@ -226,6 +231,8 @@ function renderVisual(card, activity) {
 }
 
 function renderComplete(root) {
+  try { if(typeof HahaMana!=="undefined" && new URL(window.location.href).searchParams.has("practice"))HahaMana.completeSet("physics",studyActivities().length>0&&studyActivities().every(a=>manaSessionChecked.has(a.id))); }catch(_){}
+
   syncActivityUrl(null);
   const card = element("section", { className: "card" });
   card.append(
@@ -233,7 +240,7 @@ function renderComplete(root) {
     element("h1", { text: studyActivities().length < state.package.activities.length ? { en: "Practice set complete", ms: "Set latihan selesai", zh: "本组练习完成" }[state.locale] : copy[state.locale].complete }),
   );
   const restart = element("button", { className: "action", text: copy[state.locale].restart, attributes: { id: "restart" } });
-  restart.addEventListener("click", () => { visitFailed = false; state.activityIndex = 0; resetActivity(); render(); });
+  restart.addEventListener("click", () => { visitFailed = false; state.activityIndex = 0; manaSessionChecked.clear(); resetActivity(); render(); });
   card.append(restart);
   if (typeof HahaLearning !== "undefined") {
     let saved = {};

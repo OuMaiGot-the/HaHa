@@ -54,3 +54,7 @@ coverage, provenance and checks. Physics content and mastery stay unchanged.
 ## Learner usability pass
 
 See [learner usability improvements](LEARNER_USABILITY.md) for navigation, progress copy, topic steps, accessibility behavior and release boundaries.
+
+## Shared Mana
+
+See [the shared Mana contract](MANA_SYSTEM.md) for approved rewards, cosmetic purchases, browser-local storage and validation.

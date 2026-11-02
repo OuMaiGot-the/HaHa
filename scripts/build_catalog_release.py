@@ -52,7 +52,7 @@ def main():
     shutil.copyfile(ROOT / "app" / "catalog.html", output / "index.html")
     shutil.copyfile(ROOT / "app" / "catalog.js", output / "catalog.js")
     shutil.copyfile(ROOT / "app" / "learning.js", output / "learning.js")
-    for asset in ("study.js", "hub-copy.js", "hub.css", "hub-orbit.svg", "audit-improvements.css", "favicon.svg"):
+    for asset in ("study.js", "hub-copy.js", "hub.css", "hub-orbit.svg", "audit-improvements.css", "favicon.svg", "mana.js", "mana-ui.js", "mana.css"):
         shutil.copyfile(ROOT / "app" / asset, output / asset)
     shutil.copytree(ROOT / "app" / "mathematics", output / "mathematics")
     maths_index = output / "mathematics" / "index.html"
