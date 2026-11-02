@@ -63,16 +63,21 @@
       Object.fromEntries(
         catalog.map((l) => [l.id, HahaLearning.read(storage(), l.id)]),
       );
+    const chapterLabel = c => ({
+      "Chapter 8": {en:"Energy and energy transfer",ms:"Tenaga dan pemindahan tenaga",zh:"能量与能量传递"},
+      "Chapter 9": {en:"Momentum and collisions",ms:"Momentum dan perlanggaran",zh:"动量与碰撞"}
+    }[c]?.[locale] || c);
     function nav(route) {
       const n = document.getElementById("navigation");
       n.replaceChildren();
       const shortcut=document.getElementById("study-tools-shortcut");
       if(shortcut){shortcut.textContent=t("tools");shortcut.hidden=route==="subjects";}
-      for (const key of (route === "subjects" ? ["subjects"] : ["subjects", "home", "learn", "progress", "tools"])) {
+      document.querySelector(".brand-caption").textContent=route==="subjects"?"LEARNING STUDIO":t("physics").toUpperCase();
+      for (const key of (route === "subjects" ? ["subjects"] : ["home", "learn", "practice", "progress", "subjects"])) {
         const a = link(t(key), "#" + key);
         if (
           key === route ||
-          (key === "learn" && ["practice", "review", "lesson"].includes(route))
+          (key === "learn" && ["review", "lesson"].includes(route))
         )
           a.setAttribute("aria-current", "page");
         n.append(a);
@@ -104,10 +109,6 @@
         );
       root.append(panel);
     }
-    const chapterLabel = c => ({
-      "Chapter 8": {en:"Energy and energy transfer",ms:"Tenaga dan pemindahan tenaga",zh:"能量与能量传递"},
-      "Chapter 9": {en:"Momentum and collisions",ms:"Momentum dan perlanggaran",zh:"动量与碰撞"}
-    }[c]?.[locale] || c);
     function dashboard(saved) {
       const panel = node("section", undefined, "mastery-dashboard");
       panel.setAttribute("aria-label", t("title"));
@@ -158,6 +159,7 @@
       panel.append(settings);
       root.append(panel);
     }
+    function mascot(who,pose="welcome",extra=""){const m=node("span",undefined,"mascot mascot-"+who+" mascot-"+pose+" "+extra);m.setAttribute("aria-hidden","true");return m;}
     function subjects() {
       root.append(node("p", "HaHa Learning", "eyebrow"), node("h1", t("chooseSubject")), node("p", t("subjectIntro"), "muted"));
       const choices = node("section", undefined, "subject-grid");
@@ -168,57 +170,63 @@
         const entrance = link(t("openSubject") + " →", href, "primary");
         entrance.id = key + "-entrance";
         entrance.setAttribute("aria-label", t("openSubject") + ": " + t(key));
-        card.append(entrance); choices.append(card);
+        card.prepend(mascot(key === "physics" ? "phyphy" : "meymey"),node("small",key === "physics" ? "Meet PhyPhy" : "Meet MeyMey","mascot-name"));card.append(entrance); choices.append(card);
       }
-      root.append(choices);
+      const hello=node("div",undefined,"mascot-greeting");hello.append(mascot("haha"),node("p",{en:"Hi, I’m HaHa. Let’s discover something new!",ms:"Hai, saya HaHa. Mari terokai sesuatu yang baharu!",zh:"你好，我是HaHa。一起来探索新知识吧！"}[locale]));root.append(hello,choices);
     }
+    function phyphyChess(index,complete=false){
+      const art=node("span",undefined,"phyphy-chess");
+      art.setAttribute("aria-hidden","true");
+      art.style.setProperty("--phy-x",index%2?"79%":"27%");
+      art.style.setProperty("--phy-y",index%4>=2?"100%":"0%");
+      art.style.setProperty("--phy-height",index%4>=2?"191.76%":"215.126%");
+      art.append(node("span",undefined,"phyphy-expression"),PhyPhyMotion.create(index));
+      if(complete)art.append(node("span","✓","phyphy-complete"));
+      return art;
+    }
+    const phyphyBypass=new WeakSet();
+    document.addEventListener("click",async event=>{
+      const trigger=event.target.closest(".phyphy-trigger");
+      if(!trigger||phyphyBypass.has(trigger))return;
+      event.preventDefault();event.stopImmediatePropagation();
+      if(trigger.dataset.reacting)return;
+      // Closing an expanded lesson needs no second animation delay.
+      if(trigger.tagName==="SUMMARY"&&trigger.parentElement.open){
+        trigger.classList.remove("phyphy-reacting");
+        phyphyBypass.add(trigger);try{trigger.click();}finally{phyphyBypass.delete(trigger);}return;
+      }
+      trigger.dataset.reacting="true";trigger.classList.add("phyphy-reacting");
+      try{await PhyPhyMotion.play(trigger.querySelector(".phyphy-feature-canvas"));}
+      finally{delete trigger.dataset.reacting;trigger.classList.remove("phyphy-reacting");}
+      if(!trigger.isConnected)return;
+      phyphyBypass.add(trigger);try{trigger.click();}finally{phyphyBypass.delete(trigger);}
+    },true);
     function home(saved) {
-      const hero = node("section", undefined, "hero"),
-        text = node("div");
-      text.append(
-        node("p", t("space"), "eyebrow"),
-        node("h1", t("welcome")),
-        node("p", t("intro")),
-      );
-      const art = node("div", undefined, "orbit-art"),
-        img = node("img");
-      img.src = "hub-orbit.svg";
-      img.alt = "";
-      img.setAttribute("aria-hidden", "true");
-      art.append(img);
-      hero.append(text, art);
-      root.append(hero);
-      const r=HahaLearning.recommend(catalog,saved);
-      if(r){
-        const quick=node("section",undefined,"next-lesson-card");quick.id="next-lesson";
-        const started=catalog.some(l=>HahaLearning.attempts(saved[l.id],l.activityMetadata).length);
-        quick.append(node("p",t("nextStep"),"eyebrow"),node("h2",r.lesson.subchapter),node("p",t("smallGoal")),link(t(started?"continue":"start")+" →",r.lesson.url+"?activity="+encodeURIComponent(r.activity.id),"primary"));
-        root.append(quick);
-      }
-      const cards = node("section", undefined, "home-actions");
-      cards.setAttribute("aria-label", t("space"));
-      for (const [key, symbol, desc] of [
-        ["learn", "↗", "learnDesc"],
-        ["practice", "✎", "practiceDesc"],
-        ["review", "⟳", "reviewDesc"],
-        ["tools", "✧", "toolsDesc"],
-      ]) {
-        const card = node("article", undefined, "home-action");
-        card.append(
-          node("span", symbol, "card-symbol"),
-          node("h2", t(key)),
-          node("p", t(desc)),
-          link(t(key) + " →", "#" + key),
-        );
-        cards.append(card);
-      }
-      root.append(cards);
-      recommend(saved);
-      dashboard(saved);
+      const groups=[...new Set(catalog.map(l=>l.chapter))],scores=catalog.map(l=>HahaLearning.score(saved[l.id],l.activityMetadata));
+      const done=scores.reduce((n,x)=>n+x.completed,0),total=scores.reduce((n,x)=>n+x.total,0);
+      const next=catalog.find((l,i)=>scores[i].completed<scores[i].total)||catalog[0];
+      const copy={en:["A LITTLE PRACTICE. A BIG DIFFERENCE.","Your next physics adventure","PhyPhy is here to help. Let’s take it one step at a time.","Explore the world of Physics","Measurement, energy, and momentum.","All chapters →","Your progress","activities","Start learning →","A little practice?","Explore up to five activities, with hints and explanations.","Let’s practise →","Every step counts.","Explore at your own pace. You can revisit any lesson.","Progress stays in this browser.","Review & study tools"],ms:["LATIHAN KECIL. PERUBAHAN BESAR.","Pengembaraan fizik anda","PhyPhy sedia membantu. Mari belajar selangkah demi selangkah.","Terokai dunia Fizik","Pengukuran, tenaga dan momentum.","Semua bab →","Kemajuan anda","aktiviti","Mula belajar →","Mari berlatih?","Cuba sehingga lima aktiviti dengan petunjuk dan penjelasan.","Mari berlatih →","Setiap langkah bermakna.","Belajar mengikut rentak sendiri. Ulang mana-mana pelajaran.","Kemajuan disimpan dalam pelayar ini.","Ulang kaji & alat belajar"],zh:["每天练一点，进步多一点。","你的物理新冒险","PhyPhy来帮你。让我们一步一步学习。","探索物理世界","测量、能量与动量。","所有章节 →","你的进度","活动","开始学习 →","练习一下？","尝试最多五项活动，配有提示和解释。","开始练习 →","每一步都有意义。","按自己的节奏探索，随时重温课程。","进度保存在此浏览器中。","复习与学习工具"]}[locale];
+      const layout=node("div",undefined,"physics-home-layout"),main=node("section",undefined,"physics-home-main"),side=node("aside",undefined,"physics-home-side");
+      const greet=node("div",undefined,"physics-home-greeting"),words=node("div");words.append(node("p",copy[0],"eyebrow"),node("h1",copy[1]),node("p",copy[2]));greet.append(words,mascot("phyphy"));main.append(greet);
+      const banner=node("section",undefined,"physics-home-banner"),intro=node("div");intro.append(node("small",t("physics").toUpperCase()),node("h2",copy[3]),node("p",copy[4]));banner.append(intro,link("▤", "#learn","physics-guide"));banner.lastChild.setAttribute("aria-label",copy[5]);main.append(banner);
+      const recommendation=HahaLearning.recommend(catalog,saved);
+      const nextLesson=recommendation?.lesson || next;
+      const hasAttempts=catalog.some(l=>HahaLearning.attempts(saved[l.id],l.activityMetadata).length);
+      const quick=node("section",undefined,"next-lesson-card");quick.id="next-lesson";
+      quick.append(node("p",t("nextStep"),"eyebrow"),node("h2",nextLesson.subchapter),node("p",t("smallGoal")));
+      quick.append(link(t(hasAttempts?"continue":"start")+" →",nextLesson.url+(recommendation?"?activity="+encodeURIComponent(recommendation.activity.id):""),"primary"));
+      main.append(quick);
+      const path=node("div",undefined,"physics-home-path");
+      groups.forEach((c,i)=>{const stop=node("div",undefined,"physics-home-stop");stop.style.setProperty("--home-offset",["-50px","55px","-28px"][i%3]);const lessons=catalog.filter(l=>l.chapter===c),finished=lessons.every(l=>{const x=HahaLearning.score(saved[l.id],l.activityMetadata);return x.completed===x.total;});const go=button(finished?"✓":["↗","ϟ","⇄"][i%3],()=>{chapter=c;query="";onlySaved=false;location.hash="learn";},"physics-home-node node-colour-"+i);go.setAttribute("aria-label",t("learn")+": "+chapterLabel(c));go.classList.add("phyphy-trigger");go.replaceChildren(phyphyChess(i%4,finished));stop.append(go,node("strong",chapterLabel(c)),node("small",lessons.length+" "+(locale==="en"&&lessons.length===1?"lesson":t("lessons"))));path.append(stop);});main.append(path);
+      const bottom=node("div",undefined,"physics-home-bottom"),bottomText=node("div");bottomText.append(node("strong",copy[12]),node("p",copy[13]));bottom.append(bottomText,link(copy[5],"#learn","primary secondary-home"));main.append(bottom);
+      const progress=node("section",undefined,"physics-home-card"),title=node("div",undefined,"physics-side-title");title.append(node("h2",copy[6]),link("↗","#progress"));progress.append(title);const ring=node("div",undefined,"physics-home-ring");ring.style.setProperty("--completion",(total?done/total*100:0)+"%");const count=node("strong",done+" / "+total);count.append(node("small",copy[7]));ring.append(count);progress.append(ring,node("p",copy[14]),link(t("progress")+" →","#progress","primary secondary-home"));side.append(progress);
+      const practice=node("section",undefined,"physics-home-card");practice.append(node("span","✎","physics-practice-icon"),node("h2",copy[9]),node("p",copy[10]),link(copy[11],"#practice","primary secondary-home"));side.append(practice);
+      const extras=node("div",undefined,"physics-home-extras");extras.append(link(t("review"),"#review"),link(copy[15],"#tools"));side.append(extras);layout.append(main,side);root.append(layout);
     }
     function lessonCard(lesson, saved) {
       const card = node("article", undefined, "lesson-card"),
         top = node("div", undefined, "lesson-top");
+      top.append(node("span", String(catalog.indexOf(lesson)+1).padStart(2,"0"), "lesson-step"));
       top.append(
         node(
           "span",
@@ -285,8 +293,7 @@
     }
     function lessons(saved) {
       heading("learn", "learnDesc");
-      recommend(saved);
-      dashboard(saved);
+      const buddy=node("div",undefined,"mascot-note");buddy.append(mascot("phyphy","aha","mascot-small"),node("p",{en:"PhyPhy is ready to explore Physics with you.",ms:"PhyPhy sedia menerokai Fizik bersama anda.",zh:"PhyPhy准备好和你一起探索物理。"}[locale]));root.append(buddy);
       const filters = node("div", undefined, "filters"),
         sl = node("label", t("search")),
         search = node("input");
@@ -315,8 +322,11 @@
       sb.setAttribute("aria-pressed", String(onlySaved));
       filters.append(sl, cl, sb);
       root.append(filters);
-      const lists = node("div");
-      root.append(lists);
+      const lists = node("div", undefined, "learning-chapters");
+      const nextStep=button({en:"Find my next lesson ↓",ms:"Cari pelajaran seterusnya ↓",zh:"查找下一课 ↓"}[locale],()=>{query="";chapter="";onlySaved=false;search.value="";choose.value="";sb.setAttribute("aria-pressed","false");paint();const target=document.querySelector("#physics-next-step");if(target){target.open=true;target.scrollIntoView({behavior:"smooth",block:"center"});target.querySelector("summary").focus({preventScroll:true});}},"find-next-step");
+      root.append(nextStep,node("p",{en:"Tap a PhyPhy chess piece to open a lesson. Every available lesson is yours to explore.",ms:"Ketik buah catur PhyPhy untuk membuka pelajaran. Semua pelajaran tersedia boleh diterokai.",zh:"点击PhyPhy棋子打开课程。所有可用课程都可以自由探索。"}[locale],"path-help"),lists);
+      recommend(saved);
+      dashboard(saved);
       function paint() {
         lists.replaceChildren();
         const matches = catalog.filter(
@@ -334,14 +344,31 @@
               .includes(query.toLocaleLowerCase()),
         );
         if (!matches.length) lists.append(node("p", t("empty"), "empty"));
+        const nextLesson=catalog.find(l=>{const score=HahaLearning.score(saved[l.id],l.activityMetadata);return score.completed<score.total;});
         for (const c of [...new Set(matches.map((l) => l.chapter))]) {
-          const s = node("section", undefined, "chapter-group");
-          s.append(node("h2", chapterLabel(c)));
-          const grid = node("div", undefined, "grid");
-          for (const lesson of matches.filter((l) => l.chapter === c))
-            grid.append(lessonCard(lesson, saved));
-          s.append(grid);
-          lists.append(s);
+          const section = node("section", undefined, "chapter-group physics-path-chapter");
+          section.dataset.unit=String([...new Set(catalog.map(l=>l.chapter))].indexOf(c)+1);
+          const banner=node("div",undefined,"path-chapter-banner");
+          banner.append(node("span",String([...new Set(catalog.map(l=>l.chapter))].indexOf(c)+1).padStart(2,"0"),"path-unit-number"),node("h2",chapterLabel(c)));
+          section.append(banner);
+          const trail=node("div",undefined,"physics-trail");
+          const chapterLessons=matches.filter(l=>l.chapter===c);
+          chapterLessons.forEach((lesson,index)=>{
+            const score=HahaLearning.score(saved[lesson.id],lesson.activityMetadata),complete=score.completed===score.total&&score.total>0,current=lesson.id===nextLesson?.id;
+            const stop=node("details",undefined,"physics-stop"+(complete?" is-complete":"")+(current?" is-current":""));
+            stop.style.setProperty("--step-offset",["-65px","0px","65px","0px"][index%4]);
+            const summary=node("summary",undefined,"path-node-summary");
+            summary.setAttribute("aria-label",lesson.subchapter+" · "+(complete?t("completed"):current?t("learn"):t("open")));
+            const circle=node("span",complete?"✓":current?"★":String(catalog.indexOf(lesson)+1),"path-node-circle");
+            circle.setAttribute("aria-hidden","true");
+            summary.classList.add("phyphy-trigger");circle.classList.add("phyphy-node");circle.replaceChildren(phyphyChess(catalog.indexOf(lesson)%4,complete));summary.append(circle,node("strong",lesson.subchapter,"path-node-title"),node("small",score.completed+" / "+score.total+" "+t("completed"),"path-node-progress"));
+            if(current){summary.setAttribute("aria-current","step");stop.id="physics-next-step";}
+            stop.append(summary);
+            const panel=node("div",undefined,"path-node-panel");panel.append(lessonCard(lesson,saved));stop.append(panel);
+            stop.addEventListener("toggle",()=>{if(!stop.open)summary.classList.remove("phyphy-reacting");if(stop.open)trail.querySelectorAll(".physics-stop").forEach(other=>{if(other!==stop)other.open=false;});});
+            trail.append(stop);
+          });
+          section.append(trail);lists.append(section);
         }
       }
       search.oninput = () => {
@@ -356,7 +383,7 @@
     }
     function practice(saved) {
       heading("practice", "practiceDesc");
-      const panel = node("section", undefined, "panel"),
+      const panel = node("section", undefined, "panel physics-practice-picker"),
         form = node("div", undefined, "filters"),
         ll = node("label", t("lesson")),
         ls = node("select");
@@ -625,6 +652,7 @@
       const hash = location.hash.slice(1) || "subjects",
         route = hash.split("/")[0],
         saved = data();
+      document.body.dataset.route=route;
       nav(route);
       status.textContent =
         catalog.length +

@@ -58,3 +58,7 @@ See [learner usability improvements](LEARNER_USABILITY.md) for navigation, progr
 ## Shared Mana
 
 See [the shared Mana contract](MANA_SYSTEM.md) for approved rewards, cosmetic purchases, browser-local storage and validation.
+
+## Reviewed upstream integration
+
+See [the canonical source and selective upstream integration](UPSTREAM_INTEGRATION.md) for the approved modules, compatibility rules, release workflow and remaining evidence limits.

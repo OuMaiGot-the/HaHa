@@ -17,6 +17,7 @@ class FakeElement {
   set innerHTML(_value) { throw new Error("innerHTML must not be used"); }
   set textContent(value) { this._text = String(value); this.children = []; }
   get textContent() { return this._text + this.children.map((child) => child.textContent).join(""); }
+  prepend(...children) { this.children.unshift(...children); }
   append(...children) { this.children.push(...children); }
   replaceChildren(...children) { this._text = ""; this.children = [...children]; }
   setAttribute(name, value) {

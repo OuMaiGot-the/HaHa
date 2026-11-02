@@ -35,11 +35,11 @@ const fs = require('node:fs');
       for (const locale of ['en','ms','zh']) {
         await page.locator('#locale').selectOption(locale);
         assert.equal(await page.locator('html').getAttribute('lang'),locale);
-        assert(await page.locator('article h3').first().innerText());
+        assert(await page.locator('article h3').first().textContent());
         assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true,'no mobile overflow');
       }
       await page.locator('#locale').selectOption('en');
-      await page.locator('article summary').first().focus();
+      await page.locator('.physics-stop summary').first().click();await page.locator('.lesson-card').first().waitFor();await page.locator('article summary').first().focus();
       await page.keyboard.press('Enter');
       assert.equal(await page.locator('article details').first().getAttribute('open'),'');
       await page.locator('.progress-data-settings summary').click();
@@ -58,7 +58,7 @@ const fs = require('node:fs');
     await blocked.goto(lessonUrl); await blocked.locator('.choice').first().waitFor();
     await blocked.locator('.choice[data-value="'+activity.answerKey.correct+'"]').click();
     await blocked.locator('#check').click(); assert(await blocked.locator('[role="status"]').count());
-    await blocked.goto(base + "#home"); await blocked.locator('.mastery-dashboard').waitFor();
+    await blocked.goto(base + "#progress"); await blocked.locator('.mastery-dashboard').waitFor();
     await blocked.close();
     console.log('Mastery browser tests passed: desktop/mobile, first failure, assisted retry, independent revisit, reload, locales, export, reset, malformed/blocked storage.');
   } finally {await browser.close();}

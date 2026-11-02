@@ -25,10 +25,7 @@ Existing Mathematics Mana is described as practice points rather than a mastery 
 
 ## Source and publication
 
-The GitHub generator checkout and hosted Sites source currently have different visual shells.
-These behavior changes are applied to both; the hosted version retains its approved character
-artwork and chapter journey. GitHub builds keep their existing shell. Sites publication is
-manual and separate from GitHub CI; a passing build alone does not update production.
+The canonical app source now includes the hosted character shell and artwork. Both GitHub builds and Sites publication use that source; see UPSTREAM_INTEGRATION.md for the current build and publication steps.
 
 ## Validation
 

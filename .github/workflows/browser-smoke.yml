@@ -27,10 +27,8 @@ jobs:
         run: |
           python -m http.server 8765 --directory preview >/tmp/haha-preview-server.log 2>&1 &
           python scripts/wait_preview.py
-          node scripts/smoke_preview_browser.cjs
-          node scripts/smoke_catalog_browser.cjs
-          node scripts/smoke_mastery_browser.cjs
-          node scripts/smoke_study_hub_browser.cjs
-          node scripts/smoke_subjects_browser.cjs
-          node scripts/smoke_usability_browser.cjs
-          node scripts/smoke_mana_browser.cjs
+          result=0
+          for suite in preview catalog mastery study_hub subjects usability mana upstream_integration; do
+            node "scripts/smoke_${suite}_browser.cjs" || result=1
+          done
+          exit "$result"

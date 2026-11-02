@@ -35,7 +35,9 @@ class PublicReleaseTests(unittest.TestCase):
                 "app/styles.css",
                 "app/domain-styles.css",
                 "content/package.json",
-            }, actual_files)
+            } | {"physics-practice.css", "mascots.css", "audit-improvements.css"}
+              | {"assets/" + p.relative_to(ROOT / "app" / "assets").as_posix()
+                 for p in (ROOT / "app" / "assets").rglob("*") if p.is_file()}, actual_files)
             index = (output / "index.html").read_text(encoding="utf-8")
             self.assertIn('href="app/styles.css"', index)
             self.assertIn('href="app/domain-styles.css"', index)

@@ -18,21 +18,23 @@ const fs = require("node:fs");
         errors = [];
       page.on("pageerror", (e) => errors.push(e.message));
       await page.goto(base + "#home");
-      await page.locator(".home-actions").waitFor();
-      assert.equal(await page.locator(".home-action").count(), 4);
+      await page.locator("#next-lesson").waitFor();
+      assert.equal(await page.locator(".physics-home-stop").count(), 3);
       assert.equal(
         await page.evaluate(
           () => document.documentElement.scrollWidth <= innerWidth,
         ),
         true,
       );
-      await page.getByRole("link", { name: "Learn →", exact: true }).click();
+      await page.getByRole("link", { name: "Learn", exact: true }).click();
+      await page.locator(".physics-stop summary").first().click();
       await page.locator(".lesson-card").first().waitFor();
       assert.equal(await page.locator(".lesson-card").count(), catalog.length);
       await page.locator("#lesson-search").fill("definitely-no-such-lesson");
       assert.equal(await page.locator(".lesson-card").count(), 0);
       assert(await page.locator(".empty").isVisible());
       await page.locator("#lesson-search").fill("");
+      await page.locator(".physics-stop summary").first().click();
       await page.locator(".bookmark").first().click();
       assert.equal(
         await page.locator(".bookmark").first().getAttribute("aria-pressed"),
@@ -47,6 +49,7 @@ const fs = require("node:fs");
         await page.locator(".bookmark").first().getAttribute("aria-pressed"),
         "true",
       );
+      await page.locator(".physics-stop summary").first().click();
       await page
         .getByRole("button", { name: "Concept overview", exact: true })
         .first()
@@ -143,7 +146,7 @@ const fs = require("node:fs");
       assert(saved.attempts.some((a) => a.id === "existing-evidence"));
       assert.equal(saved.attempts.filter((a) => a.result === "skip").length, 5);
       await page.locator(".study-back").click();
-      await page.locator(".home-actions").waitFor();
+      await page.locator("#next-lesson").waitFor();
       const mcq = pkg.activities.find((a) => a.type === "mcq"),
         correct = mcq.answerKey.correct;
       await page.goto(
