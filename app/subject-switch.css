@@ -1,5 +1,6 @@
 .subject-header-actions{display:flex;align-items:center;gap:12px;margin-left:auto;flex-shrink:0}
-.subject-switch{position:relative;font:700 13px "Segoe UI",sans-serif;color:#596976;z-index:35}
+.subject-switch{position:relative;margin:0;padding:0;border:0;background:none;font:700 13px "Segoe UI",sans-serif;color:#596976;z-index:35}
+.subject-header-actions .mana-trigger{font:700 13px "Segoe UI",sans-serif}
 .subject-switch>summary{display:flex;align-items:center;gap:6px;min-height:44px;padding:0 4px;cursor:pointer;list-style:none;white-space:nowrap}
 .subject-switch>summary::-webkit-details-marker{display:none}
 .subject-switch>summary::after{content:"▾";font-size:12px}
