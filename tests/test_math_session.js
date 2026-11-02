@@ -8,3 +8,5 @@ assert.equal(S.valid({...snapshot,history:[{page:'__proto__'}]}),false);
 assert.equal(C.prose('<strong>Domain</strong><br><th scope="col">Input</th>'),'<strong>Domain</strong><br><th scope="col">Input</th>');
 assert(!C.prose('<script>alert(1)</script><img src=x onerror=alert(1)>').includes('<script>'));assert(!C.prose('<strong onclick="bad()">bad</strong>').includes('<strong onclick'));
 console.log('Math session tests passed: snapshots, stale identity, malformed data, routes and safe prose.');
+
+assert.equal(S.valid({...snapshot,practiceHints:{bad:true}}),false);assert.equal(S.valid({...snapshot,practiceFocusTopic:9}),false);

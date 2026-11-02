@@ -79,3 +79,7 @@ See [the shared Mana contract](MANA_SYSTEM.md) for approved rewards, cosmetic pu
 See [the canonical source and selective upstream integration](UPSTREAM_INTEGRATION.md) for the approved modules, compatibility rules, release workflow and remaining evidence limits.
 
 Subject switching uses the shared header disclosure beside Mana in both subjects. It opens two direct subject links without navigating to the chooser. Escape and outside clicks close the disclosure; the current subject is identified for assistive technology.
+
+## Maths mastery and personalised revision
+
+See [the Maths mastery contract](MATHS_MASTERY.md) for the approved evidence model, legacy preservation, hint tracking, focused revision and validation.
