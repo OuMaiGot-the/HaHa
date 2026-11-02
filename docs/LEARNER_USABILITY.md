@@ -37,3 +37,7 @@ topic steps, existing evaluation/practice and isolated storage. The new usabilit
 top-of-home lesson actions, radio keyboard behavior, checked-attempt summaries, and topic navigation.
 The in-app browser is used to inspect the actual hosted shell at phone and desktop widths.
 This is not a full WCAG certification or a real learner study.
+
+## Browser tab identity
+
+All published subject and lesson pages declare the shared HaHa h. brand mark as an SVG favicon. The versioned icon URL refreshes cached tab artwork; standalone releases also include the icon.

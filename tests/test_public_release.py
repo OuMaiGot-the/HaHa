@@ -22,6 +22,7 @@ class PublicReleaseTests(unittest.TestCase):
 
             self.assertEqual({
                 ".nojekyll",
+                "favicon.svg",
                 "index.html",
                 "app/app.js",
                 "app/learning.js",
