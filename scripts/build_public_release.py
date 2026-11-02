@@ -59,7 +59,7 @@ def build(output: Path, package_path: Path, *, source_root: Path = ROOT, shared_
         'data-package-url=""',
         'data-package-url="./content/package.json"',
     )
-    common = ("favicon.svg", "mana.js", "mana-ui.js", "mana.css", "physics-practice.css", "mascots.css", "audit-improvements.css")
+    common = ("favicon.svg", "mana.js", "mana-ui.js", "mana.css", "physics-practice.css", "mascots.css", "audit-improvements.css", "tactile-buttons.css", "tactile-buttons.js")
     for name in common:
         public_index = public_index.replace('"' + name, '"' + shared_assets_prefix + name)
     if not shared_assets_prefix:

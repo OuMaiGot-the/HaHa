@@ -1,5 +1,7 @@
 # Physics lecture notes
 
+The release also retains the existing live version 27 tactile button CSS/JS unchanged. Those published assets are now represented in the canonical build, including purple Physics and green Maths styling and existing red/green answer feedback. Physics note reveal buttons use the existing primary-action styling.
+
 Physics → Learn → Notes opens original supplementary teaching material for all 15 existing sections (1.1, 8.1–8.5, 9.1–9.9). Eight teaching sections per lesson, a three-step worked example and two optional reasoning checks are available in English, Malay and Simplified Chinese. Each chapter group has nine qualitative review questions. The concise learner edition follows the longer discussion draft archived in `PHYSICS_TEACHING_DRAFT.md`; it is an adaptation, not a verbatim transcript.
 
 ## Source and editorial status

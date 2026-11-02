@@ -57,6 +57,8 @@ def main():
     shutil.copytree(ROOT / "app" / "assets", output / "assets")
     shutil.copytree(ROOT / "app" / "mathematics", output / "mathematics")
     shutil.copytree(ROOT / "app" / "physics-notes", output / "physics-notes")
+    for asset in ("tactile-buttons.css", "tactile-buttons.js"):
+        shutil.copyfile(ROOT / "app" / asset, output / asset)
     maths_index = output / "mathematics" / "index.html"
     maths_index.write_text(maths_index.read_text(encoding="utf-8").replace("</head>", '<link rel="icon" type="image/svg+xml" href="../favicon.svg?v=haha-1">\n</head>', 1), encoding="utf-8")
     print(f"Published {len(packages)} packages in {len(set(p['chapter'] for p in packages))} chapters" + (" (approved only)" if approved_only else " (preview mode)"))
