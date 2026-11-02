@@ -35,7 +35,7 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict'),fs=r
    await page.goto(base+'mathematics/index.html');await page.locator('#next-lesson button').click();await page.locator('.checkpoint-card [data-correct="true"]').first().click();
    await waitValue(page,afterPhysics+5);assert.equal(await value(page),afterPhysics+5);assert.equal(await page.evaluate(()=>localStorage.getItem('haha:math:v1:amMana')),'130','legacy balance remains untouched');
    await page.getByRole('button',{name:'Practice',exact:true}).click();
-   await page.locator('[data-action="practiceSubject"][data-form="4"]').click();
+   
    await page.locator('[data-action="practiceRandom"]').first().click();
    for(let i=0;i<5;i++){const jump=page.locator('[data-practice-jump="'+i+'"]');if(await jump.count())await jump.click();const inputs=page.locator('[data-practice-answer^="'+i+',"]');for(const input of await inputs.all())await input.fill('999999');}
    const beforeSet=await value(page);await page.locator('[data-action="submitPracticeAnswers"]').click();await page.locator('.practice-result-item').first().waitFor();await waitValue(page,beforeSet+5);assert.equal(await value(page),beforeSet+5,'attempting all questions earns the daily bonus, even with mistakes');

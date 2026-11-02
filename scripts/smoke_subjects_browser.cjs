@@ -24,7 +24,7 @@ const fs=require('node:fs');
    await page.getByRole('button',{name:'Submit and see results →',exact:true}).click();await page.locator('.evaluation-results').waitFor();assert.match(await page.locator('.evaluation-score-count').innerText(),/0\s*\/\s*9/);assert.equal(await page.locator('.wrong-answer').count(),9);
    assert.equal(await page.evaluate(()=>JSON.parse(localStorage.getItem('haha:math:v1:amFunctionsEvalComplete'))),true);
    await page.reload();await page.locator('.evaluation-results').waitFor();assert.equal(await page.locator('body').getAttribute('data-theme'),'dark');
-   await page.getByRole('button',{name:'Practice',exact:true}).click();await page.locator('[data-action="practiceSubject"][data-form="4"]').click();
+   await page.getByRole('button',{name:'Practice',exact:true}).click();
 
    const start=page.locator('[data-action="practiceRandom"]');if(await start.count())await start.first().click();else await page.locator('[data-action="practiceChapter"]').first().click();
    await page.locator('[data-practice-answer]').first().waitFor();assert.equal(await page.locator('.practice-question-card').count()||await page.locator('.practice-question').count(),5);

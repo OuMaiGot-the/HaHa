@@ -7,7 +7,7 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict');
   await page.locator('[data-note-plot="absolute"]').waitFor();assert.equal(await page.locator('.note-content-block table').count(),1,'authored mapping table renders semantically');
   await page.locator('[data-note-plot="absolute"] input').fill('-3');assert.match(await page.locator('[data-note-plot="absolute"] output').innerText(),/3/);
   await page.getByRole('button',{name:'3. Inverse functions',exact:true}).click();await page.locator('[data-note-plot="inverse"]').waitFor();
-  await page.getByRole('button',{name:'Practice',exact:true}).click();await page.locator('[data-action="practiceSubject"][data-form="4"]').click();await page.locator('[data-action="practiceRandom"]').first().click();
+  await page.getByRole('button',{name:'Practice',exact:true}).click();await page.locator('[data-action="practiceRandom"]').first().click();
   const current=await page.evaluate(()=>({id:state.practiceSet[4].id,parts:practiceParts(state.practiceSet[4]).map(p=>p.answers[0])}));
   await page.locator('[data-practice-jump="4"]').click();const field=page.locator('[data-practice-answer="4,0"]');await field.fill('2+(');
   const before=await page.evaluate(()=>({attempts:state.attempts.reduce((a,b)=>a+b,0),balance:HahaManaModel.balance(HahaMana.get())}));
