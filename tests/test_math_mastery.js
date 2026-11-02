@@ -12,6 +12,8 @@ for(let i=0;i<30;i++)data=M.append(data,[event('q0','correct',false,'fresh-'+i)]
 assert.equal(M.evidence(data,acts)[0].credit,.7);assert.equal(M.score(data,acts).checked,2,'repeats do not manufacture coverage');
 data=M.append(data,[event('q0','incorrect',false,'new')],acts);assert.equal(M.evidence(data,acts)[0].credit,0,'new mistake triggers revision');
 const mastered=M.append(empty,acts.map(a=>event(a.id,'correct',false,'final')),acts);assert.equal(M.score(mastered,acts).percent,100);assert.equal(M.score(mastered,acts).level,'Mastered');assert.equal(M.recommend(mastered,acts).reason,'maintain');
+let relapse=M.append(empty,[event('q0','correct',false,'first'),event('q0','incorrect',false,'later'),event('q0','correct',true,'help')],acts);assert.equal(M.evidence(relapse,acts)[0].credit,.35,'older success does not hide a later mistake followed by help');
+relapse=M.append(relapse,[event('q0','correct',false,'independent-recovery')],acts);assert.equal(M.evidence(relapse,acts)[0].credit,.7);
 const invalid=M.append(empty,[event('unknown'),{...event('q0'),assisted:'false'},{...event('q1'),timestamp:'bad'}],acts);assert.equal(invalid.attempts.length,0);
 const leaking=M.append(empty,[{...event('q0'),answer:'private text',name:'someone',topic:99}],acts);assert(!JSON.stringify(leaking).includes('private text'));assert(!JSON.stringify(leaking).includes('someone'));
 const ctx={};vm.runInNewContext(fs.readFileSync('app/mathematics/data/functions.js','utf8')+'\n'+fs.readFileSync('app/mathematics/data/notes.js','utf8')+';data={practiceQuestionBanks,practiceFinalQuestions,evaluationQuestions,noteMaterials};',ctx);

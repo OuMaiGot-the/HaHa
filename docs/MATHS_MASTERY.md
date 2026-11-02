@@ -41,7 +41,9 @@ cannot guarantee simultaneous cross-tab writes. There is no cloud backup or iden
 Each current catalog question part counts once, with equal weight; marks and speed are
 not difficulty ratings. A first unassisted success earns 1, later independent recovery
 0.7, assisted-only success 0.35, otherwise 0. A latest graded mistake makes the item's
-current credit zero until recovery. Skips do not erase prior graded evidence. Retrying
+current credit zero until recovery. Recovery credit is measured after the latest
+mistake, so an older success cannot mask a newer error followed by help. Independent
+and first-success counts remain historical counts. Skips do not erase prior graded evidence. Retrying
 the same answer cannot manufacture coverage or turn an earlier failure into first-try
 success. The denominator is all currently available question parts in that skill.
 

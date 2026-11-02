@@ -32,7 +32,9 @@
     return activities.map(activity=>{
       const history=attempts.filter(a=>a.activityId===activity.id),graded=history.filter(a=>a.result!=='skip'),first=graded[0],last=graded.at(-1);
       const independent=graded.some(a=>a.result==='correct'&&!a.assisted),success=graded.some(a=>a.result==='correct');
-      const credit=last?.result==='incorrect'?0:first?.result==='correct'&&!first.assisted?1:independent?.7:success?.35:0;
+      const lastMistake=graded.findLastIndex(a=>a.result==='incorrect'),recovery=graded.slice(lastMistake+1);
+      const recoveredIndependently=recovery.some(a=>a.result==='correct'&&!a.assisted),recovered=recovery.some(a=>a.result==='correct');
+      const credit=last?.result==='incorrect'?0:lastMistake<0&&first?.result==='correct'&&!first.assisted?1:recoveredIndependently?.7:recovered?.35:0;
       return {activity,history,first,last,independent,success,credit};
     });
   }
