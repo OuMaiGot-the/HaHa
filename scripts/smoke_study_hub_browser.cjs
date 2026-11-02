@@ -20,6 +20,10 @@ const fs = require("node:fs");
       await page.goto(base + "#home");
       await page.locator("#next-lesson").waitFor();
       assert.equal(await page.locator(".physics-home-stop").count(), 3);
+      for(const stop of await page.locator('.physics-home-stop').all()){
+        const art=await stop.locator('canvas').boundingBox(),caption=await stop.locator('strong').boundingBox();
+        assert(art.y+art.height+8<=caption.y,'Physics chess artwork has clear space above its chapter caption');
+      }
       assert.equal(
         await page.evaluate(
           () => document.documentElement.scrollWidth <= innerWidth,
