@@ -46,6 +46,7 @@ jobs:
           node tests/test_tutor.mjs
           node --test tests/test_tutor_teaching.mjs
           node --test tests/test_tutor_worker.mjs
+          node --test tests/test_local_tutor.mjs
           node --check app/tutor/tutor.mjs
           node tests/test_mana.js
           node tests/test_mana_storage.js

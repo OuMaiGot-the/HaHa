@@ -13,10 +13,14 @@ const teachingChunks = MOVES.flatMap(move => ingest(`8.3 · ${move.title}`, move
   Object.freeze({ ...chunk, id: `teach-${move.id}-${i}` })));
 const noteLesson = window.HahaPhysicsNotesContent.lessons.find(l => l.id === LESSON);
 const visualStates = {};
-function showTeaching(id) {
+function showTeaching(id, delivery = '') {
   const move = getMove(id);
   if (!move) return;
   currentMove = move.id;
+  $('selection-mode').textContent = ({ 'local-confirmed': 'Local AI confirmed this authored topic. Teaching text and figures are authored.',
+    'authored-fallback': 'Using authored teaching: the local model could not reliably confirm this topic.',
+    'scope-guard': 'Outside this lesson’s supported question routes. The local model was not called.',
+    'authored-control': 'Authored navigation control; the local model was not called.' })[delivery] || 'Authored teaching topic.';
   $('teaching-panel').hidden = false;
   $('teaching-title').textContent = move.title;
   $('teaching-text').textContent = move.text;
@@ -31,6 +35,7 @@ function showTeaching(id) {
   $('teaching-panel').scrollIntoView({ block: 'start' });
 }
 function leaveTeaching() {
+  $('selection-mode').textContent = '';
   teaching = false; $('teaching-panel').hidden = true; $('teaching-topics').hidden = true;
   $('teaching-visual').replaceChildren();
   for (const key of Object.keys(visualStates)) delete visualStates[key];
@@ -57,8 +62,24 @@ fetch('/api/tutor/status', { credentials: 'same-origin' }).then(async response =
   const data = await response.json();
   if (data.available !== true) throw Error();
   $('ai-selection').disabled = false;
+  if (data.provider === 'local') {
+    $('stop-local').hidden = data.canStop !== true;
+    $('ai-label').textContent = 'Let local AI check the authored topic';
+    $('ai-privacy').textContent = 'Questions stay on this computer. This optional offline model checks a topic already selected from the authored lesson. It cannot write lesson text or diagrams. Uploads and conversation history are never sent to it. Disagreement or failure visibly falls back to authored teaching. No API credits are used.';
+    $('ai-status').textContent = 'Offline CPU model connected · no API credits. Enable it to check authored topic choices.';
+    return;
+  }
   $('ai-status').textContent = 'Optional AI selection available. It stays off until you enable it.' + (data.dailyLimit ? ` Private pilot: ${data.dailyLimit} shared AI requests per UTC day.` : '');
 }).catch(() => { $('ai-status').textContent = 'AI is not connected here. Authored teaching and interactive models are available.'; });
+$('stop-local').onclick = async () => {
+  $('end-session').click();
+  try {
+    const response = await fetch('/api/tutor/shutdown', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
+    if (!response.ok) throw Error();
+    $('ai-selection').disabled = true; $('stop-local').disabled = true;
+    $('ai-status').textContent = 'Local tutor stopped. Run the launcher again to reconnect.';
+  } catch { $('ai-status').textContent = 'Could not stop the local service. Close its launcher window to stop it.'; }
+};
 const voiceChecks = [...document.querySelectorAll('.voice-check')];
 $('device-capabilities').textContent = `Secure page: ${window.isSecureContext ? 'yes' : 'no'}. Browser recognition: ${window.SpeechRecognition || window.webkitSpeechRecognition ? 'available' : 'unavailable; use typing'}. Browser speech: ${window.speechSynthesis && window.SpeechSynthesisUtterance ? 'available' : 'unavailable; use silent reading'}. Capabilities alone do not verify audio.`;
 function deviceCheck(reset = false) {
@@ -243,6 +264,7 @@ async function ask(question, origin, explicitMove) {
       let stream;
       let move;
       if (teaching) {
+        $('selection-mode').textContent = $('ai-selection').checked && !explicitMove ? 'Checking the authored topic…' : '';
         $('status').textContent = $('ai-selection').checked && !explicitMove ? 'Selecting an authored explanation…' : 'Preparing authored teaching…';
         controls(true);
         move = explicitMove ? getMove(explicitMove) : $('ai-selection').checked ? await remoteChoice(question, currentMove, signal) : authoredChoice(question, currentMove);
@@ -259,12 +281,14 @@ async function ask(question, origin, explicitMove) {
       if (run.signal.aborted) return;
       protocol.finish();
       if (move) currentMove = move.id;
-    } catch (error) { if (!run.signal.aborted) stop(error.message); return; }
+      if (move) run.delivery = move.delivery || (teaching && explicitMove ? 'authored-control' : '');
+    } catch (error) { if (!run.signal.aborted) { if (teaching) $('selection-mode').textContent = 'Topic check unavailable. Turn it off to continue authored teaching.'; stop(error.message); } return; }
     continuity.begin(topic, segments);
     if (teaching) continuity.active.moveId = currentMove;
+    if (teaching) continuity.active.delivery = run.delivery || '';
   }
   const lesson = continuity.active;
-  if (teaching && lesson.moveId) showTeaching(lesson.moveId);
+  if (teaching && lesson.moveId) showTeaching(lesson.moveId, lesson.delivery);
   lastTopic = lesson.topic;
   board.replaceChildren(); $('sources').replaceChildren();
   lesson.drawn.forEach(draw);

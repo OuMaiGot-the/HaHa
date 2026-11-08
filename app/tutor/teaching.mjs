@@ -56,8 +56,10 @@ export function authoredChoice(question, current = 'start') {
   if (/^(start|teach me|kinetic friction)[.!?]*$/.test(q)) return getMove('start');
   if (/\b(spring|oscillat\w*)\b/.test(q)) return getMove('spring');
   if (/\b(center|centre|translation|application|work)\b/.test(q)) return getMove('translation');
-  if (/\b(angle|angled|tilt\w*|faster|speed|forward)\b/.test(q)) return getMove('angle');
   if (/\b(normal|support|weight|coefficient)\b/.test(q)) return getMove('normal');
+  if (/\b(negative|distance|stopping point)\b/.test(q)) return getMove('distance');
+  if (/\b(energy|heat|warm\w*|destroy\w*|internal)\b/.test(q) && !/\b(block alone|only the block|both|share\w*)\b/.test(q)) return getMove('energy');
+  if (/\b(angle|angled|tilt\w*|faster|speed|forward)\b/.test(q)) return getMove('angle');
   if (/\b(stop\w*|distance|negative)\b/.test(q)) return getMove('distance');
   if (/\b(boundary|system|table|block alone|only the block|both|share\w*)\b/.test(q)) return getMove('boundary');
   if (/\b(energy|heat|warm\w*|destroy\w*|internal)\b/.test(q)) return getMove('energy');
@@ -71,5 +73,7 @@ export async function remoteChoice(question, current, signal, fetcher = fetch) {
   if (!response.ok) throw Error('AI connection unavailable. Switch off AI selection to use authored teaching.');
   const text = await response.text();
   if (text.length > 256) throw Error('Invalid teaching response.');
-  return validateChoice(JSON.parse(text));
+  const move = validateChoice(JSON.parse(text));
+  const delivery = response.headers.get('X-Tutor-Delivery');
+  return delivery && ['local-confirmed', 'authored-fallback', 'scope-guard', 'authored-control'].includes(delivery) ? { ...move, delivery } : move;
 }

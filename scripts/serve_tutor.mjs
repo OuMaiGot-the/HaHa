@@ -4,23 +4,32 @@ import { readFile, realpath, stat } from 'node:fs/promises';
 import { resolve, extname, sep } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { choose } from './tutor_provider.mjs';
+import { chooseLocal, localEndpoint } from './local_tutor_provider.mjs';
 
-export function tutorServer(root, { key = '', model = '', fetcher = fetch, limit = 60, now = Date.now } = {}) {
+export function tutorServer(root, { key = '', model = '', fetcher = fetch, limit = 60, now = Date.now, local, shutdown } = {}) {
+  if (local) localEndpoint(local.endpoint);
   let used = 0, start = now(), busy = false;
   const json = (res, code, value) => { res.writeHead(code, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' }); res.end(JSON.stringify(value)); };
   return createServer(async (req, res) => {
     const port = req.socket.localPort, origin = `http://127.0.0.1:${port}`;
     if (req.headers.host !== `127.0.0.1:${port}` || req.socket.remoteAddress !== '127.0.0.1') { json(res, 403, { error: 'Local access only.' }); return; }
     const path = new URL(req.url, origin).pathname;
-    if (path === '/api/tutor/status' && req.method === 'GET') { json(res, 200, { available: Boolean(key && model) }); return; }
+    if (path === '/api/tutor/status' && req.method === 'GET') {
+      json(res, 200, local ? { available: local.isReady ? local.isReady() : true, provider: 'local', mode: 'guarded-topic-check', ...(shutdown ? { canStop: true } : {}) } : { available: Boolean(key && model) }); return;
+    }
+    if (path === '/api/tutor/shutdown' && local && shutdown) {
+      if (req.method !== 'POST' || req.headers.origin !== origin || req.headers['content-type'] !== 'application/json') { json(res, 403, { error: 'Same-origin stop required.' }); return; }
+      res.once('finish', () => { setTimeout(() => shutdown().catch(() => {}), 100).unref(); });
+      json(res, 200, { stopped: true }); return;
+    }
     if (path === '/api/tutor/choose') {
       if (req.method !== 'POST' || req.headers.origin !== origin || req.headers['content-type'] !== 'application/json') { json(res, 403, { error: 'Same-origin JSON POST required.' }); return; }
-      if (!key || !model) { json(res, 503, { error: 'Provider unavailable.' }); return; }
+      if (!local && (!key || !model)) { json(res, 503, { error: 'Provider unavailable.' }); return; }
       if (now() - start >= 3600000) { start = now(); used = 0; }
       if (busy || used >= limit) { json(res, 429, { error: 'Request budget reached. Use authored teaching.' }); return; }
       busy = true;
       const controller = new AbortController();
-      const timer = setTimeout(() => controller.abort(), 18000);
+      const timer = setTimeout(() => local ? controller.abort('local-timeout') : controller.abort(), local ? 30000 : 18000);
       req.setTimeout(5000, () => req.destroy());
       res.on('close', () => controller.abort());
       try {
@@ -38,8 +47,9 @@ export function tutorServer(root, { key = '', model = '', fetcher = fetch, limit
         catch { json(res, 400, { error: 'Invalid JSON.' }); return; }
         const { validateRequest } = await import('../app/tutor/teaching.mjs');
         try { validateRequest(value); } catch { json(res, 400, { error: 'Invalid request.' }); return; }
-        const result = await choose(value, { key, model, fetcher, signal: controller.signal });
-        if (!res.destroyed) json(res, 200, result);
+        const result = local ? await chooseLocal(value, { ...local, signal: controller.signal }) : await choose(value, { key, model, fetcher, signal: controller.signal });
+        if (local) res.setHeader('X-Tutor-Delivery', result.delivery);
+        if (!res.destroyed) json(res, 200, { move: result.move });
       } catch { if (!res.destroyed) json(res, 502, { error: 'Teaching request failed. Use authored teaching.' }); }
       finally { clearTimeout(timer); busy = false; }
       return;

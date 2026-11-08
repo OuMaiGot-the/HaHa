@@ -4,6 +4,8 @@ Tutor teaching increment: [8.3 teaching preview, local AI setup and release limi
 
 Protected tutor increment: [private pilot deployment, durable budget and real-device check](PROTECTED_TUTOR_PILOT.md). The dedicated private Site does not migrate the public hub or learner progress.
 
+Local tutor increment: [offline CPU setup, guarded topic checks and fallback](LOCAL_TUTOR.md). The optional Windows launcher does not use account keys or change hosted deployments.
+
 ## Authority and precedence
 
 When documents conflict, use this order:
