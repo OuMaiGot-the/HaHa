@@ -48,12 +48,25 @@ $('friction').onclick = () => {
   ask('start', 'topic', 'start');
 };
 fetch('/api/tutor/status', { credentials: 'same-origin' }).then(async response => {
+  if (response.status === 401) {
+    $('tutor-signin').hidden = false;
+    $('ai-status').textContent = 'Sign in to use the protected AI connection. Authored teaching remains available.';
+    return;
+  }
   if (!response.ok) throw Error();
   const data = await response.json();
   if (data.available !== true) throw Error();
   $('ai-selection').disabled = false;
-  $('ai-status').textContent = 'Optional AI selection available. It stays off until you enable it.';
+  $('ai-status').textContent = 'Optional AI selection available. It stays off until you enable it.' + (data.dailyLimit ? ` Private pilot: ${data.dailyLimit} shared AI requests per UTC day.` : '');
 }).catch(() => { $('ai-status').textContent = 'AI is not connected here. Authored teaching and interactive models are available.'; });
+const voiceChecks = [...document.querySelectorAll('.voice-check')];
+$('device-capabilities').textContent = `Secure page: ${window.isSecureContext ? 'yes' : 'no'}. Browser recognition: ${window.SpeechRecognition || window.webkitSpeechRecognition ? 'available' : 'unavailable; use typing'}. Browser speech: ${window.speechSynthesis && window.SpeechSynthesisUtterance ? 'available' : 'unavailable; use silent reading'}. Capabilities alone do not verify audio.`;
+function deviceCheck(reset = false) {
+  if (reset) voiceChecks.forEach(input => { input.checked = false; });
+  const count = voiceChecks.filter(input => input.checked).length;
+  $('device-result').textContent = count === 3 ? 'You reported all three voice checks passed in this session. This is a self-check, not independent verification; nothing is saved.' : `Real-device voice check: ${count} of 3 observations reported. Results stay in this page only.`;
+}
+voiceChecks.forEach(input => input.addEventListener('change', () => deviceCheck()));
 const continuity = new Continuity();
 function bookmarks() { $('resume-lesson').disabled = !continuity.bookmarks.length; }
 function turn(role, text) {
@@ -128,6 +141,7 @@ $('sample').addEventListener('click', () => {
   $('question').value = 'balanced forces';
 });
 $('clear').addEventListener('click', () => {
+  deviceCheck(true);
   leaveTeaching(); $('ai-selection').checked = false;
   ++uploadGeneration; microphone.end(); lastTopic = ''; $('conversation').replaceChildren(); stop('Notes cleared.'); continuity.clear(); bookmarks(); chunks = []; board.replaceChildren(); $('sources').replaceChildren();
   $('question').value = ''; $('upload').value = ''; $('timing').textContent = '';
@@ -283,6 +297,7 @@ function showSource(id) {
   $('sources').append(item);
 }
 window.addEventListener('pagehide', () => {
+  deviceCheck(true);
   leaveTeaching(); $('ai-selection').checked = false;
   microphone.end(); ++uploadGeneration; stop(); continuity.clear(); bookmarks(); $('conversation').replaceChildren(); lastTopic = ''; chunks = []; board.replaceChildren(); $('sources').replaceChildren();
   $('question').value = ''; $('material').textContent = 'No material loaded.'; $('timing').textContent = ''; controls(false);

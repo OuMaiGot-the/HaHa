@@ -1,5 +1,7 @@
 # Kinetic-friction teaching preview
 
+The next increment adds a [separate protected owner pilot](PROTECTED_TUTOR_PILOT.md). The public static preview described here remains unchanged; the private pilot supplies hosted identity enforcement and a durable shared budget, with live provider/device checks still separate.
+
 ## What this increment does
 
 Physics 8.3 now has ten original teaching moves plus a scope response. Each move names the corresponding sections of the existing original notes; the new wording is a pedagogical explanation, not a quotation from a textbook. Instructor review is still pending. The pilot is English only. The underlying notes and trusted visual models retain their existing English/Malay/Chinese content.

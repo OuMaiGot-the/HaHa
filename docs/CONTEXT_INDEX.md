@@ -2,6 +2,8 @@
 
 Tutor teaching increment: [8.3 teaching preview, local AI setup and release limits](TUTOR_TEACHING.md). The preserved source-reader protocol remains authoritative for board playback; optional AI selects only authored move IDs.
 
+Protected tutor increment: [private pilot deployment, durable budget and real-device check](PROTECTED_TUTOR_PILOT.md). The dedicated private Site does not migrate the public hub or learner progress.
+
 ## Authority and precedence
 
 When documents conflict, use this order:
