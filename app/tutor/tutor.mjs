@@ -217,6 +217,8 @@ async function ask(question, origin, explicitMove) {
   const resume = /^(continue|go on|resume)[.!?]*$/i.test(question);
   const topic = /^(continue|again|repeat|go on|resume)[.!?]*$/i.test(question) ? lastTopic : question;
   turn(`Student (${origin})`, question);
+  // Returning from a clarification must pop the earlier topic, not checkpoint and pop itself.
+  if (teaching && resume && continuity.bookmarks.length) continuity.active = null;
   stop();
   const run = new AbortController(); controller = run;
   if (resume && continuity.bookmarks.length) continuity.resume();
