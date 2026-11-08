@@ -38,7 +38,7 @@ export async function chooseLocal(request, { endpoint, model, token, signal, fet
     const chosen = validateChoice(JSON.parse(message.content));
     return chosen.id === candidate.id ? { move: candidate.id, delivery: 'local-confirmed' } : fallback;
   } catch (error) {
-    if (signal?.aborted) throw error;
+    if (signal?.aborted && signal.reason !== 'local-timeout') throw error;
     return fallback;
   }
 }

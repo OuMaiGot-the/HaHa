@@ -29,7 +29,7 @@ export function tutorServer(root, { key = '', model = '', fetcher = fetch, limit
       if (busy || used >= limit) { json(res, 429, { error: 'Request budget reached. Use authored teaching.' }); return; }
       busy = true;
       const controller = new AbortController();
-      const timer = setTimeout(() => controller.abort(), local ? 30000 : 18000);
+      const timer = setTimeout(() => local ? controller.abort('local-timeout') : controller.abort(), local ? 30000 : 18000);
       req.setTimeout(5000, () => req.destroy());
       res.on('close', () => controller.abort());
       try {

@@ -35,6 +35,8 @@ test('Scope/control guards avoid a model call; local failures visibly preserve a
   assert.deepEqual(broken, { move: 'normal', delivery: 'authored-fallback' });
   const controller = new AbortController(); controller.abort();
   await assert.rejects(chooseLocal(input('Explain energy'), { ...local, signal: controller.signal, fetcher: async () => { throw Error('canceled'); } }));
+  const timeout = new AbortController(); timeout.abort('local-timeout');
+  assert.deepEqual(await chooseLocal(input('Explain energy'), { ...local, signal: timeout.signal, fetcher: async () => { throw Error('deadline'); } }), { move: 'energy', delivery: 'authored-fallback' });
 });
 test('Only the pinned loopback endpoint is allowed; cloud URLs and redirects are not fallback paths', () => {
   assert.equal(localEndpoint(local.endpoint), local.endpoint);
