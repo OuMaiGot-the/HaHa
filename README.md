@@ -186,3 +186,5 @@ Tutor continuity preview: `python scripts/build_catalog_release.py preview-tutor
 (empty output directory required). This includes an explicitly labeled local source-reader
 lab with interruption checkpoints; it does not enable a hosted AI teaching service.
 See [the classroom audit and current feature status](docs/TUTOR_CLASSROOM_AUDIT.md).
+
+The opt-in tutor preview now adds original 8.3 kinetic-friction teaching and trusted interactive models. Optional AI selects an authored explanation through a server-only local gateway; the public static preview works with AI off. See [setup, grounding, tests and live-service limitations](docs/TUTOR_TEACHING.md).

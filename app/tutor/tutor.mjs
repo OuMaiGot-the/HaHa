@@ -1,19 +1,66 @@
 import { Microphone } from './microphone.mjs';
 import { Continuity, remaining } from './continuity.mjs';
-import { ingest, localStream, Protocol, Playback, LIMITS } from './core.mjs';
+import { ingest, localStream, readingSegment, Protocol, Playback, LIMITS } from './core.mjs';
+import { MOVES, LESSON, getMove, authoredChoice, remoteChoice } from './teaching.mjs';
 
 const $ = id => document.getElementById(id);
 let chunks = [], controller, releaseWait, frame, uploadGeneration = 0;
 let started = 0, firstStroke, firstSpeech;
 const board = $('board');
 let lastTopic = '';
+let teaching = false, currentMove = 'start';
+const teachingChunks = MOVES.flatMap(move => ingest(`8.3 · ${move.title}`, move.text).map((chunk, i) =>
+  Object.freeze({ ...chunk, id: `teach-${move.id}-${i}` })));
+const noteLesson = window.HahaPhysicsNotesContent.lessons.find(l => l.id === LESSON);
+const visualStates = {};
+function showTeaching(id) {
+  const move = getMove(id);
+  if (!move) return;
+  currentMove = move.id;
+  $('teaching-panel').hidden = false;
+  $('teaching-title').textContent = move.title;
+  $('teaching-text').textContent = move.text;
+  $('teaching-prompt').textContent = move.prompt;
+  $('teaching-references').textContent = move.sections.length ? 'Grounding · original 8.3 notes: ' + move.sections.map(i => noteLesson.sections[i].title.en).join('; ') + '.' : 'Scope boundary · no scientific answer supplied.';
+  $('teaching-visual').replaceChildren();
+  if (move.visual) {
+    const spec = noteLesson.visuals.find(v => v.kind === move.visual);
+    $('teaching-visual').append(window.HahaPhysicsNotes.renderVisual(spec, 'en', { guided: true, state: visualStates[move.visual] ||= {} }));
+  }
+  document.querySelectorAll('#teaching-topics button').forEach(b => b.setAttribute('aria-current', String(b.dataset.move === id)));
+  $('teaching-panel').scrollIntoView({ block: 'start' });
+}
+function leaveTeaching() {
+  teaching = false; $('teaching-panel').hidden = true; $('teaching-topics').hidden = true;
+  $('teaching-visual').replaceChildren();
+  for (const key of Object.keys(visualStates)) delete visualStates[key];
+}
+for (const move of MOVES.filter(m => m.id !== 'unsupported')) {
+  const button = document.createElement('button'); button.type = 'button'; button.textContent = move.title; button.dataset.move = move.id;
+  button.onclick = () => ask(move.title, 'topic', move.id);
+  $('teaching-topics').append(button);
+}
+$('friction').onclick = () => {
+  ++uploadGeneration;
+  load('Original 8.3 teaching material', MOVES.map(m => m.text).join('\n'));
+  teaching = true; chunks = teachingChunks; currentMove = 'start';
+  $('teaching-topics').hidden = false; $('question').value = '';
+  ask('start', 'topic', 'start');
+};
+fetch('/api/tutor/status', { credentials: 'same-origin' }).then(async response => {
+  if (!response.ok) throw Error();
+  const data = await response.json();
+  if (data.available !== true) throw Error();
+  $('ai-selection').disabled = false;
+  $('ai-status').textContent = 'Optional AI selection available. It stays off until you enable it.';
+}).catch(() => { $('ai-status').textContent = 'AI is not connected here. Authored teaching and interactive models are available.'; });
 const continuity = new Continuity();
 function bookmarks() { $('resume-lesson').disabled = !continuity.bookmarks.length; }
 function turn(role, text) {
   const item = document.createElement('li'); item.textContent = `${role}: ${text}`;
   $('conversation').append(item);
   while ($('conversation').children.length > 40) $('conversation').firstChild.remove();
-  item.scrollIntoView({ block: 'nearest' });
+  if (!teaching) item.scrollIntoView({ block: 'nearest' });
 }
 const microphone = new Microphone({
   status(text, active) { $('mic-status').textContent = text; $('mic').textContent = active ? 'Mute microphone' : 'Enable microphone'; $('mic').setAttribute('aria-pressed', String(active)); },
@@ -53,6 +100,7 @@ function stop(message = 'Stopped. Resume the interrupted lesson, or send a new q
   $('pause').textContent = 'Pause'; controls(false); $('status').textContent = message;
 }
 function load(name, text) {
+  leaveTeaching();
   stop(); continuity.clear(); bookmarks(); lastTopic = ''; $('conversation').replaceChildren(); chunks = []; controls(false); board.replaceChildren(); $('sources').replaceChildren(); $('timing').textContent = '';
   try {
     chunks = ingest(name, text); $('material').textContent = `${name}: ${chunks.length} note sections loaded in memory.`;
@@ -80,6 +128,7 @@ $('sample').addEventListener('click', () => {
   $('question').value = 'balanced forces';
 });
 $('clear').addEventListener('click', () => {
+  leaveTeaching(); $('ai-selection').checked = false;
   ++uploadGeneration; microphone.end(); lastTopic = ''; $('conversation').replaceChildren(); stop('Notes cleared.'); continuity.clear(); bookmarks(); chunks = []; board.replaceChildren(); $('sources').replaceChildren();
   $('question').value = ''; $('upload').value = ''; $('timing').textContent = '';
   $('material').textContent = 'No material loaded. Files stay in this page’s memory; clearing or reloading removes them.'; controls(false);
@@ -163,7 +212,7 @@ $('lesson').addEventListener('submit', event => {
 });
 $('resume-lesson').addEventListener('click', () => ask('continue', 'text'));
 
-async function ask(question, origin) {
+async function ask(question, origin, explicitMove) {
   if (!question || !chunks.length) return;
   const resume = /^(continue|go on|resume)[.!?]*$/i.test(question);
   const topic = /^(continue|again|repeat|go on|resume)[.!?]*$/i.test(question) ? lastTopic : question;
@@ -175,17 +224,31 @@ async function ask(question, origin) {
     const session = crypto.randomUUID(), protocol = new Protocol(session, chunks), segments = [];
     const signal = run.signal;
     try {
-      for await (const raw of localStream(chunks, topic, session, signal)) {
+      let stream;
+      let move;
+      if (teaching) {
+        $('status').textContent = $('ai-selection').checked && !explicitMove ? 'Selecting an authored explanation…' : 'Preparing authored teaching…';
+        controls(true);
+        move = explicitMove ? getMove(explicitMove) : $('ai-selection').checked ? await remoteChoice(question, currentMove, signal) : authoredChoice(question, currentMove);
+        if (signal.aborted) return;
+        const matches = chunks.filter(c => c.id.startsWith(`teach-${move.id}-`));
+        stream = matches.map((c, row) => ({ v: 1, session, seq: row, type: 'segment', ...readingSegment(c, row) }));
+        stream.push({ v: 1, session, seq: matches.length, type: 'done', reason: 'complete' });
+      } else stream = localStream(chunks, topic, session, signal);
+      for await (const raw of stream) {
         if (run.signal.aborted) return;
         const event = protocol.accept(raw);
         if (event.type === 'segment') segments.push(event);
       }
       if (run.signal.aborted) return;
       protocol.finish();
+      if (move) currentMove = move.id;
     } catch (error) { if (!run.signal.aborted) stop(error.message); return; }
     continuity.begin(topic, segments);
+    if (teaching) continuity.active.moveId = currentMove;
   }
   const lesson = continuity.active;
+  if (teaching && lesson.moveId) showTeaching(lesson.moveId);
   lastTopic = lesson.topic;
   board.replaceChildren(); $('sources').replaceChildren();
   lesson.drawn.forEach(draw);
@@ -200,13 +263,13 @@ async function ask(question, origin) {
       const message = lesson.segments[lesson.index];
       if (!lesson.references.includes(message.source)) {
         lesson.references.push(message.source); showSource(message.source);
-        turn('Tutor · source reading', message.text);
+        turn(teaching ? 'Tutor · authored teaching' : 'Tutor · source reading', message.text);
       }
       await play(message, run.signal, voice, lesson.offset);
       if (run.signal.aborted) return;
       lesson.index++; lesson.offset = -1;
     }
-    $('status').textContent = lesson.segments.length ? 'Finished reading matching notes. This was source reading, not an AI-generated explanation.' : 'No matching source. Try words that occur in your notes; no answer was invented.';
+    $('status').textContent = teaching ? 'Authored explanation finished. Explore the model, choose a topic, or ask a clarification. AI selection does not generate teaching text.' : lesson.segments.length ? 'Finished reading matching notes. This was source reading, not an AI-generated explanation.' : 'No matching source. Try words that occur in your notes; no answer was invented.';
     continuity.complete();
   } catch (error) { if (!run.signal.aborted) stop(error.message); }
   finally { if (controller === run) { controller = undefined; controls(false); } bookmarks(); }
@@ -218,6 +281,7 @@ function showSource(id) {
   $('sources').append(item);
 }
 window.addEventListener('pagehide', () => {
+  leaveTeaching(); $('ai-selection').checked = false;
   microphone.end(); ++uploadGeneration; stop(); continuity.clear(); bookmarks(); $('conversation').replaceChildren(); lastTopic = ''; chunks = []; board.replaceChildren(); $('sources').replaceChildren();
   $('question').value = ''; $('material').textContent = 'No material loaded.'; $('timing').textContent = ''; controls(false);
 });

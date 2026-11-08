@@ -23,5 +23,5 @@ class TutorBuildTests(unittest.TestCase):
                 if enabled:
                     index = (output / "tutor/index.html").read_text(encoding="utf-8")
                     self.assertIn('href="../index.html"', index)
-                    for asset in ("tutor.mjs", "core.mjs", "microphone.mjs", "continuity.mjs", "tutor.css"):
+                    for asset in ("tutor.mjs", "core.mjs", "microphone.mjs", "continuity.mjs", "teaching.mjs", "tutor.css"):
                         self.assertTrue((output / "tutor" / asset).is_file(), asset)

@@ -44,6 +44,7 @@ jobs:
           node tests/test_physics_notes.js
           node tests/test_friction_guide.js
           node tests/test_tutor.mjs
+          node --test tests/test_tutor_teaching.mjs
           node --check app/tutor/tutor.mjs
           node tests/test_mana.js
           node tests/test_mana_storage.js

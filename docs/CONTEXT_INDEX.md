@@ -1,5 +1,7 @@
 # Context index
 
+Tutor teaching increment: [8.3 teaching preview, local AI setup and release limits](TUTOR_TEACHING.md). The preserved source-reader protocol remains authoritative for board playback; optional AI selects only authored move IDs.
+
 ## Authority and precedence
 
 When documents conflict, use this order:

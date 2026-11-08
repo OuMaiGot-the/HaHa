@@ -66,7 +66,7 @@ def main():
         hub = output / "index.html"
         hub.write_text(hub.read_text(encoding="utf-8").replace(
             '<div class="subject-header-actions">',
-            '<div class="subject-header-actions"><a class="settings-shortcut" href="tutor/">Tutor lab · source reader</a>', 1), encoding="utf-8")
+            '<div class="subject-header-actions"><a class="settings-shortcut" href="tutor/">Tutor preview · 8.3 friction</a>', 1), encoding="utf-8")
     for asset in ("tactile-buttons.css", "tactile-buttons.js"):
         shutil.copyfile(ROOT / "app" / asset, output / asset)
     maths_index = output / "mathematics" / "index.html"

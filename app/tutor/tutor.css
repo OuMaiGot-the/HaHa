@@ -38,3 +38,18 @@ main { padding-bottom: 300px; }
 
 .dock form { position: sticky; bottom: 0; background: white; padding-top: 4px; }
 .disclosure summary { cursor: pointer; min-height: 24px; }
+.privacy { font-size: .85rem; line-height: 1.5; max-width: 75ch; }
+.teaching-panel { border: 1px solid #c5d3c5; border-radius: 16px; background: #fffef9; padding: 24px; margin: 24px 0; }
+.teaching-panel > p { max-width: 75ch; line-height: 1.7; }
+#teaching-prompt { font-weight: 650; color: #205d4e; }
+#teaching-topics button { background: white; color: #205d4e; font-size: .85rem; }
+#teaching-topics button[aria-current="true"] { background: #205d4e; color: white; }
+#teaching-visual figure { margin: 16px 0; }
+#teaching-visual svg { min-width: 0; min-height: 0; max-width: 760px; }
+#teaching-visual input[type="radio"] { width: auto; display: inline; }
+#teaching-visual fieldset label { display: flex; gap: 12px; align-items: center; font-weight: 400; }
+#teaching-visual .visual-view { overflow: auto; }
+#teaching-visual .energy-meter { display: flex; gap: 12px; align-items: center; }
+#teaching-visual table { border-collapse: collapse; width: 100%; max-width: 760px; }
+#teaching-visual td, #teaching-visual th { padding: 8px; border-bottom: 1px solid #c5d3c5; text-align: left; }
+[hidden] { display: none !important; }

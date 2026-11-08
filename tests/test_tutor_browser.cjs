@@ -206,6 +206,43 @@ const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
     await page.waitForFunction(() => document.querySelectorAll('#board text').length > 0);
     await page.locator('#stop').click();
     if (process.env.TUTOR_SCREENSHOT) await page.screenshot({ path: process.env.TUTOR_SCREENSHOT, fullPage: true });
+    // Teaching uses authored material and trusted models, with the original reader still available.
+    await page.locator('#friction').click();
+    await page.waitForFunction(() => document.querySelector('#teaching-title').textContent === 'Follow the energy');
+    assert(await page.locator('[data-physics-visual="E5"]').isVisible());
+    assert(await page.locator('#ai-selection').isDisabled(), 'Static preview must not advertise live AI');
+    await page.locator('[data-move="angle"]').click();
+    await page.waitForFunction(() => document.querySelector('#teaching-title').textContent === 'Less friction does not decide the speed');
+    await page.waitForFunction(() => document.querySelectorAll('#board text').length > 0);
+    await page.locator('#stop').click();
+    await page.locator('#question').fill('photosynthesis'); await page.locator('#start').click();
+    await page.waitForFunction(() => document.querySelector('#teaching-title').textContent === 'Stay within this lesson');
+    assert.equal(await page.locator('#teaching-visual > *').count(), 0);
+    await page.locator('#resume-lesson').click();
+    await page.waitForFunction(() => document.querySelector('#teaching-title').textContent === 'Less friction does not decide the speed');
+    assert(await page.locator('[data-physics-visual="E6"]').isVisible(), 'Resume restores the interrupted topic model');
+    assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), 'No page-width overflow on mobile');
+    await page.locator('#clear').click();
+    assert(!(await page.locator('#teaching-panel').isVisible()));
+    assert.equal(await page.locator('#teaching-visual > *').count(), 0);
+    // No provider call: synthetic route verifies remote choice hydration and rejects extra output.
+    await page.route('**/api/tutor/status', route => route.fulfill({ json: { available: true } }));
+    await page.reload(); await page.locator('#voice').uncheck();
+    await page.locator('#friction').click();
+    await page.waitForFunction(() => !document.querySelector('#ai-selection').disabled);
+    await page.locator('#ai-selection').check();
+    await page.route('**/api/tutor/choose', route => {
+      const body = route.request().postDataJSON();
+      assert.deepEqual(Object.keys(body).sort(), ['current', 'question', 'version']);
+      return route.fulfill({ json: { move: 'normal' } });
+    });
+    await page.locator('#question').fill('Please clarify the support force'); await page.locator('#start').click();
+    await page.waitForFunction(() => document.querySelector('#teaching-title').textContent === 'Why the normal force matters');
+    await page.route('**/api/tutor/choose', route => route.fulfill({ json: { move: 'normal', text: 'Untrusted generated prose' } }));
+    await page.locator('#start').click();
+    await page.waitForFunction(() => document.querySelector('#status').textContent === 'Invalid teaching choice.');
+    assert(!(await page.locator('#conversation').textContent()).includes('Untrusted generated prose'));
+    await page.locator('#end-session').click();
     assert.deepEqual(errors, []);
     console.log('Tutor browser: upload/refusal, silent progression, word/phrase speech callbacks, speech errors, pause/resume, stop/stale callbacks, clear, literal markup, in-memory conversation, microphone permissions/mute/revocation/stale results and fixed mobile composer passed. Speech is simulated.');
   } finally {
