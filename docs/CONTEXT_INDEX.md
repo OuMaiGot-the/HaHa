@@ -1,5 +1,7 @@
 # Context index
 
+Tutor teaching increment: [8.3 teaching preview, local AI setup and release limits](TUTOR_TEACHING.md). The preserved source-reader protocol remains authoritative for board playback; optional AI selects only authored move IDs.
+
 ## Authority and precedence
 
 When documents conflict, use this order:
@@ -40,6 +42,9 @@ Historical roadmaps, old branch-testing instructions, chat transcripts, and copi
 | Release planning | Development roadmap, test plan, current milestone/PR |
 
 ## Current operational baseline on `main`
+
+For the standalone local source-reading tutor increment and its explicit live-AI
+limits, see [real-time tutor foundation](REALTIME_TUTOR.md).
 
 The current tracked project authority is:
 

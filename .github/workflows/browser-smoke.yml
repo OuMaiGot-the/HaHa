@@ -23,6 +23,8 @@ jobs:
         run: |
           npm install --no-save playwright@1.56.1
           npx playwright install --with-deps chromium
+      - name: Run standalone tutor browser test
+        run: node tests/test_tutor_browser.cjs
       - name: Run browser smoke test
         run: |
           python -m http.server 8765 --directory preview >/tmp/haha-preview-server.log 2>&1 &

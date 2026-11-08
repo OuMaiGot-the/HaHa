@@ -84,6 +84,12 @@ The learner scaffold is project-neutral. Learner-facing strings follow the curre
 
 ## Development checks
 
+The standalone [real-time tutor lab](docs/REALTIME_TUTOR.md) is available at
+`http://127.0.0.1:8000/app/tutor/` after starting the local server. This first
+increment retrieves original text notes and synchronizes progressive source
+reading with optional browser speech. Live AI generation and PDF extraction are
+not connected. It is separate from assessed learning and public release bundles.
+
 Run before review:
 
 ```text
@@ -170,3 +176,15 @@ navigation and study tools with HaHa's validated physics content and mastery eng
 The [two-subject integration](docs/TWO_SUBJECTS.md) adds the entrance chooser and imports the
 available AddMath material with separate local progress. It records exact content
 coverage, provenance and checks. Physics content and mastery stay unchanged.
+
+Tutor lab update: the always-available bottom composer now shares the local note
+reader with permission-gated browser microphone input and persistent mute controls.
+Only mute preference is saved. This remains a standalone source-reading lab;
+see [exact behavior and limitations](docs/REALTIME_TUTOR.md).
+
+Tutor continuity preview: `python scripts/build_catalog_release.py preview-tutor --include-tutor-lab`
+(empty output directory required). This includes an explicitly labeled local source-reader
+lab with interruption checkpoints; it does not enable a hosted AI teaching service.
+See [the classroom audit and current feature status](docs/TUTOR_CLASSROOM_AUDIT.md).
+
+The opt-in tutor preview now adds original 8.3 kinetic-friction teaching and trusted interactive models. Optional AI selects an authored explanation through a server-only local gateway; the public static preview works with AI off. See [setup, grounding, tests and live-service limitations](docs/TUTOR_TEACHING.md).
