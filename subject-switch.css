@@ -1,0 +1,18 @@
+.subject-header-actions{display:flex;align-items:center;gap:12px;margin-left:auto;flex-shrink:0}
+.subject-switch{position:relative;margin:0;padding:0;border:0;background:none;font:700 13px "Segoe UI",sans-serif;color:#596976;z-index:35}
+.subject-switch>summary{display:flex;align-items:center;gap:6px;min-height:44px;padding:0 4px;font:inherit;cursor:pointer;list-style:none;white-space:nowrap}
+.subject-switch>summary::-webkit-details-marker{display:none}
+.subject-switch>summary::after{content:"▾";font-size:12px}
+.subject-switch[open]>summary::after{content:"▴"}
+.subject-switch-options{position:absolute;right:0;top:100%;display:grid;min-width:180px;padding:6px;background:#fff;border:2px solid #dce5e9;border-radius:12px;box-shadow:0 8px 24px #152f2426}
+.subject-switch-options>a{display:flex;align-items:center;min-height:44px;padding:10px 12px;border-radius:7px;color:#3c4c58;text-decoration:none;font:700 14px "Segoe UI",sans-serif}
+.subject-switch-options>a:hover,.subject-switch-options>a[aria-current=page]{background:#edf5e7;color:#376126}
+.subject-switch :focus-visible{outline:3px solid #3177ad;outline-offset:3px}
+.physics-preferences{display:flex;align-items:center;justify-content:flex-end;gap:16px;flex-wrap:wrap;padding:10px 0}
+.app-shell{width:100%;max-width:1240px;padding-left:32px;padding-right:32px}
+.app-header,.topbar{gap:12px;min-height:88px;padding:14px 0}
+body[data-theme=dark] .subject-switch{color:#c1d0d9}body[data-theme=dark] .subject-switch-options{background:#203541;border-color:#45606e}body[data-theme=dark] .subject-switch-options>a{color:#e2edf4}body[data-theme=dark] .subject-switch-options>a:hover,body[data-theme=dark] .subject-switch-options>a[aria-current=page]{background:#304b35;color:#d7f2c7}
+@media(max-width:1000px){.app-shell{padding-left:22px;padding-right:22px}}
+@media(max-width:760px){.app-shell{padding-left:16px;padding-right:16px}.app-header,.topbar{min-height:72px;padding:10px 0}.subject-switch{font-size:11px}.subject-header-actions{gap:8px}.subject-header-actions .mana-trigger{margin:0}.app-header>.brand{margin-right:0}.physics-preferences{justify-content:flex-start}.app-header .brand-caption{display:none}}
+@media(max-width:380px){.topbar .brand-name{font-size:18px}.app-header .brand{font-size:18px;gap:6px}}
+@media(max-width:760px){.app-header>.brand,.topbar>.brand{flex:1;min-width:0;overflow:hidden}.topbar>.brand>span:last-child{min-width:0}.topbar .brand-name{display:block;font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}}

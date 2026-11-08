@@ -1,0 +1,23 @@
+
+    @media(min-width:681px){
+      .home-dashboard{gap:18px}
+      .home-dashboard>.welcome-panel{flex-basis:110px;padding:16px 22px}
+      .home-dashboard>.welcome-panel .welcome-accent{height:72px}
+      .home-dashboard>.welcome-panel .eyebrow{margin-bottom:8px}
+      .home-dashboard>.welcome-panel h1{line-height:1.18}
+      .home-dashboard>.welcome-panel p{margin-top:9px;line-height:1.4}
+      .home-dashboard>.friends-update{flex-basis:60px;padding:9px 15px;gap:14px}
+      .home-friends-empty .friend-copy{display:grid;align-content:center;gap:5px}
+      .home-friends-empty .friend-label{line-height:1.25}
+      .home-friends-empty .friend-message{margin:0;line-height:1.45}
+    }
+    @media(max-height:700px) and (min-width:681px){
+      .home-dashboard{gap:10px}
+      .home-dashboard>.welcome-panel{flex-basis:98px;padding:12px 17px}
+      .home-dashboard>.welcome-panel h1{font-size:28px}
+      .home-dashboard>.welcome-panel p{margin-top:6px}
+      .home-dashboard>.friends-update{flex-basis:53px;padding:7px 12px}
+    }
+    .profile-overview .profile-avatar{flex-basis:140px;width:140px;height:140px;font-size:48px}
+    @media(max-width:680px){.profile-overview .profile-avatar{flex-basis:88px;width:88px;height:88px;font-size:32px}}
+
