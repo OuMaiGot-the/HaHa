@@ -57,6 +57,16 @@ def main():
     shutil.copytree(ROOT / "app" / "assets", output / "assets")
     shutil.copytree(ROOT / "app" / "mathematics", output / "mathematics")
     shutil.copytree(ROOT / "app" / "physics-notes", output / "physics-notes")
+    # Explicit preview opt-in: the source reader must not be sold as a live AI tutor.
+    if "--include-tutor-lab" in sys.argv[2:]:
+        shutil.copytree(ROOT / "app" / "tutor", output / "tutor")
+        tutor_index = output / "tutor" / "index.html"
+        tutor_index.write_text(tutor_index.read_text(encoding="utf-8").replace(
+            '../catalog.html', '../index.html'), encoding="utf-8")
+        hub = output / "index.html"
+        hub.write_text(hub.read_text(encoding="utf-8").replace(
+            '<div class="subject-header-actions">',
+            '<div class="subject-header-actions"><a class="settings-shortcut" href="tutor/">Tutor lab · source reader</a>', 1), encoding="utf-8")
     for asset in ("tactile-buttons.css", "tactile-buttons.js"):
         shutil.copyfile(ROOT / "app" / asset, output / asset)
     maths_index = output / "mathematics" / "index.html"

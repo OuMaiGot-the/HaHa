@@ -1,0 +1,40 @@
+:root { font-family: system-ui, sans-serif; color: #173b36; background: #f3f6f0; }
+* { box-sizing: border-box; }
+body { margin: 0; }
+main { max-width: 1240px; margin: auto; padding: 28px; }
+header { display: flex; justify-content: space-between; gap: 20px; font-size: .85rem; letter-spacing: .04em; }
+a { color: #215f50; }
+h1 { font-size: clamp(2rem, 4vw, 3.3rem); max-width: 800px; margin-bottom: 12px; }
+.intro { max-width: 800px; line-height: 1.6; }
+.setup, aside { background: white; padding: 22px; border-radius: 16px; border: 1px solid #c5d3c5; }
+.setup { margin: 24px 0; }
+label { display: block; margin-bottom: 12px; font-weight: 600; }
+input:not([type="checkbox"]) { display: block; width: 100%; max-width: 650px; margin-top: 8px; padding: 10px; border: 1px solid #788f85; border-radius: 6px; font: inherit; }
+.voice { font-size: .9rem; font-weight: 400; }
+button { min-height: 44px; padding: 10px 16px; margin: 4px 6px 4px 0; background: #205d4e; color: white; border: 1px solid #205d4e; border-radius: 8px; font: inherit; cursor: pointer; }
+button:disabled { opacity: .5; cursor: default; }
+:focus-visible { outline: 3px solid #a35b07; outline-offset: 3px; }
+.workspace { display: grid; grid-template-columns: minmax(0, 2fr) minmax(280px, 1fr); gap: 18px; align-items: start; }
+.board { min-width: 0; background: #fffef9; border: 1px solid #c5d3c5; border-radius: 16px; overflow: auto; }
+svg { display: block; width: 100%; min-width: 740px; min-height: 500px; }
+svg text { font: 16px ui-monospace, monospace; fill: #173b36; }
+svg polyline { fill: none; stroke: #b16c14; stroke-width: 3; stroke-linecap: round; }
+h2 { font-size: 1.1rem; }
+li { line-height: 1.6; margin-bottom: 16px; overflow-wrap: anywhere; }
+#timing { font-size: .85rem; }
+@media (max-width: 820px) { main { padding: 16px; } .workspace { grid-template-columns: 1fr; } header { flex-wrap: wrap; } }
+
+main { padding-bottom: 300px; }
+.dock { position: fixed; inset: auto 0 0; z-index: 10; background: #fff; border-top: 2px solid #788f85; padding: 10px max(16px, calc((100vw - 1184px) / 2)); padding-bottom: max(10px, env(safe-area-inset-bottom)); max-height: 48dvh; overflow: auto; }
+.audio-controls, .compose { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.audio-controls .voice { margin: 0; }
+#mic-status { font-size: .85rem; }
+.disclosure { font-size: .75rem; margin: 4px 0; }
+#lesson label { margin: 4px 0; }
+.compose { flex-wrap: nowrap; }
+.compose input { min-width: 0; flex: 1; max-width: none; margin: 0; }
+#conversation { max-height: 320px; overflow: auto; }
+@media (max-width: 600px) { main { padding-bottom: 340px; } .dock button { padding: 8px; } }
+
+.dock form { position: sticky; bottom: 0; background: white; padding-top: 4px; }
+.disclosure summary { cursor: pointer; min-height: 24px; }

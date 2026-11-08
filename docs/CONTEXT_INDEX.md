@@ -41,6 +41,9 @@ Historical roadmaps, old branch-testing instructions, chat transcripts, and copi
 
 ## Current operational baseline on `main`
 
+For the standalone local source-reading tutor increment and its explicit live-AI
+limits, see [real-time tutor foundation](REALTIME_TUTOR.md).
+
 The current tracked project authority is:
 
 ```text

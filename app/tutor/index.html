@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>YOON · Tutor lab</title><link rel="stylesheet" href="tutor.css"></head>
+<body>
+<main>
+  <header><a href="../catalog.html">← Study hub</a><span>YOON / TUTOR LAB</span></header>
+  <h1>Your notes, one idea at a time.</h1>
+  <p class="intro">Local source-reading prototype. Reads matching original notes while building the board. AI-generated explanations and PDF uploads are not connected yet.</p>
+  <section class="setup" aria-label="Lesson setup">
+    <label>Upload your own original notes (.txt, UTF-8, up to 100 KB)<input id="upload" type="file" accept=".txt,text/plain"></label>
+    <button id="sample" type="button">Try original sample notes</button>
+    <p id="material" role="status">No material loaded. Files stay in this page’s memory; clearing or reloading removes them.</p>
+
+  </section>
+  <section class="workspace" aria-label="Tutor workspace">
+    <div class="board" tabindex="0" role="region" aria-label="Whiteboard; scroll horizontally on small screens. Full text follows."><svg id="board" viewBox="0 0 740 500" role="img" aria-label="Progressively written note excerpts; full text is available below"></svg></div>
+    <aside><h2>Lesson</h2><p id="status" role="status">Ready when you are.</p><div class="controls"><button id="pause" disabled>Pause</button><button id="stop" disabled>Stop</button><button id="resume-lesson" disabled>Resume interrupted lesson</button><button id="clear">Clear notes</button></div><p id="timing"></p><h2>Source references &amp; text</h2><ol id="sources"></ol></aside>
+  </section>
+  <section aria-label="Conversation"><h2>Conversation · local source reader</h2><ol id="conversation" aria-live="polite"></ol></section>
+</main>
+<div class="dock">
+  <div class="audio-controls"><button id="mic" type="button" aria-pressed="false">Enable microphone</button><span id="mic-status" role="status">Microphone off · authorization required</span><button id="end-session" type="button">End session</button>
+  <label class="voice"><input id="voice" type="checkbox" checked> Tutor audio (browser voice service)</label></div>
+  <details class="disclosure"><summary>Microphone and privacy details</summary><p>Enabling the microphone authorizes the browser speech service, which may send audio to its provider. Use headphones to reduce tutor echo. Only mute preference is saved; notes and conversation stay in memory.</p></details>
+  <form id="lesson"><label for="question">Speak or type in the same lesson</label><div class="compose"><input id="question" required maxlength="500" placeholder="Ask about your notes; continue resumes, repeat restarts"><button id="start" disabled>Send</button></div></form>
+</div><script type="module" src="tutor.mjs"></script>
+</body></html>
