@@ -83,7 +83,7 @@ try {
     await new Promise(resolve => setTimeout(resolve, 500));
   }
   if (!ready) throw Error('The offline model did not become ready within one minute.');
-  server = tutorServer(site, { local: { endpoint: origin + '/v1/chat/completions', model: alias, token, isReady: () => !childError && child.exitCode === null } });
+  server = tutorServer(site, { local: { endpoint: origin + '/v1/chat/completions', model: alias, token, isReady: () => !childError && child.exitCode === null }, shutdown: cleanup });
   server.requestTimeout = 35000;
   await new Promise((accept, reject) => { server.once('error', reject); server.listen(port, '127.0.0.1', accept); });
   console.log(`Local HaHa tutor: http://127.0.0.1:${port}/tutor/`);

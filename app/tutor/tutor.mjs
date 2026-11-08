@@ -63,6 +63,7 @@ fetch('/api/tutor/status', { credentials: 'same-origin' }).then(async response =
   if (data.available !== true) throw Error();
   $('ai-selection').disabled = false;
   if (data.provider === 'local') {
+    $('stop-local').hidden = data.canStop !== true;
     $('ai-label').textContent = 'Let local AI check the authored topic';
     $('ai-privacy').textContent = 'Questions stay on this computer. This optional offline model checks a topic already selected from the authored lesson. It cannot write lesson text or diagrams. Uploads and conversation history are never sent to it. Disagreement or failure visibly falls back to authored teaching. No API credits are used.';
     $('ai-status').textContent = 'Offline CPU model connected · no API credits. Enable it to check authored topic choices.';
@@ -70,6 +71,15 @@ fetch('/api/tutor/status', { credentials: 'same-origin' }).then(async response =
   }
   $('ai-status').textContent = 'Optional AI selection available. It stays off until you enable it.' + (data.dailyLimit ? ` Private pilot: ${data.dailyLimit} shared AI requests per UTC day.` : '');
 }).catch(() => { $('ai-status').textContent = 'AI is not connected here. Authored teaching and interactive models are available.'; });
+$('stop-local').onclick = async () => {
+  $('end-session').click();
+  try {
+    const response = await fetch('/api/tutor/shutdown', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
+    if (!response.ok) throw Error();
+    $('ai-selection').disabled = true; $('stop-local').disabled = true;
+    $('ai-status').textContent = 'Local tutor stopped. Run the launcher again to reconnect.';
+  } catch { $('ai-status').textContent = 'Could not stop the local service. Close its launcher window to stop it.'; }
+};
 const voiceChecks = [...document.querySelectorAll('.voice-check')];
 $('device-capabilities').textContent = `Secure page: ${window.isSecureContext ? 'yes' : 'no'}. Browser recognition: ${window.SpeechRecognition || window.webkitSpeechRecognition ? 'available' : 'unavailable; use typing'}. Browser speech: ${window.speechSynthesis && window.SpeechSynthesisUtterance ? 'available' : 'unavailable; use silent reading'}. Capabilities alone do not verify audio.`;
 function deviceCheck(reset = false) {

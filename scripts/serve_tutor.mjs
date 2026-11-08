@@ -6,7 +6,7 @@ import { pathToFileURL } from 'node:url';
 import { choose } from './tutor_provider.mjs';
 import { chooseLocal, localEndpoint } from './local_tutor_provider.mjs';
 
-export function tutorServer(root, { key = '', model = '', fetcher = fetch, limit = 60, now = Date.now, local } = {}) {
+export function tutorServer(root, { key = '', model = '', fetcher = fetch, limit = 60, now = Date.now, local, shutdown } = {}) {
   if (local) localEndpoint(local.endpoint);
   let used = 0, start = now(), busy = false;
   const json = (res, code, value) => { res.writeHead(code, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' }); res.end(JSON.stringify(value)); };
@@ -15,7 +15,12 @@ export function tutorServer(root, { key = '', model = '', fetcher = fetch, limit
     if (req.headers.host !== `127.0.0.1:${port}` || req.socket.remoteAddress !== '127.0.0.1') { json(res, 403, { error: 'Local access only.' }); return; }
     const path = new URL(req.url, origin).pathname;
     if (path === '/api/tutor/status' && req.method === 'GET') {
-      json(res, 200, local ? { available: local.isReady ? local.isReady() : true, provider: 'local', mode: 'guarded-topic-check' } : { available: Boolean(key && model) }); return;
+      json(res, 200, local ? { available: local.isReady ? local.isReady() : true, provider: 'local', mode: 'guarded-topic-check', ...(shutdown ? { canStop: true } : {}) } : { available: Boolean(key && model) }); return;
+    }
+    if (path === '/api/tutor/shutdown' && local && shutdown) {
+      if (req.method !== 'POST' || req.headers.origin !== origin || req.headers['content-type'] !== 'application/json') { json(res, 403, { error: 'Same-origin stop required.' }); return; }
+      res.once('finish', () => { setTimeout(() => shutdown().catch(() => {}), 100).unref(); });
+      json(res, 200, { stopped: true }); return;
     }
     if (path === '/api/tutor/choose') {
       if (req.method !== 'POST' || req.headers.origin !== origin || req.headers['content-type'] !== 'application/json') { json(res, 403, { error: 'Same-origin JSON POST required.' }); return; }

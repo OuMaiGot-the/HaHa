@@ -13,7 +13,7 @@
     <a id="tutor-signin" href="/signin-with-chatgpt?return_to=%2Ftutor%2F" target="_top" hidden>Sign in to the protected tutor</a>
     <label class="voice"><input id="ai-selection" type="checkbox" disabled> <span id="ai-label">Use AI to select a teaching explanation</span></label>
     <p class="privacy" id="ai-privacy">When enabled, your question and current teaching-step ID are sent to the configured OpenAI service. Uploaded notes and conversation history are never sent. Service retention follows the provider policy; this app does not save questions. AI can choose only an authored explanation, not write new science.</p>
-    <p id="selection-mode" role="status"></p>
+    <p id="selection-mode" role="status"></p><button id="stop-local" type="button" hidden>Stop local tutor</button>
     <nav id="teaching-topics" aria-label="Teaching topics" hidden></nav>
   </section>
   <section class="setup" aria-label="Lesson setup">

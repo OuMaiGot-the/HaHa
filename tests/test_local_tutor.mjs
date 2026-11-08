@@ -43,17 +43,23 @@ test('Only the pinned loopback endpoint is allowed; cloud URLs and redirects are
 });
 test('Loopback gateway exposes a truthful local mode and sends delivery metadata separately from lesson data', async () => {
   const root = await mkdtemp(join(tmpdir(), 'haha-local-fixture-'));
-  const server = tutorServer(root, { local: { ...local, fetcher: async () => response({ move: 'normal' }) } });
+  let stopped = 0;
+  const server = tutorServer(root, { local: { ...local, fetcher: async () => response({ move: 'normal' }) }, shutdown: async () => { stopped++; } });
   server.listen(0, '127.0.0.1'); await once(server, 'listening');
   const origin = `http://127.0.0.1:${server.address().port}`;
   try {
     const status = await (await fetch(origin + '/api/tutor/status')).json();
-    assert.deepEqual(status, { available: true, provider: 'local', mode: 'guarded-topic-check' });
+    assert.deepEqual(status, { available: true, provider: 'local', mode: 'guarded-topic-check', canStop: true });
     assert(!JSON.stringify(status).includes(local.token));
     const send = (url, options) => fetch(origin + url, { ...options, headers: { ...options.headers, Origin: origin } });
     const choice = await remoteChoice('Explain the normal force', 'start', new AbortController().signal, send);
     assert.equal(choice.id, 'normal'); assert.equal(choice.delivery, 'local-confirmed');
     const blocked = await fetch(origin + '/api/tutor/choose', { method: 'POST', body: JSON.stringify(input('energy')), headers: { Origin: 'https://other.invalid', 'Content-Type': 'application/json' } });
     assert.equal(blocked.status, 403);
+    assert.equal((await fetch(origin + '/api/tutor/shutdown', { method: 'POST', headers: { Origin: 'https://other.invalid', 'Content-Type': 'application/json' }, body: '{}' })).status, 403);
+    assert.equal(stopped, 0);
+    assert.equal((await fetch(origin + '/api/tutor/shutdown', { method: 'POST', headers: { Origin: origin, 'Content-Type': 'application/json' }, body: '{}' })).status, 200);
+    await new Promise(resolve => setTimeout(resolve, 150));
+    assert.equal(stopped, 1);
   } finally { server.closeAllConnections(); await new Promise(resolve => server.close(resolve)); await rm(root, { recursive: true, force: true }); }
 });

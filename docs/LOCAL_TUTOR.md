@@ -8,7 +8,7 @@ Double-click `run-local-tutor.cmd` in the HaHa checkout. It checks the downloade
 
 Start kinetic friction, then enable **Let local AI check the authored topic**. It is off initially. Authored topic buttons and text reading work without the model check. Browser speech/microphone remain optional and separate; recognition or voice services may use their own providers, as disclosed in the app. The no-network inference guarantee applies to the local text model, not browser speech services.
 
-Keep the launcher running while using the local tutor. Ctrl+C stops both processes and removes the temporary model-access credential. The generated static app remains in the operating system's temporary directory; it contains no questions, audio, keys or learner progress. Browser learning records are separate from the public site's records because origins differ. Do not copy real learner records into development.
+Keep the launcher running while using the local tutor. **Stop local tutor** closes both processes and removes their session credential. Ctrl+C also requests shutdown; forcibly closing a process can leave an unused temporary session file. The generated static app remains in the operating system's temporary directory; it contains no questions, audio, keys or learner progress. Browser learning records are separate from the public site's records because origins differ. Do not copy real learner records into development.
 
 ## Exact portable files
 
