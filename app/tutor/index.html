@@ -10,6 +10,7 @@
     <h2>8.3 · Kinetic friction</h2><p>Follow the energy, inspect the forces, and ask for a clarification. Microphone and browser speech are optional.</p>
     <button id="friction" type="button">Start kinetic friction</button>
     <p id="ai-status" role="status">Checking optional AI connection…</p>
+    <a id="tutor-signin" href="/signin-with-chatgpt?return_to=%2Ftutor%2F" target="_top" hidden>Sign in to the protected tutor</a>
     <label class="voice"><input id="ai-selection" type="checkbox" disabled> Use AI to select a teaching explanation</label>
     <p class="privacy">When enabled, your question and current teaching-step ID are sent to the configured OpenAI service. Uploaded notes and conversation history are never sent. Service retention follows the provider policy; this app does not save questions. AI can choose only an authored explanation, not write new science.</p>
     <nav id="teaching-topics" aria-label="Teaching topics" hidden></nav>
@@ -30,6 +31,15 @@
     <aside><h2>Lesson</h2><p id="status" role="status">Ready when you are.</p><div class="controls"><button id="pause" disabled>Pause</button><button id="stop" disabled>Stop</button><button id="resume-lesson" disabled>Resume interrupted lesson</button><button id="clear">Clear notes</button></div><p id="timing"></p><h2>Source references &amp; text</h2><ol id="sources"></ol></aside>
   </section>
   <section aria-label="Conversation"><h2>Conversation · page memory only</h2><ol id="conversation" aria-live="polite"></ol></section>
+  <details class="setup" id="device-check"><summary>Check voice on your device</summary>
+    <p id="device-capabilities"></p>
+    <p>Use headphones. These steps require you to listen and speak; automated tests cannot verify your microphone or acoustic echo.</p>
+    <ol><li>Enable Tutor audio and start kinetic friction. Listen for a clear explanation.</li><li>Enable the microphone and say “normal force”. Check that the matching explanation appears. If permission is refused, typing should still work.</li><li>While an explanation is playing, interrupt with “energy”, then choose Resume interrupted lesson. Check that the earlier explanation and model return without overlapping audio.</li></ol>
+    <label class="voice"><input type="checkbox" class="voice-check"> I heard the tutor clearly.</label>
+    <label class="voice"><input type="checkbox" class="voice-check"> My spoken topic selected the expected explanation.</label>
+    <label class="voice"><input type="checkbox" class="voice-check"> Interruption and resume worked without tutor echo.</label>
+    <p id="device-result" role="status">Real-device voice check has not been completed. Results stay in this page only.</p>
+  </details>
 </main>
 <div class="dock">
   <div class="audio-controls"><button id="mic" type="button" aria-pressed="false">Enable microphone</button><span id="mic-status" role="status">Microphone off · authorization required</span><button id="end-session" type="button">End session</button>

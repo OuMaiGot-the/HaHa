@@ -243,6 +243,16 @@ const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
     await page.waitForFunction(() => document.querySelector('#status').textContent === 'Invalid teaching choice.');
     assert(!(await page.locator('#conversation').textContent()).includes('Untrusted generated prose'));
     await page.locator('#end-session').click();
+    await page.locator('#device-check summary').click();
+    assert.match(await page.locator('#device-capabilities').textContent(), /Capabilities alone do not verify audio/);
+    for (const check of await page.locator('.voice-check').all()) await check.check();
+    assert.match(await page.locator('#device-result').textContent(), /self-check, not independent verification/);
+    await page.locator('#end-session').click();
+    assert.equal(await page.locator('.voice-check:checked').count(), 0);
+    await page.route('**/api/tutor/status', route => route.fulfill({ status: 401, json: { error: 'Sign in' } }));
+    await page.reload();
+    assert(await page.locator('#tutor-signin').isVisible());
+    assert(await page.locator('#ai-selection').isDisabled());
     assert.deepEqual(errors, []);
     console.log('Tutor browser: upload/refusal, silent progression, word/phrase speech callbacks, speech errors, pause/resume, stop/stale callbacks, clear, literal markup, in-memory conversation, microphone permissions/mute/revocation/stale results and fixed mobile composer passed. Speech is simulated.');
   } finally {

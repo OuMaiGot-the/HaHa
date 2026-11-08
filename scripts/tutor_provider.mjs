@@ -12,7 +12,9 @@ export async function choose(request, { key, model, fetcher = fetch, signal }) {
     })
   });
   if (!response.ok) throw Error('Tutor provider failed.');
-  const data = await response.json();
+  const raw = await response.text();
+  if (raw.length > 32768) throw Error('Tutor provider response exceeds the limit.');
+  const data = JSON.parse(raw);
   if (data.status !== 'completed' || !Array.isArray(data.output)) throw Error('Tutor provider did not complete.');
   const content = data.output.filter(x => x.type === 'message' && x.role === 'assistant').flatMap(x => x.content || []);
   if (content.length !== 1 || content[0].type !== 'output_text' || typeof content[0].text !== 'string' || content[0].text.length > 256)

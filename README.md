@@ -188,3 +188,5 @@ lab with interruption checkpoints; it does not enable a hosted AI teaching servi
 See [the classroom audit and current feature status](docs/TUTOR_CLASSROOM_AUDIT.md).
 
 The opt-in tutor preview now adds original 8.3 kinetic-friction teaching and trusted interactive models. Optional AI selects an authored explanation through a server-only local gateway; the public static preview works with AI off. See [setup, grounding, tests and live-service limitations](docs/TUTOR_TEACHING.md).
+
+The [protected owner tutor pilot](docs/PROTECTED_TUTOR_PILOT.md) adds a separate private Worker, hosted sign-in checks, a durable shared daily budget and an on-device voice checklist. Public lessons and browser-local progress stay on the existing hub. Live AI remains disabled until secure provider setup succeeds.
